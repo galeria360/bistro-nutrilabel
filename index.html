@@ -794,11 +794,41 @@ async function searchFood() {
     hint.style.display = 'block';
   }
   try {
+    // Szukaj w USDA
     const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(translated.text)}&pageSize=10&api_key=${USDA_KEY}&dataType=Foundation,SR Legacy,Branded`);
     const data = await res.json();
-    showSearchResults(data.foods || []);
+    let usdaFoods = data.foods || [];
+
+    // Szukaj równolegle w Open Food Facts
+    const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&lc=pl`);
+    const offData = await offRes.json();
+    const offFoods = (offData.products || [])
+      .filter(p => p.nutriments && p.product_name)
+      .map(p => ({
+        description: p.product_name_pl || p.product_name,
+        brandOwner: p.brands || '',
+        foodCategory: 'Open Food Facts',
+        _source: 'off',
+        foodNutrients: [
+          { nutrientId: 1008, value: p.nutriments['energy-kcal_100g'] || 0 },
+          { nutrientId: 1003, value: p.nutriments.proteins_100g || 0 },
+          { nutrientId: 1004, value: p.nutriments.fat_100g || 0 },
+          { nutrientId: 1258, value: p.nutriments['saturated-fat_100g'] || 0 },
+          { nutrientId: 1005, value: p.nutriments.carbohydrates_100g || 0 },
+          { nutrientId: 2000, value: p.nutriments.sugars_100g || 0 },
+          { nutrientId: 1093, value: (p.nutriments.salt_100g || 0) / 2.5 * 1000 },
+        ]
+      }));
+
+    // Połącz wyniki — USDA pierwsze, potem OFF
+    const combined = [...usdaFoods, ...offFoods].slice(0, 12);
+    if (combined.length === 0) {
+      showToast('Brak wyników. Użyj trybu ręcznego.', true);
+    } else {
+      showSearchResults(combined);
+    }
   } catch(e) {
-    showToast('Błąd połączenia z USDA API. Użyj trybu ręcznego.', true);
+    showToast('Błąd połączenia z API. Użyj trybu ręcznego.', true);
   }
   btn.innerHTML = 'Szukaj';
   btn.disabled = false;
