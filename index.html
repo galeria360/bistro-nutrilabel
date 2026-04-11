@@ -809,19 +809,35 @@ function getNutrient(food, id) {
   return n ? (n.value || 0) : 0;
 }
 
-function showSearchResults(foods) {
+async function showSearchResults(foods, translatedQuery) {
   const el = document.getElementById('searchResults');
-  if (!foods.length) { el.innerHTML = '<div class="result-item"><span class="r-name">Brak wyników. Spróbuj po angielsku lub użyj trybu ręcznego.</span></div>'; el.style.display='block'; return; }
+  if (!foods.length) {
+    el.innerHTML = '<div class="result-item"><span class="r-name">Brak wyników. Spróbuj inaczej lub użyj trybu ręcznego.</span></div>';
+    el.style.display='block';
+    return;
+  }
+  el.innerHTML = '<div class="result-item"><span class="r-name" style="color:var(--muted)">⏳ Tłumaczenie wyników...</span></div>';
+  el.style.display = 'block';
+  const top = foods.slice(0,10);
+  const plNames = await Promise.all(top.map(async (item) => {
+    try {
+      const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(item.description) + '&langpair=en|pl');
+      const data = await res.json();
+      const t = data?.responseData?.translatedText;
+      return (t && t.toLowerCase() !== item.description.toLowerCase()) ? t : item.description;
+    } catch(e) { return item.description; }
+  }));
   el.innerHTML = '';
-  foods.slice(0,10).forEach(f => {
-    const kcal = Math.round(getNutrient(f,1008));
+  top.forEach((item, i) => {
+    const kcal = Math.round(getNutrient(item,1008));
     const div = document.createElement('div');
     div.className = 'result-item';
-    div.innerHTML = `<div><div class="r-name">${f.description}</div><div class="r-cat">${f.brandOwner||f.foodCategory||'—'}</div></div><div class="r-kcal">${kcal} kcal</div>`;
-    div.onclick = () => pickFood(f);
+    const plName = plNames[i];
+    div.innerHTML = '<div><div class="r-name">' + plName + '</div><div class="r-cat" style="font-size:10px;color:var(--muted)">' + item.description + '</div></div><div class="r-kcal">' + kcal + ' kcal</div>';
+    div.onclick = () => pickFood(item, plName);
+    div.appendChild(document.createElement('span'));
     el.appendChild(div);
   });
-  el.style.display = 'block';
   document.addEventListener('click', closeSearchOnce);
 }
 function closeSearchOnce(e) {
