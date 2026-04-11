@@ -787,8 +787,14 @@ async function searchFood() {
   const btn = document.getElementById('searchBtn');
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
+  const hint = document.getElementById('translateHint');
+  const translated = await translateToEN(q);
+  if (translated.text !== translated.original && hint) {
+    hint.textContent = '🔤 Tłumaczenie: "' + translated.original + '" → "' + translated.text + '"';
+    hint.style.display = 'block';
+  }
   try {
-    const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=10&api_key=${USDA_KEY}&dataType=Foundation,SR Legacy,Branded`);
+    const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(translated.text)}&pageSize=10&api_key=${USDA_KEY}&dataType=Foundation,SR Legacy,Branded`);
     const data = await res.json();
     showSearchResults(data.foods || []);
   } catch(e) {
