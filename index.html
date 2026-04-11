@@ -831,13 +831,14 @@ function closeSearchOnce(e) {
   }
 }
 
-function pickFood(f) {
+function pickFood(f, plName) {
   document.getElementById('searchResults').style.display = 'none';
   document.getElementById('searchInput').value = '';
   const allergens = detectAllergens(f.description);
+  const displayName = plName && plName !== f.description ? plName : f.description;
   const item = {
     id: Date.now(),
-    name: f.description,
+    name: displayName,
     source: 'USDA',
     weight: 100,
     per100: {
