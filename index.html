@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Wartości Odżywczych | Bistro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --bg2: #181714;
+    --bg3: #211f1b;
+    --border: #2e2b25;
+    --accent: #d4a84b;
+    --accent2: #e8c87a;
+    --danger: #c0392b;
+    --green: #4caf7d;
+    --text: #f0ead8;
+    --muted: #8a8070;
+    --label-bg: #f9f5ec;
+    --label-text: #1a1814;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  header .subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  header .eu-badge {
+    margin-left: auto;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── LAYOUT ── */
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    min-height: calc(100vh - 65px);
+  }
+  .left-panel {
+    padding: 32px;
+    border-right: 1px solid var(--border);
+  }
+  .right-panel {
+    padding: 32px;
+    background: var(--bg2);
+    position: sticky;
+    top: 65px;
+    height: calc(100vh - 65px);
+    overflow-y: auto;
+  }
+
+  /* ── SECTION TITLES ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+
+  /* ── DISH META ── */
+  .dish-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field-group label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  input[type="text"], input[type="number"], select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  select option { background: var(--bg3); }
+
+  /* ── SEARCH BAR ── */
+  .search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .search-row input { flex: 1; }
+  .btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--bg3); color: var(--text); }
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger)33;
+  }
+  .btn-danger:hover { background: var(--danger)22; }
+
+  /* ── SEARCH RESULTS DROPDOWN ── */
+  .search-results-wrap { position: relative; margin-bottom: 6px; }
+  #searchResults {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg3);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    z-index: 50;
+    max-height: 240px;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px #0008;
+  }
+  .result-item {
+    padding: 11px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .result-item:last-child { border-bottom: none; }
+  .result-item:hover { background: var(--bg); }
+  .result-item .r-name { font-size: 13px; }
+  .result-item .r-cat { font-size: 11px; color: var(--muted); }
+  .result-item .r-kcal { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); }
+
+  /* ── ADD MANUAL FORM ── */
+  .manual-form {
+    background: var(--bg3);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: none;
+  }
+  .manual-form.open { display: block; }
+  .manual-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .manual-grid .field-group:first-child { grid-column: span 2; }
+
+  /* ── INGREDIENTS TABLE ── */
+  .ingredients-table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th:first-child, thead th:nth-child(2) { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border)66; transition: background 0.15s; }
+  tbody tr:hover { background: var(--bg3); }
+  tbody td {
+    padding: 10px 10px;
+    font-size: 13px;
+    text-align: right;
+  }
+  tbody td:first-child { text-align: left; }
+  tbody td:nth-child(2) { text-align: left; }
+  .td-name { font-weight: 500; }
+  .td-alergen { font-size: 11px; color: var(--danger); }
+  .td-mono { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .td-badge {
+    display: inline-flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .badge {
+    background: var(--danger)22;
+    color: var(--danger);
+    border: 1px solid var(--danger)44;
+    border-radius: 4px;
+    font-size: 10px;
+    padding: 1px 5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge-muted {
+    background: var(--bg3);
+    color: var(--muted);
+    border-color: var(--border);
+    font-weight: 400;
+    text-transform: none;
+  }
+  .weight-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+  .weight-cell input {
+    width: 70px;
+    text-align: right;
+    padding: 5px 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* ── COOKED WEIGHT ── */
+  .cooked-section {
+    margin-top: 28px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .cooked-section .icon { font-size: 24px; }
+  .cooked-section .cw-label {
+    flex: 1;
+    min-width: 180px;
+  }
+  .cooked-section .cw-label h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .cooked-section .cw-label p { font-size: 12px; color: var(--muted); }
+  .cooked-section .cw-input { display: flex; align-items: center; gap: 8px; }
+  .cw-input input { width: 110px; }
+  .ratio-badge {
+    background: var(--accent)22;
+    color: var(--accent);
+    border: 1px solid var(--accent)44;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* ── RIGHT PANEL – LABEL ── */
+  .right-panel h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .label-card {
+    background: var(--label-bg);
+    color: var(--label-text);
+    border-radius: 12px;
+    padding: 20px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .label-dish-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--label-text);
+  }
+  .label-portion {
+    font-size: 11px;
+    color: #6b6252;
+    margin-bottom: 14px;
+  }
+  .nv-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  .nv-table th {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b6252;
+    padding: 5px 0;
+    text-align: right;
+    border-bottom: 2px solid #1a181444;
+  }
+  .nv-table th:first-child { text-align: left; }
+  .nv-table td {
+    padding: 5px 0;
+    font-size: 12px;
+    text-align: right;
+    border-bottom: 1px solid #1a181422;
+  }
+  .nv-table td:first-child { text-align: left; }
+  .nv-table .main-row td { font-weight: 600; }
+  .nv-table .sub-row td:first-child { padding-left: 10px; color: #6b6252; font-size: 11px; }
+  .nv-table .sub-row td { color: #6b6252; font-size: 11px; }
+  .nv-table .energy-row td { font-family: 'DM Mono', monospace; font-size: 11px; }
+
+  .label-section-title {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6b6252;
+    margin: 12px 0 6px;
+  }
+  .ingredients-list {
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--label-text);
+  }
+  .alergen-highlight {
+    font-weight: 800;
+    text-decoration: underline;
+    color: #8b2020;
+  }
+  .allergen-legend {
+    margin-top: 10px;
+    font-size: 10px;
+    color: #8b2020;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .legend-item { background: #8b202012; border-radius: 3px; padding: 2px 6px; }
+
+  /* Empty state */
+  .empty-label {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-label .big-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-label p { font-size: 12px; line-height: 1.8; }
+
+  /* Export buttons */
+  .export-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  /* Toasts */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--text);
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    box-shadow: 0 8px 32px #0008;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { border-left-color: var(--danger); }
+
+  /* ── ALLERGEN CHECKLIST ── */
+  .allergen-check-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .ac-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+  }
+  .ac-item.selected {
+    background: var(--danger)22;
+    border-color: var(--danger)66;
+    color: var(--danger);
+  }
+  .ac-item .ac-icon { font-size: 14px; }
+
+  /* Progress bar for macros */
+  .macro-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .macro-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .right-panel { position: static; height: auto; }
+    .allergen-check-grid { grid-template-columns: repeat(3, 1fr); }
+    .manual-grid { grid-template-columns: 1fr 1fr; }
+    .manual-grid .field-group:first-child { grid-column: span 2; }
+  }
+
+  /* Print label */
+  @media print {
+    body { background: white; color: black; }
+    .left-panel, header, .export-row { display: none !important; }
+    .right-panel { position: static; height: auto; background: white; border: none; padding: 20px; }
+    .label-card { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">⚖️ NutriLabel</div>
+    <div class="subtitle">Kalkulator wartości odżywczych · Bistro · EU 1169/2011</div>
+  </div>
+  <div class="eu-badge">🇪🇺 Rozporządzenie UE nr 1169/2011</div>
+</header>
+
+<div class="app">
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+
+    <!-- STEP 1: Dish info -->
+    <div class="section-title">
+      <span class="step-num">01</span> Dane dania
+    </div>
+    <div class="dish-meta">
+      <div class="field-group">
+        <label>Nazwa dania</label>
+        <input type="text" id="dishName" placeholder="np. Zupa pomidorowa z bazylią">
+      </div>
+      <div class="field-group">
+        <label>Kategoria</label>
+        <select id="dishCategory">
+          <option>Zupy</option>
+          <option>Dania główne</option>
+          <option>Sałatki</option>
+          <option>Przystawki</option>
+          <option>Desery</option>
+          <option>Napoje</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Porcja (g)</label>
+        <input type="number" id="portionSize" value="300" min="1">
+      </div>
+      <div class="field-group">
+        <label>Ilość porcji z przepisu</label>
+        <input type="number" id="numPortions" value="1" min="1">
+      </div>
+    </div>
+
+    <!-- STEP 2: Add ingredients -->
+    <div class="section-title">
+      <span class="step-num">02</span> Składniki surowca
+    </div>
+
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Szukaj składnika (USDA FoodData Central)..." onkeydown="if(event.key==='Enter')searchFood()">
+      <button class="btn" onclick="searchFood()" id="searchBtn">Szukaj</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleManual()">+ Ręcznie</button>
+    </div>
+
+    <div class="search-results-wrap">
+      <div id="searchResults" style="display:none"></div>
+    </div>
+
+    <!-- Manual entry form -->
+    <div class="manual-form" id="manualForm">
+      <div class="manual-grid">
+        <div class="field-group">
+          <label>Nazwa składnika</label>
+          <input type="text" id="mName" placeholder="np. Śmietana 18%">
+        </div>
+        <div class="field-group">
+          <label>Kcal / 100g</label>
+          <input type="number" id="mKcal" placeholder="150" min="0">
+        </div>
+        <div class="field-group">
+          <label>Białko (g)</label>
+          <input type="number" id="mProt" placeholder="3.5" min="0" step="0.1">
+        </div>
+        <div class="field-group">
+          <label>Tłuszcz (g)</label>
+          <input type="number" id="mFat" placeholder="18" min="0" step="0.1">
+        </div>
+        <div class="field-group">
+          <label>Nasyc. (g)</label>
+          <input type="number" id="mSat" placeholder="11" min="0" step="0.1">
+        </div>
+        <div class="field-group">
+          <label>Węglowod. (g)</label>
+          <input type="number" id="mCarb" placeholder="4.2" min="0" step="0.1">
+        </div>
+        <div class="field-group">
+          <label>Cukry (g)</label>
+          <input type="number" id="mSugar" placeholder="4.2" min="0" step="0.1">
+        </div>
+        <div class="field-group">
+          <label>Sól (g)</label>
+          <input type="number" id="mSalt" placeholder="0.1" min="0" step="0.01">
+        </div>
+        <div class="field-group" style="display:flex;align-items:flex-end;">
+          <button class="btn" onclick="addManual()" style="width:100%">Dodaj</button>
+        </div>
+      </div>
+      <div>
+        <div class="field-group">
+          <label>Alergeny tego składnika</label>
+          <div id="manualAllergenCheck" class="allergen-check-grid" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ingredients table -->
+    <div class="ingredients-table-wrap">
+      <table id="ingredientsTable">
+        <thead>
+          <tr>
+            <th>Składnik</th>
+            <th>Alergeny</th>
+            <th>Waga (g)</th>
+            <th>Kcal</th>
+            <th>Białko</th>
+            <th>Tłuszcz</th>
+            <th>Węglow.</th>
+            <th>Sól</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ingredientRows">
+          <tr id="emptyRow">
+            <td colspan="9" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">
+              Dodaj składniki powyżej, aby rozpocząć
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- STEP 3: Cooked weight -->
+    <div class="cooked-section">
+      <div class="icon">🍲</div>
+      <div class="cw-label">
+        <h4>Masa po obróbce termicznej</h4>
+        <p>Zważ gotowe danie przed porcjowaniem. Składniki zagęszczają się podczas gotowania.</p>
+      </div>
+      <div class="cw-input">
+        <div class="field-group">
+          <label>Masa ugotowana (g)</label>
+          <input type="number" id="cookedWeight" placeholder="auto" min="1">
+        </div>
+        <div id="ratioDisplay" class="ratio-badge" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Totals bar -->
+    <div id="totalsBar" style="display:none;margin-top:20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 20px;">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Energia</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent)" id="totalKcal">—</div>
+          <div style="font-size:10px;color:var(--muted)" id="totalKj">—</div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Białko</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px" id="totalProt">—</div>
+          <div class="macro-bar"><div class="macro-bar-fill" id="barProt" style="background:#4caf7d;width:0%"></div></div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Tłuszcz</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px" id="totalFat">—</div>
+          <div class="macro-bar"><div class="macro-bar-fill" id="barFat" style="background:#d4a84b;width:0%"></div></div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Węglow.</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px" id="totalCarb">—</div>
+          <div class="macro-bar"><div class="macro-bar-fill" id="barCarb" style="background:#7eb8e0;width:0%"></div></div>
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Sól</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px" id="totalSalt">—</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted)">
+        📦 Masa surowa łącznie: <span id="totalRawWeight" style="color:var(--text);font-family:'DM Mono',monospace">—</span> g &nbsp;|&nbsp;
+        🍲 Masa ugotowana: <span id="cookedDisplay" style="color:var(--text);font-family:'DM Mono',monospace">—</span> g &nbsp;|&nbsp;
+        Wartości na 100 g gotowego dania
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL – LABEL -->
+  <div class="right-panel">
+    <h2>📋 Podgląd etykiety EU</h2>
+    <div id="labelOutput">
+      <div class="empty-label">
+        <div class="big-icon">🏷️</div>
+        <p>Dodaj składniki i wpisz masę po ugotowaniu,<br>aby zobaczyć podgląd etykiety<br>zgodnej z rozporządzeniem UE 1169/2011</p>
+      </div>
+    </div>
+    <div class="export-row">
+      <button class="btn btn-sm" onclick="window.print()">🖨️ Drukuj etykietę</button>
+      <button class="btn btn-sm btn-ghost" onclick="copyLabel()">📋 Kopiuj tekst</button>
+      <button class="btn btn-sm btn-ghost" onclick="exportJSON()">💾 Zapisz recepturę</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── ALLERGENS CONFIG ──
+const ALLERGENS = [
+  { id: 'gluten',    name: 'Gluten',     icon: '🌾', keywords: ['wheat','rye','barley','oats','spelt','flour','bread','pasta','semolina','mąka','chleb','makaron','orkisz','pszen','żyto','owies','jęczmień'] },
+  { id: 'crustacea', name: 'Skorupiaki', icon: '🦐', keywords: ['shrimp','crab','lobster','prawn','krab','krewetka','homar'] },
+  { id: 'eggs',      name: 'Jaja',       icon: '🥚', keywords: ['egg','jaj','jajko','jajca','mayonnaise','majonez'] },
+  { id: 'fish',      name: 'Ryby',       icon: '🐟', keywords: ['fish','salmon','tuna','cod','ryba','łosoś','tuńczyk','dorsz','śledź','anchov'] },
+  { id: 'peanuts',   name: 'Orzeszki',   icon: '🥜', keywords: ['peanut','orzeszki ziemne','orzech ziemny'] },
+  { id: 'soy',       name: 'Soja',       icon: '🫘', keywords: ['soy','soja','tofu','edamame','tempeh'] },
+  { id: 'milk',      name: 'Mleko',      icon: '🥛', keywords: ['milk','cream','butter','cheese','mleko','śmietana','masło','ser','jogurt','dairy','lactose','lakto','skyr','kefir'] },
+  { id: 'nuts',      name: 'Orzechy',    icon: '🌰', keywords: ['almond','walnut','hazelnut','cashew','pistachio','migdał','orzech','pistacj','nerkowc'] },
+  { id: 'celery',    name: 'Seler',      icon: '🥬', keywords: ['celery','seler','celeriac'] },
+  { id: 'mustard',   name: 'Gorczyca',   icon: '🌼', keywords: ['mustard','gorczyca','musztarda'] },
+  { id: 'sesame',    name: 'Sezam',      icon: '🫙', keywords: ['sesame','sezam','tahini'] },
+  { id: 'sulphites', name: 'Siarczyny',  icon: '🍷', keywords: ['sulphite','sulfite','wine','wino','ocet','vinegar','dried fruit','suszon'] },
+  { id: 'lupin',     name: 'Łubin',      icon: '🌻', keywords: ['lupin','łubin'] },
+  { id: 'molluscs',  name: 'Mięczaki',   icon: '🦑', keywords: ['mollusc','squid','oyster','mussel','ślimak','małż','kalmary','ostryg'] },
+];
+
+let ingredients = [];
+let selectedManualAllergens = [];
+
+// ── BUILD MANUAL ALLERGEN CHECKBOXES ──
+function buildManualAllergenCheck() {
+  const el = document.getElementById('manualAllergenCheck');
+  el.innerHTML = '';
+  ALLERGENS.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'ac-item';
+    div.innerHTML = `<span class="ac-icon">${a.icon}</span>${a.name}`;
+    div.onclick = () => {
+      const idx = selectedManualAllergens.indexOf(a.id);
+      if (idx === -1) { selectedManualAllergens.push(a.id); div.classList.add('selected'); }
+      else { selectedManualAllergens.splice(idx,1); div.classList.remove('selected'); }
+    };
+    el.appendChild(div);
+  });
+}
+buildManualAllergenCheck();
+
+// ── AUTO-DETECT ALLERGENS ──
+function detectAllergens(name) {
+  const lower = name.toLowerCase();
+  return ALLERGENS.filter(a => a.keywords.some(k => lower.includes(k))).map(a => a.id);
+}
+
+// ── USDA SEARCH ──
+const USDA_KEY = 'DEMO_KEY'; // DEMO_KEY działa dla testów; zamień na własny z api.nal.usda.gov/api-key-signup
+async function searchFood() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  const btn = document.getElementById('searchBtn');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=10&api_key=${USDA_KEY}&dataType=Foundation,SR Legacy,Branded`);
+    const data = await res.json();
+    showSearchResults(data.foods || []);
+  } catch(e) {
+    showToast('Błąd połączenia z USDA API. Użyj trybu ręcznego.', true);
+  }
+  btn.innerHTML = 'Szukaj';
+  btn.disabled = false;
+}
+
+function getNutrient(food, id) {
+  const n = (food.foodNutrients || []).find(x => x.nutrientId === id || x.nutrientNumber == String(id));
+  return n ? (n.value || 0) : 0;
+}
+
+function showSearchResults(foods) {
+  const el = document.getElementById('searchResults');
+  if (!foods.length) { el.innerHTML = '<div class="result-item"><span class="r-name">Brak wyników. Spróbuj po angielsku lub użyj trybu ręcznego.</span></div>'; el.style.display='block'; return; }
+  el.innerHTML = '';
+  foods.slice(0,10).forEach(f => {
+    const kcal = Math.round(getNutrient(f,1008));
+    const div = document.createElement('div');
+    div.className = 'result-item';
+    div.innerHTML = `<div><div class="r-name">${f.description}</div><div class="r-cat">${f.brandOwner||f.foodCategory||'—'}</div></div><div class="r-kcal">${kcal} kcal</div>`;
+    div.onclick = () => pickFood(f);
+    el.appendChild(div);
+  });
+  el.style.display = 'block';
+  document.addEventListener('click', closeSearchOnce);
+}
+function closeSearchOnce(e) {
+  if (!document.getElementById('searchResults').contains(e.target)) {
+    document.getElementById('searchResults').style.display = 'none';
+    document.removeEventListener('click', closeSearchOnce);
+  }
+}
+
+function pickFood(f) {
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('searchInput').value = '';
+  const allergens = detectAllergens(f.description);
+  const item = {
+    id: Date.now(),
+    name: f.description,
+    source: 'USDA',
+    weight: 100,
+    per100: {
+      kcal: parseFloat(getNutrient(f,1008).toFixed(1)),
+      protein: parseFloat(getNutrient(f,1003).toFixed(2)),
+      fat: parseFloat(getNutrient(f,1004).toFixed(2)),
+      saturated: parseFloat(getNutrient(f,1258).toFixed(2)),
+      carbs: parseFloat(getNutrient(f,1005).toFixed(2)),
+      sugars: parseFloat(getNutrient(f,2000).toFixed(2)),
+      salt: parseFloat((getNutrient(f,1093)*2.5/1000).toFixed(3)),
+    },
+    allergens
+  };
+  ingredients.push(item);
+  renderTable();
+  showToast(`✓ Dodano: ${f.description.substring(0,40)}`);
+}
+
+// ── MANUAL ADD ──
+function toggleManual() {
+  const f = document.getElementById('manualForm');
+  f.classList.toggle('open');
+}
+function addManual() {
+  const name = document.getElementById('mName').value.trim();
+  if (!name) { showToast('Podaj nazwę składnika', true); return; }
+  const item = {
+    id: Date.now(),
+    name,
+    source: 'Ręczny',
+    weight: 100,
+    per100: {
+      kcal: parseFloat(document.getElementById('mKcal').value)||0,
+      protein: parseFloat(document.getElementById('mProt').value)||0,
+      fat: parseFloat(document.getElementById('mFat').value)||0,
+      saturated: parseFloat(document.getElementById('mSat').value)||0,
+      carbs: parseFloat(document.getElementById('mCarb').value)||0,
+      sugars: parseFloat(document.getElementById('mSugar').value)||0,
+      salt: parseFloat(document.getElementById('mSalt').value)||0,
+    },
+    allergens: [...selectedManualAllergens]
+  };
+  ingredients.push(item);
+  selectedManualAllergens = [];
+  document.querySelectorAll('#manualAllergenCheck .ac-item').forEach(el => el.classList.remove('selected'));
+  ['mName','mKcal','mProt','mFat','mSat','mCarb','mSugar','mSalt'].forEach(id => document.getElementById(id).value='');
+  renderTable();
+  showToast(`✓ Dodano: ${name}`);
+}
+
+// ── RENDER TABLE ──
+function renderTable() {
+  const tbody = document.getElementById('ingredientRows');
+  if (!ingredients.length) {
+    tbody.innerHTML = '<tr id="emptyRow"><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Dodaj składniki powyżej, aby rozpocząć</td></tr>';
+    document.getElementById('totalsBar').style.display = 'none';
+    updateLabel();
+    return;
+  }
+  tbody.innerHTML = '';
+  ingredients.forEach((ing, idx) => {
+    const w = ing.weight;
+    const f = w/100;
+    const kcal = (ing.per100.kcal*f).toFixed(0);
+    const prot = (ing.per100.protein*f).toFixed(1);
+    const fat = (ing.per100.fat*f).toFixed(1);
+    const carb = (ing.per100.carbs*f).toFixed(1);
+    const salt = (ing.per100.salt*f).toFixed(2);
+    const allergenNames = ing.allergens.map(id => ALLERGENS.find(a=>a.id===id)?.name||id);
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="td-name">
+        <div>${ing.name}</div>
+        <div style="font-size:10px;color:var(--muted)">${ing.source}</div>
+      </td>
+      <td>
+        <div class="td-badge">
+          ${allergenNames.length ? allergenNames.map(n=>`<span class="badge">${n}</span>`).join('') : '<span class="badge badge-muted">brak</span>'}
+        </div>
+      </td>
+      <td>
+        <div class="weight-cell">
+          <input type="number" class="weight-input" value="${w}" min="0" step="1" onchange="updateWeight(${idx}, this.value)">
+          <span style="color:var(--muted);font-size:11px">g</span>
+        </div>
+      </td>
+      <td class="td-mono">${kcal}</td>
+      <td class="td-mono">${prot}g</td>
+      <td class="td-mono">${fat}g</td>
+      <td class="td-mono">${carb}g</td>
+      <td class="td-mono">${salt}g</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeIngredient(${idx})">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateTotals();
+}
+
+function updateWeight(idx, val) {
+  ingredients[idx].weight = parseFloat(val)||0;
+  updateTotals();
+}
+function removeIngredient(idx) {
+  ingredients.splice(idx,1);
+  renderTable();
+}
+
+// ── TOTALS & LABEL ──
+function getTotals() {
+  let totRaw=0, totKcal=0, totProt=0, totFat=0, totSat=0, totCarb=0, totSugar=0, totSalt=0;
+  ingredients.forEach(ing => {
+    const f = ing.weight/100;
+    totRaw += ing.weight;
+    totKcal += ing.per100.kcal*f;
+    totProt += ing.per100.protein*f;
+    totFat += ing.per100.fat*f;
+    totSat += ing.per100.saturated*f;
+    totCarb += ing.per100.carbs*f;
+    totSugar += ing.per100.sugars*f;
+    totSalt += ing.per100.salt*f;
+  });
+  return { totRaw, totKcal, totProt, totFat, totSat, totCarb, totSugar, totSalt };
+}
+
+function updateTotals() {
+  const {totRaw, totKcal, totProt, totFat, totSat, totCarb, totSugar, totSalt} = getTotals();
+  const cooked = parseFloat(document.getElementById('cookedWeight').value) || totRaw;
+  const r = 100/cooked;
+
+  const kcal100 = totKcal*r;
+  const prot100 = totProt*r;
+  const fat100 = totFat*r;
+  const carb100 = totCarb*r;
+  const salt100 = totSalt*r;
+
+  const totBar = document.getElementById('totalsBar');
+  totBar.style.display = 'block';
+  document.getElementById('totalKcal').textContent = kcal100.toFixed(0)+' kcal';
+  document.getElementById('totalKj').textContent = (kcal100*4.184).toFixed(0)+' kJ';
+  document.getElementById('totalProt').textContent = prot100.toFixed(1)+'g';
+  document.getElementById('totalFat').textContent = fat100.toFixed(1)+'g';
+  document.getElementById('totalCarb').textContent = carb100.toFixed(1)+'g';
+  document.getElementById('totalSalt').textContent = salt100.toFixed(2)+'g';
+  document.getElementById('totalRawWeight').textContent = totRaw.toFixed(0);
+  document.getElementById('cookedDisplay').textContent = cooked.toFixed(0);
+
+  const maxMacro = Math.max(prot100, fat100, carb100, 1);
+  document.getElementById('barProt').style.width = Math.min(100, prot100/maxMacro*100)+'%';
+  document.getElementById('barFat').style.width = Math.min(100, fat100/maxMacro*100)+'%';
+  document.getElementById('barCarb').style.width = Math.min(100, carb100/maxMacro*100)+'%';
+
+  if (cooked !== totRaw) {
+    const ratio = ((totRaw-cooked)/totRaw*100).toFixed(0);
+    document.getElementById('ratioDisplay').textContent = `↓${ratio}% wody`;
+    document.getElementById('ratioDisplay').style.display = 'block';
+  }
+
+  updateLabel(kcal100, prot100, fat100, totSat*r, carb100, totSugar*r, salt100);
+}
+
+document.getElementById('cookedWeight').addEventListener('input', updateTotals);
+
+// ── LABEL RENDER ──
+function updateLabel(kcal100=0, prot100=0, fat100=0, sat100=0, carb100=0, sug100=0, salt100=0) {
+  const el = document.getElementById('labelOutput');
+  if (!ingredients.length) {
+    el.innerHTML = `<div class="empty-label"><div class="big-icon">🏷️</div><p>Dodaj składniki i wpisz masę po ugotowaniu,<br>aby zobaczyć podgląd etykiety<br>zgodnej z rozporządzeniem UE 1169/2011</p></div>`;
+    return;
+  }
+
+  const dishName = document.getElementById('dishName').value || 'Nazwa dania';
+  const portion = parseFloat(document.getElementById('portionSize').value)||300;
+  const cooked = parseFloat(document.getElementById('cookedWeight').value) || getTotals().totRaw;
+  const kj100 = kcal100*4.184;
+
+  // Portion values
+  const pf = portion/100;
+  const kcalP = (kcal100*pf).toFixed(0);
+  const kjP = (kj100*pf).toFixed(0);
+
+  // Sort ingredients by weight (descending)
+  const sorted = [...ingredients].sort((a,b) => b.weight - a.weight);
+
+  // Collect all allergen IDs
+  const allAllergenIds = [...new Set(sorted.flatMap(i => i.allergens))];
+  const allergenNames = allAllergenIds.map(id => ALLERGENS.find(a=>a.id===id));
+
+  // Build ingredients list with highlighted allergens
+  const ingList = sorted.map(ing => {
+    const allergenKeywords = ing.allergens.flatMap(id => ALLERGENS.find(a=>a.id===id)?.name||'');
+    let name = ing.name;
+    if (ing.allergens.length > 0) {
+      name = `<strong class="alergen-highlight">${ing.name.toUpperCase()}</strong>`;
+    }
+    return name;
+  }).join(', ');
+
+  el.innerHTML = `
+    <div class="label-card">
+      <div class="label-dish-name">${dishName}</div>
+      <div class="label-portion">Porcja: ${portion} g &nbsp;|&nbsp; Masa gotowego dania: ${cooked.toFixed(0)} g</div>
+
+      <table class="nv-table">
+        <thead>
+          <tr>
+            <th>Wartość odżywcza</th>
+            <th>na 100 g</th>
+            <th>na porcję (${portion}g)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="main-row energy-row">
+            <td>Wartość energetyczna</td>
+            <td>${kj100.toFixed(0)} kJ / ${kcal100.toFixed(0)} kcal</td>
+            <td>${kjP} kJ / ${kcalP} kcal</td>
+          </tr>
+          <tr class="main-row">
+            <td>Tłuszcz</td>
+            <td>${fat100.toFixed(1)} g</td>
+            <td>${(fat100*pf).toFixed(1)} g</td>
+          </tr>
+          <tr class="sub-row">
+            <td>w tym kwasy nasycone</td>
+            <td>${sat100.toFixed(1)} g</td>
+            <td>${(sat100*pf).toFixed(1)} g</td>
+          </tr>
+          <tr class="main-row">
+            <td>Węglowodany</td>
+            <td>${carb100.toFixed(1)} g</td>
+            <td>${(carb100*pf).toFixed(1)} g</td>
+          </tr>
+          <tr class="sub-row">
+            <td>w tym cukry</td>
+            <td>${sug100.toFixed(1)} g</td>
+            <td>${(sug100*pf).toFixed(1)} g</td>
+          </tr>
+          <tr class="main-row">
+            <td>Białko</td>
+            <td>${prot100.toFixed(1)} g</td>
+            <td>${(prot100*pf).toFixed(1)} g</td>
+          </tr>
+          <tr class="main-row">
+            <td>Sól</td>
+            <td>${salt100.toFixed(2)} g</td>
+            <td>${(salt100*pf).toFixed(2)} g</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="label-section-title">Wykaz składników</div>
+      <div class="ingredients-list">${ingList}</div>
+
+      ${allergenNames.length ? `
+        <div class="allergen-legend">
+          <strong style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;">Alergeny:</strong>
+          ${allergenNames.map(a => `<span class="legend-item">${a.icon} ${a.name}</span>`).join('')}
+        </div>
+      ` : ''}
+
+      <div style="margin-top:12px;font-size:9px;color:#a09070;border-top:1px solid #1a181422;padding-top:8px;">
+        Oznakowanie zgodne z Rozporządzeniem UE nr 1169/2011 · Obliczenia na podstawie receptury i masy po obróbce termicznej
+      </div>
+    </div>
+  `;
+}
+
+// ── COPY LABEL TEXT ──
+function copyLabel() {
+  const dishName = document.getElementById('dishName').value || 'Nazwa dania';
+  const {totRaw, totKcal, totProt, totFat, totSat, totCarb, totSugar, totSalt} = getTotals();
+  const cooked = parseFloat(document.getElementById('cookedWeight').value) || totRaw;
+  const r = 100/cooked;
+  const sorted = [...ingredients].sort((a,b)=>b.weight-a.weight);
+  const ingNames = sorted.map(i => i.allergens.length ? i.name.toUpperCase() : i.name).join(', ');
+  const text = `${dishName}\nWartość energetyczna: ${(totKcal*r).toFixed(0)} kcal / ${(totKcal*r*4.184).toFixed(0)} kJ\nTłuszcz: ${(totFat*r).toFixed(1)}g (nasycone: ${(totSat*r).toFixed(1)}g)\nWęglowodany: ${(totCarb*r).toFixed(1)}g (cukry: ${(totSugar*r).toFixed(1)}g)\nBiałko: ${(totProt*r).toFixed(1)}g\nSól: ${(totSalt*r).toFixed(2)}g\n\nSkładniki: ${ingNames}`;
+  navigator.clipboard.writeText(text).then(()=>showToast('✓ Skopiowano do schowka'));
+}
+
+// ── EXPORT JSON ──
+function exportJSON() {
+  const data = { dish: document.getElementById('dishName').value, date: new Date().toISOString().split('T')[0], ingredients };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = (document.getElementById('dishName').value||'receptura').replace(/\s+/g,'_')+'.json';
+  a.click();
+  showToast('✓ Zapisano recepturę jako JSON');
+}
+
+// ── TOAST ──
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError?' error':'');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.className='toast',3000);
+}
+</script>
+</body>
+</html>
