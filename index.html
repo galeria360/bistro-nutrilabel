@@ -565,11 +565,12 @@
     </div>
 
     <div class="search-row">
-      <input type="text" id="searchInput" placeholder="Szukaj składnika (USDA FoodData Central)..." onkeydown="if(event.key==='Enter')searchFood()">
+      <input type="text" id="searchInput" placeholder="Wpisz po polsku: śmietana, marchew, pierś z kurczaka..." onkeydown="if(event.key==='Enter')searchFood()">
       <button class="btn" onclick="searchFood()" id="searchBtn">Szukaj</button>
       <button class="btn btn-ghost btn-sm" onclick="toggleManual()">+ Ręcznie</button>
     </div>
 
+    <div id="translateHint" style="display:none;font-size:11px;color:var(--accent);margin-bottom:8px;padding:6px 12px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--accent);"></div>
     <div class="search-results-wrap">
       <div id="searchResults" style="display:none"></div>
     </div>
@@ -763,6 +764,19 @@ buildManualAllergenCheck();
 function detectAllergens(name) {
   const lower = name.toLowerCase();
   return ALLERGENS.filter(a => a.keywords.some(k => lower.includes(k))).map(a => a.id);
+}
+
+// ── TRANSLATION PL->EN (MyMemory) ──
+async function translateToEN(text) {
+  try {
+    const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=pl|en');
+    const data = await res.json();
+    const translated = data?.responseData?.translatedText;
+    if (translated && translated.toLowerCase() !== text.toLowerCase()) {
+      return { text: translated, original: text };
+    }
+  } catch(e) {}
+  return { text: text, original: text };
 }
 
 // ── USDA SEARCH ──
