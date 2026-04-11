@@ -721,6 +721,82 @@
 <div class="toast" id="toast"></div>
 
 <script>
+
+// ── POLSKA BAZA PRODUKTÓW (NIZP PZH) ──
+const POLISH_DB = [
+  { name: 'Śmietana 30%', tags: ['śmietana','smietana','30%'], per100: { kcal:292, protein:2.4, fat:30.0, saturated:18.7, carbs:3.4, sugars:3.4, salt:0.1 } },
+  { name: 'Śmietana 18%', tags: ['śmietana 18','smietana 18'], per100: { kcal:185, protein:2.8, fat:18.0, saturated:11.2, carbs:3.8, sugars:3.8, salt:0.1 } },
+  { name: 'Śmietana 12%', tags: ['śmietana 12','smietana 12'], per100: { kcal:131, protein:3.1, fat:12.0, saturated:7.5, carbs:4.0, sugars:4.0, salt:0.1 } },
+  { name: 'Śmietanka 36%', tags: ['śmietanka','smietanka','kremówka'], per100: { kcal:337, protein:2.1, fat:36.0, saturated:22.4, carbs:3.1, sugars:3.1, salt:0.05 } },
+  { name: 'Masło ekstra 82%', tags: ['masło','maslo'], per100: { kcal:739, protein:0.6, fat:82.0, saturated:51.4, carbs:0.5, sugars:0.5, salt:0.07 } },
+  { name: 'Mleko 3.2%', tags: ['mleko 3','mleko pełne','mleko'], per100: { kcal:61, protein:3.2, fat:3.2, saturated:2.0, carbs:4.7, sugars:4.7, salt:0.1 } },
+  { name: 'Mleko 2%', tags: ['mleko 2'], per100: { kcal:49, protein:3.3, fat:2.0, saturated:1.2, carbs:4.8, sugars:4.8, salt:0.1 } },
+  { name: 'Jogurt naturalny', tags: ['jogurt','yogurt'], per100: { kcal:61, protein:4.3, fat:2.0, saturated:1.3, carbs:6.0, sugars:6.0, salt:0.1 } },
+  { name: 'Twaróg chudy', tags: ['twaróg','twarog','ser biały','ser bialy'], per100: { kcal:98, protein:18.0, fat:1.5, saturated:0.9, carbs:3.2, sugars:3.2, salt:0.1 } },
+  { name: 'Twaróg półtłusty', tags: ['twaróg półtłusty','twarog'], per100: { kcal:133, protein:16.0, fat:6.0, saturated:3.7, carbs:3.5, sugars:3.5, salt:0.1 } },
+  { name: 'Ser żółty Gouda', tags: ['gouda','ser żółty','ser zolty'], per100: { kcal:356, protein:25.0, fat:28.0, saturated:17.5, carbs:0.5, sugars:0.1, salt:1.7 } },
+  { name: 'Maślanka', tags: ['maślanka','maslanka'], per100: { kcal:40, protein:3.3, fat:1.0, saturated:0.6, carbs:4.5, sugars:4.5, salt:0.1 } },
+  { name: 'Kefir', tags: ['kefir'], per100: { kcal:52, protein:3.3, fat:2.0, saturated:1.3, carbs:4.5, sugars:4.5, salt:0.1 } },
+  { name: 'Pierś z kurczaka', tags: ['pierś','piersi','kurczak','chicken'], per100: { kcal:110, protein:23.1, fat:1.8, saturated:0.5, carbs:0.0, sugars:0.0, salt:0.1 } },
+  { name: 'Udko z kurczaka', tags: ['udko','udka'], per100: { kcal:158, protein:18.4, fat:9.3, saturated:2.6, carbs:0.0, sugars:0.0, salt:0.2 } },
+  { name: 'Wołowina chuda', tags: ['wołowina','wolowina'], per100: { kcal:136, protein:21.0, fat:5.4, saturated:2.1, carbs:0.0, sugars:0.0, salt:0.1 } },
+  { name: 'Wieprzowina szynka', tags: ['wieprzowina','szynka'], per100: { kcal:167, protein:20.0, fat:9.5, saturated:3.5, carbs:0.0, sugars:0.0, salt:0.1 } },
+  { name: 'Łosoś świeży', tags: ['łosoś','losos'], per100: { kcal:182, protein:19.9, fat:11.0, saturated:2.5, carbs:0.0, sugars:0.0, salt:0.1 } },
+  { name: 'Dorsz świeży', tags: ['dorsz'], per100: { kcal:76, protein:17.5, fat:0.7, saturated:0.1, carbs:0.0, sugars:0.0, salt:0.2 } },
+  { name: 'Boczek wieprzowy', tags: ['boczek'], per100: { kcal:476, protein:10.5, fat:47.0, saturated:17.3, carbs:0.5, sugars:0.0, salt:1.2 } },
+  { name: 'Marchew', tags: ['marchew'], per100: { kcal:35, protein:0.9, fat:0.2, saturated:0.0, carbs:7.4, sugars:5.7, salt:0.07 } },
+  { name: 'Ziemniaki', tags: ['ziemniak','ziemniaki','kartofel'], per100: { kcal:77, protein:2.1, fat:0.1, saturated:0.0, carbs:17.0, sugars:0.8, salt:0.01 } },
+  { name: 'Cebula', tags: ['cebula'], per100: { kcal:40, protein:1.1, fat:0.1, saturated:0.0, carbs:8.6, sugars:4.5, salt:0.01 } },
+  { name: 'Czosnek', tags: ['czosnek'], per100: { kcal:149, protein:6.4, fat:0.5, saturated:0.1, carbs:30.0, sugars:1.0, salt:0.02 } },
+  { name: 'Pomidory', tags: ['pomidor','pomidory'], per100: { kcal:18, protein:0.9, fat:0.2, saturated:0.0, carbs:3.1, sugars:2.6, salt:0.01 } },
+  { name: 'Papryka czerwona', tags: ['papryka'], per100: { kcal:31, protein:1.0, fat:0.3, saturated:0.0, carbs:6.0, sugars:4.2, salt:0.01 } },
+  { name: 'Kapusta biała', tags: ['kapusta biała','kapusta'], per100: { kcal:25, protein:1.3, fat:0.2, saturated:0.0, carbs:4.7, sugars:2.8, salt:0.02 } },
+  { name: 'Kapusta kiszona', tags: ['kapusta kiszona'], per100: { kcal:19, protein:1.1, fat:0.2, saturated:0.0, carbs:3.3, sugars:1.8, salt:0.9 } },
+  { name: 'Burak ćwikłowy', tags: ['burak','buraki'], per100: { kcal:43, protein:1.6, fat:0.1, saturated:0.0, carbs:9.0, sugars:7.0, salt:0.08 } },
+  { name: 'Pietruszka korzeń', tags: ['pietruszka'], per100: { kcal:55, protein:2.1, fat:0.4, saturated:0.0, carbs:10.5, sugars:3.9, salt:0.06 } },
+  { name: 'Seler korzeń', tags: ['seler'], per100: { kcal:42, protein:1.5, fat:0.3, saturated:0.0, carbs:8.3, sugars:2.9, salt:0.1 } },
+  { name: 'Por', tags: ['por'], per100: { kcal:61, protein:1.5, fat:0.3, saturated:0.0, carbs:13.0, sugars:3.9, salt:0.02 } },
+  { name: 'Pieczarki', tags: ['pieczarki','pieczarka'], per100: { kcal:22, protein:3.1, fat:0.3, saturated:0.0, carbs:2.3, sugars:1.7, salt:0.01 } },
+  { name: 'Szpinak', tags: ['szpinak'], per100: { kcal:23, protein:2.9, fat:0.4, saturated:0.1, carbs:1.4, sugars:0.4, salt:0.1 } },
+  { name: 'Brokuły', tags: ['brokuł','brokuły'], per100: { kcal:34, protein:2.8, fat:0.4, saturated:0.0, carbs:5.0, sugars:1.7, salt:0.03 } },
+  { name: 'Ogórek', tags: ['ogórek','ogurek'], per100: { kcal:15, protein:0.7, fat:0.1, saturated:0.0, carbs:2.7, sugars:1.7, salt:0.01 } },
+  { name: 'Ryż biały', tags: ['ryż','ryz'], per100: { kcal:358, protein:6.7, fat:0.7, saturated:0.2, carbs:79.7, sugars:0.1, salt:0.01 } },
+  { name: 'Makaron pszenny', tags: ['makaron'], per100: { kcal:357, protein:12.5, fat:1.5, saturated:0.3, carbs:71.5, sugars:2.8, salt:0.01 } },
+  { name: 'Kasza gryczana', tags: ['kasza gryczana'], per100: { kcal:343, protein:12.6, fat:3.1, saturated:0.7, carbs:65.0, sugars:0.9, salt:0.01 } },
+  { name: 'Kasza jaglana', tags: ['kasza jaglana'], per100: { kcal:354, protein:11.0, fat:4.2, saturated:0.7, carbs:68.0, sugars:0.0, salt:0.01 } },
+  { name: 'Mąka pszenna', tags: ['mąka','maka'], per100: { kcal:338, protein:10.0, fat:1.2, saturated:0.2, carbs:70.5, sugars:1.5, salt:0.01 } },
+  { name: 'Chleb żytni', tags: ['chleb'], per100: { kcal:224, protein:7.0, fat:1.3, saturated:0.3, carbs:46.0, sugars:2.5, salt:1.1 } },
+  { name: 'Olej rzepakowy', tags: ['olej'], per100: { kcal:884, protein:0.0, fat:100.0, saturated:7.4, carbs:0.0, sugars:0.0, salt:0.0 } },
+  { name: 'Oliwa z oliwek', tags: ['oliwa'], per100: { kcal:884, protein:0.0, fat:100.0, saturated:14.2, carbs:0.0, sugars:0.0, salt:0.0 } },
+  { name: 'Jajo kurze całe', tags: ['jajo','jajko','jaja'], per100: { kcal:143, protein:12.6, fat:9.9, saturated:3.1, carbs:0.7, sugars:0.4, salt:0.4 } },
+  { name: 'Sól kuchenna', tags: ['sól','sol'], per100: { kcal:0, protein:0.0, fat:0.0, saturated:0.0, carbs:0.0, sugars:0.0, salt:39.3 } },
+  { name: 'Cukier biały', tags: ['cukier'], per100: { kcal:405, protein:0.0, fat:0.0, saturated:0.0, carbs:99.8, sugars:99.8, salt:0.0 } },
+  { name: 'Koncentrat pomidorowy', tags: ['koncentrat pomidorowy','koncentrat'], per100: { kcal:82, protein:4.5, fat:0.5, saturated:0.1, carbs:14.5, sugars:9.0, salt:0.1 } },
+  { name: 'Bulion warzywny', tags: ['bulion','rosół'], per100: { kcal:27, protein:1.5, fat:1.2, saturated:0.5, carbs:2.8, sugars:0.5, salt:4.5 } },
+];
+
+function searchPolishDB(query) {
+  const q = query.toLowerCase().trim();
+  return POLISH_DB.filter(item =>
+    item.name.toLowerCase().includes(q) ||
+    item.tags.some(tag => q.includes(tag) || tag.includes(q))
+  ).map(item => ({
+    description: item.name,
+    brandOwner: '',
+    foodCategory: '🇵🇱 Polska baza NIZP PZH',
+    _source: 'polish',
+    foodNutrients: [
+      { nutrientId: 1008, value: item.per100.kcal },
+      { nutrientId: 1003, value: item.per100.protein },
+      { nutrientId: 1004, value: item.per100.fat },
+      { nutrientId: 1258, value: item.per100.saturated },
+      { nutrientId: 1005, value: item.per100.carbs },
+      { nutrientId: 2000, value: item.per100.sugars },
+      { nutrientId: 1093, value: item.per100.salt / 2.5 * 1000 },
+    ]
+  }));
+}
+
 // ── ALLERGENS CONFIG ──
 const ALLERGENS = [
   { id: 'gluten',    name: 'Gluten',     icon: '🌾', keywords: ['wheat','rye','barley','oats','spelt','flour','bread','pasta','semolina','mąka','chleb','makaron','orkisz','pszen','żyto','owies','jęczmień'] },
@@ -820,8 +896,9 @@ async function searchFood() {
         ]
       }));
 
-    // Połącz wyniki — USDA pierwsze, potem OFF
-    const combined = [...usdaFoods, ...offFoods].slice(0, 12);
+    // Połącz wyniki — polska baza pierwsza, potem USDA, potem OFF
+    const polishResults = searchPolishDB(q);
+    const combined = [...polishResults, ...usdaFoods, ...offFoods].slice(0, 12);
     if (combined.length === 0) {
       showToast('Brak wyników. Użyj trybu ręcznego.', true);
     } else {
