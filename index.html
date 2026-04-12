@@ -1194,6 +1194,7 @@ function renderTable() {
 function updateWeight(idx, val) {
   ingredients[idx].weight = parseFloat(val)||0;
   updateTotals();
+  updateFoodCost();
 }
 function removeIngredient(idx) {
   ingredients.splice(idx,1);
