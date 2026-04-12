@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalkulator Wartości Odżywczych | Bistro</title>
+<title>Kalkulator Wartości Odżywczych | Bistro v2</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1319,7 +1319,7 @@ function showToast(msg, isError=false) {
 </script>
 <div id="bulkModal" style="display:none;position:fixed;inset:0;background:#000a;z-index:200;align-items:center;justify-content:center;"><div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px #000c;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h3 style="font-family:Playfair Display,serif;color:var(--accent);font-size:18px;">📋 Importuj recepturę</h3><button onclick="closeBulkImport()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button></div><p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Wklej listę składników — AI rozdzieli i dopasuje każdy składnik do bazy.</p><textarea id="bulkText" style="width:100%;height:160px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text);font-family:DM Sans,sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Np: woda, przecier pomidorowy 7,7%, marchew, smietana, cebula, czosnek, sol..."></textarea><div style="margin-top:12px;display:flex;gap:10px;align-items:center;"><button class="btn" onclick="parseBulkIngredients()" id="parseBtn">✨ Analizuj</button><span id="parseStatus" style="font-size:12px;color:var(--muted);"></span></div><div id="parsedPreview" style="display:none;margin-top:20px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;">Rozpoznane skladniki:</div><div id="parsedList"></div><button class="btn" onclick="confirmBulkImport()" style="margin-top:14px;width:100%;">Dodaj wszystkie do receptury</button></div></div></div><script>
 function toggleBulkImport(){var m=document.getElementById('bulkModal');m.style.display=m.style.display==='flex'?'none':'flex';}
-function closeBulkImport(){document.getElementById('bulkModal').style.display='none';document.getElementById('parsedPreview').style.display='none';document.getElementById('bulkText').value='';}
+function closeBulkImport(){var m=document.getElementById('bulkModal');m.style.display='none';m.style.setProperty('display','none','important');document.getElementById('parsedPreview').style.display='none';document.getElementById('bulkText').value='';parsedIngredients=[];}
 var parsedIngredients=[];
 async function parseBulkIngredients(){
   var text=document.getElementById('bulkText').value.trim();
@@ -2037,6 +2037,182 @@ function renderTable() {
   updateTotals();
   updateFoodCost();
 }
+</script>
+
+<script>
+// ── AI CENY - pobiera orientacyjne ceny hurtowe dla gastronomii ──
+const pricesFetchQueue = [];
+let pricesFetchRunning = false;
+
+async function fetchMarketPricesAI(names) {
+  const key = getApiKey();
+  if (!key || !names.length) return {};
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: 'Podaj orientacyjne ceny hurtowe dla gastronomii w Polsce (PLN/kg lub PLN/litr) dla tych produktów: ' + names.join(', ') + '. Zwróć TYLKO JSON: {"nazwa produktu": cena_numeryczna}. Ceny netto, hurt, rok 2025.'
+        }]
+      })
+    });
+    const data = await response.json();
+    const raw = data.content[0].text.trim().replace(/```json|```/g,'').trim();
+    return JSON.parse(raw);
+  } catch(e) { return {}; }
+}
+
+async function autoFillPrices() {
+  if (pricesFetchRunning) return;
+  // Znajdz skladniki bez ceny i bez ceny z cache
+  const needsPrice = ingredients.filter(ing => 
+    !ing.pricePerKg && !ing._priceFetched
+  );
+  if (!needsPrice.length) return;
+  
+  pricesFetchRunning = true;
+  const names = needsPrice.map(ing => ing.name);
+  
+  // Pokaż że pobiera
+  needsPrice.forEach(ing => { ing._priceFetched = true; });
+  
+  const prices = await fetchMarketPricesAI(names);
+  
+  let updated = false;
+  ingredients.forEach(ing => {
+    if (ing.pricePerKg) return; // ma własną cenę - nie nadpisuj
+    // Szukaj w wynikach AI
+    for (const [key, price] of Object.entries(prices)) {
+      if (ing.name.toLowerCase().includes(key.toLowerCase()) || 
+          key.toLowerCase().includes(ing.name.toLowerCase())) {
+        ing.marketPrice = parseFloat(price) || 0;
+        updated = true;
+        break;
+      }
+    }
+  });
+  
+  pricesFetchRunning = false;
+  if (updated) {
+    renderTable();
+    showToast('💰 Pobrano orientacyjne ceny rynkowe');
+  }
+}
+
+// Patch renderTable zeby pokazywal kolumne z cenami
+const _origRenderTable3 = renderTable;
+function renderTable() {
+  const tbody = document.getElementById('ingredientRows');
+  if (!ingredients.length) {
+    tbody.innerHTML = '<tr id="emptyRow"><td colspan="12" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Dodaj składniki powyżej, aby rozpocząć</td></tr>';
+    document.getElementById('totalsBar').style.display = 'none';
+    updateLabel();
+    return;
+  }
+  tbody.innerHTML = '';
+  ingredients.forEach((ing, idx) => {
+    if (!ing.pricePerKg) ing.pricePerKg = getPriceFromCache(ing.name);
+    const loss = ing.loss || 0;
+    const effectiveWeight = ing.weight * (1 - loss/100);
+    const fw = effectiveWeight/100;
+    const kcal = (ing.per100.kcal*fw).toFixed(0);
+    const prot = (ing.per100.protein*fw).toFixed(1);
+    const fat = (ing.per100.fat*fw).toFixed(1);
+    const carb = (ing.per100.carbs*fw).toFixed(1);
+    const salt = (ing.per100.salt*fw).toFixed(2);
+    const allergenNames = ing.allergens.map(id => ALLERGENS.find(a=>a.id===id)?.name||id);
+    const myPrice = ing.pricePerKg || 0;
+    const marketPrice = ing.marketPrice || 0;
+    const activePrice = myPrice > 0 ? myPrice : marketPrice;
+    const cost = activePrice > 0 ? (ing.weight / 1000 * activePrice).toFixed(2) : '—';
+    const needsLookup = ing.needsLookup;
+
+    const tr = document.createElement('tr');
+    tr.style.borderLeft = needsLookup ? '3px solid var(--danger)' : '';
+    tr.innerHTML = `
+      <td class="td-name">
+        <div style="display:flex;align-items:center;gap:6px;">
+          ${needsLookup ? '<span>⚠️</span>' : ''}
+          <div>
+            <div>${ing.name}</div>
+            <div style="font-size:10px;color:var(--muted)">${ing.source}</div>
+          </div>
+        </div>
+        ${needsLookup ? `<button id="lookup_${idx}" class="btn btn-sm" style="margin-top:4px;font-size:11px;background:var(--danger);width:100%;" onclick="aiLookupSingle(${idx})">🔍 Pobierz dane AI</button>` : ''}
+      </td>
+      <td>
+        <div class="td-badge">
+          ${allergenNames.length ? allergenNames.map(n=>`<span class="badge">${n}</span>`).join('') : '<span class="badge badge-muted">brak</span>'}
+        </div>
+      </td>
+      <td>
+        <div class="weight-cell">
+          <input type="number" value="${ing.weight}" min="0" step="1" onchange="updateWeight(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
+          <span style="color:var(--muted);font-size:11px">g</span>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input type="number" value="${loss}" min="0" max="99" step="1" onchange="updateLoss(${idx}, this.value)" style="width:45px;text-align:right;padding:5px 6px;font-family:'DM Mono',monospace;font-size:12px;">
+          <span style="color:var(--muted);font-size:11px">%</span>
+        </div>
+      </td>
+      <td>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">
+          ${marketPrice > 0 && !myPrice ? '<span style="color:var(--muted);font-size:10px;">🤖 ' + marketPrice.toFixed(2) + ' zł/kg</span>' : ''}
+          ${marketPrice > 0 && myPrice > 0 ? '<span style="color:var(--muted);font-size:10px;text-decoration:line-through;">' + marketPrice.toFixed(2) + '</span>' : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input type="number" value="${myPrice||''}" min="0" step="0.01" placeholder="${marketPrice>0?marketPrice.toFixed(2):'0.00'}" onchange="updatePrice(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;${myPrice>0?'border-color:var(--accent);':''}" title="${myPrice>0?'Twoja cena':'Wpisz własną cenę'}">
+          <span style="color:var(--muted);font-size:11px">zł/kg</span>
+        </div>
+      </td>
+      <td class="td-mono" style="color:${myPrice>0?'var(--accent)':marketPrice>0?'var(--muted)':'var(--muted)'}">
+        ${cost}${activePrice>0?' zł':''}
+        ${myPrice>0?'<div style="font-size:9px;color:var(--accent)">✓ moja</div>':marketPrice>0?'<div style="font-size:9px;color:var(--muted)">~ rynek</div>':''}
+      </td>
+      <td class="td-mono" style="color:${needsLookup?'var(--danger)':'inherit'}">${needsLookup?'?':kcal}</td>
+      <td class="td-mono">${needsLookup?'?':prot+'g'}</td>
+      <td class="td-mono">${needsLookup?'?':fat+'g'}</td>
+      <td class="td-mono">${needsLookup?'?':carb+'g'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeIngredient(${idx})">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateTotals();
+  updateFoodCost();
+  // Pobierz ceny w tle po renderowaniu
+  setTimeout(autoFillPrices, 500);
+}
+
+// Zaktualizuj naglowki
+window.addEventListener('DOMContentLoaded', function() {
+  const thead = document.querySelector('#ingredientsTable thead tr');
+  if (thead) {
+    thead.innerHTML = `
+      <th>Składnik</th>
+      <th>Alergeny</th>
+      <th>Waga (g)</th>
+      <th>Straty</th>
+      <th>Cena (zł/kg)</th>
+      <th>Koszt</th>
+      <th>Kcal</th>
+      <th>Białko</th>
+      <th>Tłuszcz</th>
+      <th>Węglow.</th>
+      <th></th>
+    `;
+  }
+});
 </script>
 </body>
 </html>
