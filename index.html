@@ -214,6 +214,71 @@ tbody td:nth-child(2) { text-align: left; }
   .cooked-section { gap: 10px; }
   .cw-input { flex-direction: column; gap: 8px; }
 }
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  /* Layout - jedna kolumna */
+  .app { grid-template-columns: 1fr; }
+  .right-panel {
+    position: static;
+    height: auto;
+    border-top: 1px solid var(--border);
+    order: 2;
+  }
+  .left-panel { order: 1; }
+
+  /* Header */
+  header { padding: 12px 16px; gap: 8px; flex-wrap: wrap; }
+  .logo { font-size: 17px; }
+  .subtitle { display: none; }
+  .api-key-input { width: 140px; font-size: 11px; padding: 5px 8px; }
+  .eu-badge { display: none; }
+  .header-right { gap: 6px; }
+
+  /* Panels */
+  .left-panel { padding: 16px; }
+  .right-panel { padding: 16px; }
+
+  /* Dane dania */
+  .dish-meta { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* Przyciski search-row */
+  .search-row { flex-wrap: wrap; gap: 6px; }
+  .search-row input { min-width: 100%; }
+  #searchBtn { flex: 1; }
+
+  /* Tabela składników - ukryj mniej ważne kolumny */
+  #ingredientsTable thead th:nth-child(2),
+  #ingredientsTable tbody td:nth-child(2) { display: none; }
+  #ingredientsTable input[type=number] { width: 52px !important; }
+
+  /* Totals */
+  .totals-grid { grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .totals-value { font-size: 13px; }
+
+  /* Food cost */
+  #foodCostBar { padding: 14px; }
+  .fc-grid { grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .fc-divider { grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .fc-value { font-size: 16px; }
+  .fc-input { width: 75px; }
+
+  /* Cooked section */
+  .cooked-section { flex-wrap: wrap; gap: 10px; }
+  .cw-input { flex-wrap: wrap; gap: 8px; }
+
+  /* Modal */
+  .modal-box { padding: 18px; width: 95vw; }
+
+  /* Manual form */
+  .manual-grid { grid-template-columns: 1fr 1fr; }
+  .manual-grid .field-group:first-child { grid-column: span 2; }
+  .allergen-check-grid { grid-template-columns: repeat(2,1fr); }
+
+  /* Extra costs */
+  .extra-cost-row { flex-wrap: wrap; }
+}
+
 </style>
 </head>
 <body>
