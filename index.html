@@ -457,11 +457,11 @@ tbody td:nth-child(2) { text-align: left; }
       <h2 style="font-family:Playfair Display,serif;color:var(--label-text);font-size:16px;margin-bottom:14px;">📝 Przepis</h2>
       <div class="field-group" style="margin-bottom:12px;">
         <label>Instrukcja przygotowania</label>
-        <textarea id="przepisInstrukcja" style="width:100%;min-height:120px;background:#fff;border:1px solid #ddd;color:var(--label-text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Czas gotowania, temperatura, kolejność dodawania składników..."></textarea>
+        <textarea id="przepisInstrukcja" style="width:100%;min-height:120px;max-height:none;overflow:hidden;background:#fff;border:1px solid #ddd;color:var(--label-text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:13px;resize:none;line-height:1.6;overflow:hidden;" placeholder="Czas gotowania, temperatura, kolejność dodawania składników..."></textarea>
       </div>
       <div class="field-group">
         <label style="color:#6b6252;">Notatki kucharza</label>
-        <textarea id="przepisNotatki" style="width:100%;min-height:80px;background:#fff;border:1px solid #ddd;color:var(--label-text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Warianty dania, sezonowość, uwagi..."></textarea>
+        <textarea id="przepisNotatki" style="width:100%;min-height:80px;max-height:none;overflow:hidden;background:#fff;border:1px solid #ddd;color:var(--label-text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:13px;resize:none;line-height:1.6;overflow:hidden;" placeholder="Warianty dania, sezonowość, uwagi..."></textarea>
       </div>
     </div>
   </div>
@@ -1573,6 +1573,20 @@ document.addEventListener('input', function(e) {
   if (e.target.id === 'przepisNotkiMobile') {
     const d = document.getElementById('przepisNotatki'); if(d) d.value = e.target.value;
   }
+});
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+window.addEventListener('DOMContentLoaded', function() {
+  ['przepisInstrukcja','przepisNotatki'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', function() { autoResize(this); });
+      autoResize(el);
+    }
+  });
 });
 
 function showToast(msg, isError=false) {
