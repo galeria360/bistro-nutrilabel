@@ -1523,8 +1523,8 @@ async function loadRecipe(id) {
     window._currentRecipeId = data.id;
     const piEl = document.getElementById('przepisInstrukcja');
     const pnEl = document.getElementById('przepisNotatki');
-    if(piEl) piEl.value = r.przepisInstrukcja || '';
-    if(pnEl) pnEl.value = r.przepisNotatki || '';
+    if(piEl) { piEl.value = r.przepisInstrukcja || ''; autoResize(piEl); }
+    if(pnEl) { pnEl.value = r.przepisNotatki || ''; autoResize(pnEl); }
     renderTable();
     closeRecipeManager();
     showToast('✓ Wczytano: '+r.name);
@@ -1584,7 +1584,8 @@ window.addEventListener('DOMContentLoaded', function() {
     const el = document.getElementById(id);
     if (el) {
       el.addEventListener('input', function() { autoResize(this); });
-      autoResize(el);
+      el.addEventListener('change', function() { autoResize(this); });
+      setTimeout(() => autoResize(el), 100);
     }
   });
 });
