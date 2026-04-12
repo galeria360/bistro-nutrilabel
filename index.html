@@ -1,2153 +1,843 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalkulator Wartości Odżywczych | Bistro v2</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PROMPTHAUS — AI Image Prompts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f0e0c;
-    --bg2: #181714;
-    --bg3: #211f1b;
-    --border: #2e2b25;
-    --accent: #d4a84b;
-    --accent2: #e8c87a;
-    --danger: #c0392b;
-    --green: #4caf7d;
-    --text: #f0ead8;
-    --muted: #8a8070;
-    --label-bg: #f9f5ec;
-    --label-text: #1a1814;
+    --black: #080808;
+    --white: #f4f0e8;
+    --cream: #ede8dc;
+    --accent: #c8ff00;
+    --mid: #1a1a1a;
+    --muted: #5a5a5a;
+    --border: rgba(244,240,232,0.12);
   }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: var(--black);
+    color: var(--white);
     font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.6;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
   }
 
-  /* ── HEADER ── */
-  header {
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 20px 32px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  header .logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    color: var(--accent);
-    letter-spacing: 0.02em;
-  }
-  header .subtitle {
-    color: var(--muted);
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  header .eu-badge {
-    margin-left: auto;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 5px 12px;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-  }
-
-  /* ── LAYOUT ── */
-  .app {
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 0;
-    min-height: calc(100vh - 65px);
-  }
-  .left-panel {
-    padding: 32px;
-    border-right: 1px solid var(--border);
-  }
-  .right-panel {
-    padding: 32px;
-    background: var(--bg2);
-    position: sticky;
-    top: 65px;
-    height: calc(100vh - 65px);
-    overflow-y: auto;
-  }
-
-  /* ── SECTION TITLES ── */
-  .section-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    color: var(--accent);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-  .step-num {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 7px;
-  }
-
-  /* ── DISH META ── */
-  .dish-meta {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 28px;
-  }
-  .field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .field-group label {
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 500;
-  }
-  input[type="text"], input[type="number"], select {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    transition: border-color 0.2s;
-    width: 100%;
-  }
-  input:focus, select:focus { outline: none; border-color: var(--accent); }
-  select option { background: var(--bg3); }
-
-  /* ── SEARCH BAR ── */
-  .search-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .search-row input { flex: 1; }
-  .btn {
+  /* CUSTOM CURSOR */
+  .cursor {
+    width: 10px; height: 10px;
     background: var(--accent);
-    color: var(--bg);
-    border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease;
+    mix-blend-mode: difference;
   }
-  .btn:hover { background: var(--accent2); transform: translateY(-1px); }
-  .btn:active { transform: translateY(0); }
-  .btn-sm {
-    padding: 6px 12px;
-    font-size: 12px;
-    border-radius: 6px;
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(200,255,0,0.5);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease, width 0.2s, height 0.2s;
   }
-  .btn-ghost {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover { background: var(--bg3); color: var(--text); }
-  .btn-danger {
-    background: transparent;
-    color: var(--danger);
-    border: 1px solid var(--danger)33;
-  }
-  .btn-danger:hover { background: var(--danger)22; }
+  a:hover ~ .cursor-ring, button:hover ~ .cursor-ring { width: 60px; height: 60px; }
 
-  /* ── SEARCH RESULTS DROPDOWN ── */
-  .search-results-wrap { position: relative; margin-bottom: 6px; }
-  #searchResults {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: var(--bg3);
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    z-index: 50;
-    max-height: 240px;
-    overflow-y: auto;
-    box-shadow: 0 8px 32px #0008;
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9000; opacity: 0.35;
   }
-  .result-item {
-    padding: 11px 16px;
-    cursor: pointer;
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 28px 48px;
     border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    background: rgba(8,8,8,0.85);
+    backdrop-filter: blur(12px);
   }
-  .result-item:last-child { border-bottom: none; }
-  .result-item:hover { background: var(--bg); }
-  .result-item .r-name { font-size: 13px; }
-  .result-item .r-cat { font-size: 11px; color: var(--muted); }
-  .result-item .r-kcal { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); }
-
-  /* ── ADD MANUAL FORM ── */
-  .manual-form {
-    background: var(--bg3);
-    border: 1px dashed var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 20px;
-    display: none;
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 0.15em;
+    color: var(--white);
+    text-decoration: none;
   }
-  .manual-form.open { display: block; }
-  .manual-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-  .manual-grid .field-group:first-child { grid-column: span 2; }
-
-  /* ── INGREDIENTS TABLE ── */
-  .ingredients-table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  thead th {
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 500;
-    padding: 8px 10px;
-    text-align: right;
-    border-bottom: 1px solid var(--border);
-  }
-  thead th:first-child, thead th:nth-child(2) { text-align: left; }
-  tbody tr { border-bottom: 1px solid var(--border)66; transition: background 0.15s; }
-  tbody tr:hover { background: var(--bg3); }
-  tbody td {
-    padding: 10px 10px;
-    font-size: 13px;
-    text-align: right;
-  }
-  tbody td:first-child { text-align: left; }
-  tbody td:nth-child(2) { text-align: left; }
-  .td-name { font-weight: 500; }
-  .td-alergen { font-size: 11px; color: var(--danger); }
-  .td-mono { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
-  .td-badge {
-    display: inline-flex;
-    gap: 3px;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-  }
-  .badge {
-    background: var(--danger)22;
-    color: var(--danger);
-    border: 1px solid var(--danger)44;
-    border-radius: 4px;
-    font-size: 10px;
-    padding: 1px 5px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .badge-muted {
-    background: var(--bg3);
-    color: var(--muted);
-    border-color: var(--border);
-    font-weight: 400;
-    text-transform: none;
-  }
-  .weight-cell {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-end;
-  }
-  .weight-cell input {
-    width: 70px;
-    text-align: right;
-    padding: 5px 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-  }
-
-  /* ── COOKED WEIGHT ── */
-  .cooked-section {
-    margin-top: 28px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: 10px;
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  .cooked-section .icon { font-size: 24px; }
-  .cooked-section .cw-label {
-    flex: 1;
-    min-width: 180px;
-  }
-  .cooked-section .cw-label h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
-  .cooked-section .cw-label p { font-size: 12px; color: var(--muted); }
-  .cooked-section .cw-input { display: flex; align-items: center; gap: 8px; }
-  .cw-input input { width: 110px; }
-  .ratio-badge {
-    background: var(--accent)22;
-    color: var(--accent);
-    border: 1px solid var(--accent)44;
-    border-radius: 6px;
-    padding: 5px 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-  }
-
-  /* ── RIGHT PANEL – LABEL ── */
-  .right-panel h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 17px;
-    color: var(--accent);
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  .label-card {
-    background: var(--label-bg);
-    color: var(--label-text);
-    border-radius: 12px;
-    padding: 20px;
-    font-family: 'DM Sans', sans-serif;
-  }
-  .label-dish-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 4px;
-    color: var(--label-text);
-  }
-  .label-portion {
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a {
+    font-family: 'Space Mono', monospace;
     font-size: 11px;
-    color: #6b6252;
-    margin-bottom: 14px;
-  }
-  .nv-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-  .nv-table th {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #6b6252;
-    padding: 5px 0;
-    text-align: right;
-    border-bottom: 2px solid #1a181444;
-  }
-  .nv-table th:first-child { text-align: left; }
-  .nv-table td {
-    padding: 5px 0;
-    font-size: 12px;
-    text-align: right;
-    border-bottom: 1px solid #1a181422;
-  }
-  .nv-table td:first-child { text-align: left; }
-  .nv-table .main-row td { font-weight: 600; }
-  .nv-table .sub-row td:first-child { padding-left: 10px; color: #6b6252; font-size: 11px; }
-  .nv-table .sub-row td { color: #6b6252; font-size: 11px; }
-  .nv-table .energy-row td { font-family: 'DM Mono', monospace; font-size: 11px; }
-
-  .label-section-title {
-    font-size: 9px;
-    font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #6b6252;
-    margin: 12px 0 6px;
-  }
-  .ingredients-list {
-    font-size: 11px;
-    line-height: 1.7;
-    color: var(--label-text);
-  }
-  .alergen-highlight {
-    font-weight: 800;
-    text-decoration: underline;
-    color: #8b2020;
-  }
-  .allergen-legend {
-    margin-top: 10px;
-    font-size: 10px;
-    color: #8b2020;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .legend-item { background: #8b202012; border-radius: 3px; padding: 2px 6px; }
-
-  /* Empty state */
-  .empty-label {
-    text-align: center;
-    padding: 40px 20px;
     color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
   }
-  .empty-label .big-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
-  .empty-label p { font-size: 12px; line-height: 1.8; }
-
-  /* Export buttons */
-  .export-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 16px;
-  }
-
-  /* Toasts */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--green);
-    border-radius: 10px;
-    padding: 12px 18px;
-    font-size: 13px;
-    color: var(--text);
-    z-index: 999;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s;
-    box-shadow: 0 8px 32px #0008;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.error { border-left-color: var(--danger); }
-
-  /* ── ALLERGEN CHECKLIST ── */
-  .allergen-check-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-  .ac-item {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 8px 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 7px;
+  .nav-links a:hover { color: var(--accent); }
+  .nav-cta {
+    font-family: 'Space Mono', monospace;
     font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: var(--black);
+    border: none;
+    padding: 10px 22px;
+    cursor: none;
+    font-weight: 700;
+    transition: background 0.2s, transform 0.15s;
   }
-  .ac-item.selected {
-    background: var(--danger)22;
-    border-color: var(--danger)66;
-    color: var(--danger);
-  }
-  .ac-item .ac-icon { font-size: 14px; }
+  .nav-cta:hover { background: #d4ff33; transform: scale(1.02); }
 
-  /* Progress bar for macros */
-  .macro-bar {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding-top: 100px;
     overflow: hidden;
-    margin-top: 4px;
+    position: relative;
   }
-  .macro-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
-
-  /* Loading spinner */
-  .spinner {
+  .hero-left {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 80px 48px 80px 48px;
+    position: relative;
+  }
+  .hero-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
     display: inline-block;
-    width: 14px; height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    vertical-align: middle;
+    padding: 6px 14px;
+    margin-bottom: 40px;
+    width: fit-content;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 9vw, 128px);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    color: var(--white);
+    margin-bottom: 32px;
+  }
+  .hero-title .line-accent { color: var(--accent); }
+  .hero-sub {
+    font-size: 16px; line-height: 1.7;
+    color: var(--muted); max-width: 420px;
+    margin-bottom: 52px;
+  }
+  .hero-actions { display: flex; gap: 16px; align-items: center; }
+  .btn-primary {
+    background: var(--accent); color: var(--black);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 16px 36px; border: none; cursor: none;
+    text-decoration: none; display: inline-block;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: #d4ff33; transform: translateY(-2px); }
+  .btn-ghost {
+    color: var(--white);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none; padding: 16px 0;
+    border-bottom: 1px solid rgba(244,240,232,0.3);
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-ghost:hover { color: var(--accent); border-color: var(--accent); }
 
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .hero-stats {
+    margin-top: 64px; display: flex; gap: 48px;
+    border-top: 1px solid var(--border);
+    padding-top: 36px;
+  }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px; color: var(--white); line-height: 1;
+  }
+  .stat-label {
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-top: 6px;
+  }
 
+  .hero-right {
+    position: relative; overflow: hidden;
+  }
+  .hero-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 3px; height: 100%; width: 100%;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 0.4s forwards;
+  }
+  .hero-img {
+    background: var(--mid);
+    overflow: hidden; position: relative;
+  }
+  .hero-img img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: grayscale(20%);
+    transition: filter 0.4s, transform 0.5s;
+  }
+  .hero-img:hover img { filter: grayscale(0%); transform: scale(1.04); }
+  .hero-img-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(8,8,8,0.6) 0%, transparent 60%);
+  }
+  .hero-img:nth-child(1) { grid-row: span 2; }
+
+  /* marquee */
+  .marquee-wrap {
+    overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    background: var(--mid); padding: 14px 0;
+  }
+  .marquee-inner {
+    display: flex; gap: 0; white-space: nowrap;
+    animation: marquee 22s linear infinite;
+  }
+  .marquee-inner span {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 0.15em; color: var(--muted);
+    padding: 0 40px;
+  }
+  .marquee-inner span.accent { color: var(--accent); }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* GALLERY */
+  .section { padding: 100px 48px; }
+  .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 56px; }
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 5vw, 72px);
+    line-height: 0.95; letter-spacing: 0.03em;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 340px);
+    gap: 3px;
+  }
+  .gallery-item {
+    position: relative; overflow: hidden; background: var(--mid);
+    cursor: none;
+  }
+  .gallery-item:nth-child(1) { grid-column: span 2; }
+  .gallery-item:nth-child(5) { grid-column: span 2; }
+
+  .gallery-item img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.4s;
+    filter: grayscale(30%);
+  }
+  .gallery-item:hover img { transform: scale(1.06); filter: grayscale(0%); }
+  .gallery-item-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(8,8,8,0.75) 0%, transparent 55%);
+    opacity: 0; transition: opacity 0.4s;
+    display: flex; align-items: flex-end; padding: 24px;
+  }
+  .gallery-item:hover .gallery-item-overlay { opacity: 1; }
+  .gallery-item-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--accent); background: rgba(8,8,8,0.7);
+    padding: 5px 10px;
+  }
+
+  /* SHOP */
+  .shop { background: var(--mid); padding: 100px 48px; }
+  .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 56px; }
+
+  .product-card {
+    background: var(--black); position: relative;
+    cursor: none; overflow: hidden;
+    transition: transform 0.3s;
+  }
+  .product-card:hover { transform: translateY(-4px); }
+  .product-img { aspect-ratio: 4/5; overflow: hidden; background: #111; }
+  .product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; filter: grayscale(20%); }
+  .product-card:hover .product-img img { transform: scale(1.05); filter: grayscale(0%); }
+  .product-info { padding: 24px; border-top: 1px solid var(--border); }
+  .product-type {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .product-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px; font-weight: 400; margin-bottom: 16px;
+    line-height: 1.3;
+  }
+  .product-footer { display: flex; justify-content: space-between; align-items: center; }
+  .product-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; color: var(--accent);
+  }
+  .product-price span { font-size: 14px; color: var(--muted); font-family: 'DM Sans'; }
+  .add-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--white); font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 10px 18px; cursor: none;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .add-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--black); }
+
+  .badge-new {
+    position: absolute; top: 16px; left: 16px;
+    background: var(--accent); color: var(--black);
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+    padding: 4px 10px; text-transform: uppercase;
+  }
+  .badge-hot {
+    position: absolute; top: 16px; left: 16px;
+    background: #ff3c3c; color: var(--white);
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+    padding: 4px 10px; text-transform: uppercase;
+  }
+
+  /* FEATURED PROMPT */
+  .feature-section {
+    padding: 100px 48px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+  }
+  .feature-img { aspect-ratio: 1; overflow: hidden; background: var(--mid); position: relative; }
+  .feature-img img { width: 100%; height: 100%; object-fit: cover; }
+  .feature-img-label {
+    position: absolute; bottom: 20px; right: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    background: var(--black); color: var(--accent);
+    padding: 6px 12px; border: 1px solid var(--accent);
+  }
+  .feature-content {}
+  .feature-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 5.5vw, 80px);
+    line-height: 0.92; margin-bottom: 28px;
+  }
+  .feature-desc { font-size: 15px; line-height: 1.8; color: var(--muted); margin-bottom: 36px; }
+  .prompt-preview {
+    background: var(--mid);
+    border-left: 2px solid var(--accent);
+    padding: 20px 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px; line-height: 1.7;
+    color: rgba(244,240,232,0.7);
+    margin-bottom: 36px;
+    position: relative;
+  }
+  .prompt-preview::before {
+    content: '// PROMPT PREVIEW';
+    display: block;
+    font-size: 9px; letter-spacing: 0.15em;
+    color: var(--accent); margin-bottom: 10px;
+  }
+  .prompt-blur { filter: blur(4px); user-select: none; }
+
+  /* FAQ */
+  .faq-section { padding: 100px 48px; background: var(--mid); }
+  .faq-list { max-width: 800px; margin-top: 56px; }
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-question {
+    width: 100%; background: none; border: none; color: var(--white);
+    font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 400;
+    text-align: left; padding: 28px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: none;
+    transition: color 0.2s;
+  }
+  .faq-question:hover { color: var(--accent); }
+  .faq-question .icon {
+    width: 24px; height: 24px;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 16px; transition: transform 0.3s, background 0.2s;
+  }
+  .faq-item.open .faq-question .icon { transform: rotate(45deg); background: var(--accent); color: var(--black); border-color: var(--accent); }
+  .faq-answer {
+    font-size: 15px; line-height: 1.8; color: var(--muted);
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s;
+    padding: 0;
+  }
+  .faq-item.open .faq-answer { max-height: 300px; padding-bottom: 28px; }
+
+  /* NEWSLETTER */
+  .newsletter {
+    padding: 100px 48px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+  }
+  .newsletter-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 5.5vw, 80px);
+    line-height: 0.92;
+  }
+  .newsletter-title span { color: var(--accent); }
+  .newsletter-sub { font-size: 15px; color: var(--muted); line-height: 1.7; margin-top: 20px; }
+  .newsletter-form { display: flex; flex-direction: column; gap: 14px; }
+  .newsletter-input {
+    background: var(--mid); border: 1px solid var(--border);
+    color: var(--white); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; padding: 16px 20px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .newsletter-input:focus { border-color: var(--accent); }
+  .newsletter-input::placeholder { color: var(--muted); }
+  .newsletter-btn {
+    background: var(--accent); color: var(--black); border: none;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 16px; cursor: none;
+    transition: background 0.2s;
+  }
+  .newsletter-btn:hover { background: #d4ff33; }
+  .newsletter-note { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px; display: flex;
+    justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 24px;
+  }
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 0.15em; color: var(--white);
+  }
+  .footer-logo span { color: var(--accent); }
+  .footer-links { display: flex; gap: 28px; }
+  .footer-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-copy {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; color: var(--muted); letter-spacing: 0.05em;
+    width: 100%;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .reveal {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* RESPONSIVE */
   @media (max-width: 900px) {
-    .app { grid-template-columns: 1fr; }
-    .right-panel { position: static; height: auto; }
-    .allergen-check-grid { grid-template-columns: repeat(3, 1fr); }
-    .manual-grid { grid-template-columns: 1fr 1fr; }
-    .manual-grid .field-group:first-child { grid-column: span 2; }
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { height: 55vw; }
+    .hero-left { padding: 40px 24px; }
+    .section, .faq-section, .shop { padding: 72px 24px; }
+    .gallery-grid { grid-template-columns: 1fr 1fr; }
+    .gallery-item:nth-child(1), .gallery-item:nth-child(5) { grid-column: span 1; }
+    .shop-grid { grid-template-columns: 1fr 1fr; }
+    .feature-section, .newsletter { grid-template-columns: 1fr; gap: 40px; }
+    footer { padding: 32px 24px; }
   }
-
-  /* Print label */
-  @media print {
-    body { background: white; color: black; }
-    .left-panel, header, .export-row { display: none !important; }
-    .right-panel { position: static; height: auto; background: white; border: none; padding: 20px; }
-    .label-card { box-shadow: none; border: 1px solid #ccc; }
+  @media (max-width: 560px) {
+    .shop-grid { grid-template-columns: 1fr; }
+    .gallery-grid { grid-template-columns: 1fr; }
+    .gallery-item:nth-child(1) { grid-column: span 1; }
   }
 </style>
 </head>
 <body>
 
-<header>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">PROMPT<span>HAUS</span></a>
+  <ul class="nav-links">
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#shop">Shop</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#newsletter">Newsletter</a></li>
+  </ul>
+  <button class="nav-cta">Browse Prompts</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-badge reveal">✦ AI Image Prompts</div>
+    <h1 class="hero-title reveal" style="transition-delay:0.1s">
+      CRAFT<br>
+      <span class="line-accent">STUNNING</span><br>
+      VISUALS
+    </h1>
+    <p class="hero-sub reveal" style="transition-delay:0.2s">
+      Hand-crafted prompts for Midjourney, DALL·E & Stable Diffusion. 
+      Skip the trial-and-error — get professional results instantly.
+    </p>
+    <div class="hero-actions reveal" style="transition-delay:0.3s">
+      <a href="#shop" class="btn-primary">Shop Prompts</a>
+      <a href="#gallery" class="btn-ghost">View Gallery →</a>
+    </div>
+    <div class="hero-stats reveal" style="transition-delay:0.4s">
+      <div>
+        <div class="stat-num">300+</div>
+        <div class="stat-label">Prompts</div>
+      </div>
+      <div>
+        <div class="stat-num">12K+</div>
+        <div class="stat-label">Happy Users</div>
+      </div>
+      <div>
+        <div class="stat-num">4.9★</div>
+        <div class="stat-label">Rating</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-grid">
+      <div class="hero-img">
+        <img src="https://images.unsplash.com/photo-1681412332249-dfce459bc7e4?w=800&auto=format&fit=crop" alt="AI art 1"/>
+        <div class="hero-img-overlay"></div>
+      </div>
+      <div class="hero-img">
+        <img src="https://images.unsplash.com/photo-1686183372703-d2abda29bfff?w=600&auto=format&fit=crop" alt="AI art 2"/>
+        <div class="hero-img-overlay"></div>
+      </div>
+      <div class="hero-img">
+        <img src="https://images.unsplash.com/photo-1686459569226-20ffbb3e03b4?w=600&auto=format&fit=crop" alt="AI art 3"/>
+        <div class="hero-img-overlay"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-inner">
+    <span>Midjourney</span><span class="accent">✦</span>
+    <span>DALL·E 3</span><span class="accent">✦</span>
+    <span>Stable Diffusion</span><span class="accent">✦</span>
+    <span>Runway ML</span><span class="accent">✦</span>
+    <span>Adobe Firefly</span><span class="accent">✦</span>
+    <span>Ideogram</span><span class="accent">✦</span>
+    <span>Flux</span><span class="accent">✦</span>
+    <span>Midjourney</span><span class="accent">✦</span>
+    <span>DALL·E 3</span><span class="accent">✦</span>
+    <span>Stable Diffusion</span><span class="accent">✦</span>
+    <span>Runway ML</span><span class="accent">✦</span>
+    <span>Adobe Firefly</span><span class="accent">✦</span>
+    <span>Ideogram</span><span class="accent">✦</span>
+    <span>Flux</span><span class="accent">✦</span>
+  </div>
+</div>
+
+<!-- GALLERY -->
+<section class="section" id="gallery">
+  <div class="section-header reveal">
+    <div>
+      <div class="section-label">✦ Prompt Gallery</div>
+      <h2 class="section-title">WHAT YOU<br>CAN CREATE</h2>
+    </div>
+    <a href="#shop" class="btn-ghost">See all styles →</a>
+  </div>
+  <div class="gallery-grid reveal">
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1686183372703-d2abda29bfff?w=1000&auto=format&fit=crop" alt="Cinematic portrait"/>
+      <div class="gallery-item-overlay"><span class="gallery-item-tag">Cinematic Portrait</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1655635643557-9b6b9adb21e3?w=600&auto=format&fit=crop" alt="Abstract art"/>
+      <div class="gallery-item-overlay"><span class="gallery-item-tag">Abstract Art</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1684779847678-4a0b4df5b1d9?w=600&auto=format&fit=crop" alt="Landscape"/>
+      <div class="gallery-item-overlay"><span class="gallery-item-tag">Epic Landscape</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1698778573682-346d219402b5?w=600&auto=format&fit=crop" alt="Fashion"/>
+      <div class="gallery-item-overlay"><span class="gallery-item-tag">Editorial Fashion</span></div>
+    </div>
+    <div class="gallery-item">
+      <img src="https://images.unsplash.com/photo-1681412332249-dfce459bc7e4?w=1000&auto=format&fit=crop" alt="Sci-fi"/>
+      <div class="gallery-item-overlay"><span class="gallery-item-tag">Sci-Fi Concept</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOP -->
+<section class="shop" id="shop">
+  <div class="section-header reveal">
+    <div>
+      <div class="section-label">✦ Shop</div>
+      <h2 class="section-title">PREMIUM<br>PROMPT PACKS</h2>
+    </div>
+    <a href="#" class="btn-ghost">View all →</a>
+  </div>
+  <div class="shop-grid reveal">
+
+    <div class="product-card">
+      <div class="badge-hot">🔥 Best Seller</div>
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1686183372703-d2abda29bfff?w=600&auto=format&fit=crop" alt="Cinematic Pack"/>
+      </div>
+      <div class="product-info">
+        <div class="product-type">Midjourney v6</div>
+        <div class="product-name">Cinematic Portrait Pack</div>
+        <div class="product-footer">
+          <div class="product-price">$14 <span>/ 25 prompts</span></div>
+          <button class="add-btn">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="badge-new">New</div>
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1684779847678-4a0b4df5b1d9?w=600&auto=format&fit=crop" alt="Landscape Pack"/>
+      </div>
+      <div class="product-info">
+        <div class="product-type">DALL·E 3 + MJ v6</div>
+        <div class="product-name">Epic Landscape Collection</div>
+        <div class="product-footer">
+          <div class="product-price">$19 <span>/ 40 prompts</span></div>
+          <button class="add-btn">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1698778573682-346d219402b5?w=600&auto=format&fit=crop" alt="Fashion Pack"/>
+      </div>
+      <div class="product-info">
+        <div class="product-type">Stable Diffusion XL</div>
+        <div class="product-name">Editorial Fashion Prompts</div>
+        <div class="product-footer">
+          <div class="product-price">$12 <span>/ 20 prompts</span></div>
+          <button class="add-btn">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1655635643557-9b6b9adb21e3?w=600&auto=format&fit=crop" alt="Abstract Pack"/>
+      </div>
+      <div class="product-info">
+        <div class="product-type">Universal</div>
+        <div class="product-name">Abstract & Generative Art Pack</div>
+        <div class="product-footer">
+          <div class="product-price">$9 <span>/ 15 prompts</span></div>
+          <button class="add-btn">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="badge-new">New</div>
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1681412332249-dfce459bc7e4?w=600&auto=format&fit=crop" alt="Sci-fi pack"/>
+      </div>
+      <div class="product-info">
+        <div class="product-type">Midjourney v6</div>
+        <div class="product-name">Sci-Fi Concept Art Bundle</div>
+        <div class="product-footer">
+          <div class="product-price">$22 <span>/ 50 prompts</span></div>
+          <button class="add-btn">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="badge-hot">⚡ Bundle</div>
+      <div class="product-img" style="background: linear-gradient(135deg, #111 0%, #1a1a1a 100%); display:flex; align-items:center; justify-content:center;">
+        <div style="text-align:center; padding: 40px;">
+          <div style="font-family:'Bebas Neue',sans-serif; font-size: 64px; color: var(--accent); line-height:1;">ALL</div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size: 36px; color: var(--white);">ACCESS</div>
+          <div style="font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.15em; margin-top:8px;">150+ PROMPTS</div>
+        </div>
+      </div>
+      <div class="product-info">
+        <div class="product-type">All Platforms</div>
+        <div class="product-name">Complete Prompt Library — All Packs</div>
+        <div class="product-footer">
+          <div class="product-price">$49 <span>/ lifetime</span></div>
+          <button class="add-btn">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section class="feature-section reveal">
+  <div class="feature-img">
+    <img src="https://images.unsplash.com/photo-1686459569226-20ffbb3e03b4?w=900&auto=format&fit=crop" alt="Featured prompt result"/>
+    <div class="feature-img-label">Example Output</div>
+  </div>
+  <div class="feature-content">
+    <div class="section-label">✦ How It Works</div>
+    <h2 class="feature-title">COPY,<br>PASTE,<br><span style="color:var(--accent)">CREATE.</span></h2>
+    <p class="feature-desc">Each prompt is engineered for maximum visual impact — tested across hundreds of generations. You get the exact formula, not a vague idea.</p>
+    <div class="prompt-preview">
+      <span>cinematic portrait of a woman, golden hour, </span><span class="prompt-blur">film grain, anamorphic lens, soft bokeh, editorial lighting, Hasselblad medium format, --ar 4:5 --v 6 --style raw --stylize 750</span>
+    </div>
+    <a href="#shop" class="btn-primary">Get Prompts Now</a>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="section-label reveal">✦ FAQ</div>
+  <h2 class="section-title reveal">COMMON<br>QUESTIONS</h2>
+  <div class="faq-list reveal">
+
+    <div class="faq-item">
+      <button class="faq-question">
+        What AI tools are these prompts compatible with?
+        <span class="icon">+</span>
+      </button>
+      <div class="faq-answer">
+        Our prompts are tested and optimized for Midjourney v6, DALL·E 3, Stable Diffusion XL, and Adobe Firefly. Each pack specifies which platforms it's designed for.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Do I get updates when you add new prompts?
+        <span class="icon">+</span>
+      </button>
+      <div class="faq-answer">
+        Yes! Packs are regularly updated. All buyers get free lifetime updates — if we improve or expand a pack you've purchased, you'll receive the new version automatically.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Can I use these prompts commercially?
+        <span class="icon">+</span>
+      </button>
+      <div class="faq-answer">
+        Absolutely. Commercial use is included in all purchases. You can use the generated images for client work, social media, merchandise — whatever you need.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        How do I receive my prompts after purchase?
+        <span class="icon">+</span>
+      </button>
+      <div class="faq-answer">
+        Instantly via email. You'll receive a PDF and a plain text file with all prompts, organized by style and use-case, along with brief usage notes for each one.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        What if the prompts don't work well for me?
+        <span class="icon">+</span>
+      </button>
+      <div class="faq-answer">
+        We offer a 7-day no-questions-asked refund policy. If you're not happy with the results, reach out and we'll sort it out immediately.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter" id="newsletter">
   <div>
-    <div class="logo">🍲 Gruba Micha</div>
-    <div class="subtitle">Kalkulator wartości odżywczych · Bistro · EU 1169/2011</div>
+    <div class="section-label reveal">✦ Stay Updated</div>
+    <h2 class="newsletter-title reveal">FREE<br><span>PROMPTS</span><br>WEEKLY.</h2>
+    <p class="newsletter-sub reveal">Join 8,000+ creators. Get 3 free prompts every Friday — straight to your inbox. No spam, ever.</p>
   </div>
-  <button class="btn btn-ghost btn-sm" onclick="toggleRecipeManager()" style="margin-right:8px;">📚 Moje receptury</button>
-  <div style="display:flex;align-items:center;gap:8px;">
-  <input type="password" id="apiKeyInput" placeholder="sk-ant-... (klucz Anthropic)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 12px;font-size:12px;width:260px;" oninput="saveApiKey(this.value)">
-  <div class="eu-badge">🇪🇺 UE 1169/2011</div>
-</div>
-</header>
-
-<div class="app">
-  <!-- LEFT PANEL -->
-  <div class="left-panel">
-
-    <!-- STEP 1: Dish info -->
-    <div class="section-title">
-      <span class="step-num">01</span> Dane dania
-    </div>
-    <div class="dish-meta">
-      <div class="field-group">
-        <label>Nazwa dania</label>
-        <input type="text" id="dishName" placeholder="np. Zupa pomidorowa z bazylią">
-      </div>
-      <div class="field-group">
-        <label>Kategoria</label>
-        <select id="dishCategory">
-          <option>Zupy</option>
-          <option>Buły i kanapki</option>
-          <option>Kawa i napoje gorące</option>
-          <option>Napoje zimne</option>
-          <option>Dodatki</option>
-          <option>Dania główne</option>
-          <option>Sałatki</option>
-          <option>Przystawki</option>
-          <option>Desery</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label>Porcja (g)</label>
-        <input type="number" id="portionSize" value="300" min="1">
-      </div>
-      <div class="field-group">
-        <label>Objętość gotowego produktu (l)</label>
-        <input type="number" id="cookedLiters" placeholder="np. 3.5" min="0" step="0.1" oninput="updateFromLiters()">
-      </div>
-    </div>
-
-    <!-- STEP 2: Add ingredients -->
-    <div class="section-title">
-      <span class="step-num">02</span> Składniki surowca
-    </div>
-
-    <div class="search-row">
-      <input type="text" id="searchInput" placeholder="Wpisz po polsku: śmietana, marchew, pierś z kurczaka..." onkeydown="if(event.key==='Enter')searchFood()">
-      <button class="btn" onclick="searchFood()" id="searchBtn">Szukaj</button>
-      <button class="btn btn-ghost btn-sm" onclick="toggleManual()">+ Ręcznie</button>
-      <button class="btn btn-ghost btn-sm" onclick="toggleBulkImport()">📋 Wklej recepturę</button>
-      <button class="btn btn-ghost btn-sm" onclick="clearAllIngredients()" style="color:var(--danger);border-color:var(--danger)33;">🗑️ Wyczyść</button>
-      <button class="btn btn-ghost btn-sm" onclick="saveRecipe()">💾 Zapisz</button>
-    </div>
-
-    <div id="translateHint" style="display:none;font-size:11px;color:var(--accent);margin-bottom:8px;padding:6px 12px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--accent);"></div>
-    <div class="search-results-wrap">
-      <div id="searchResults" style="display:none"></div>
-    </div>
-
-    <!-- Manual entry form -->
-    <div class="manual-form" id="manualForm">
-      <div class="manual-grid">
-        <div class="field-group">
-          <label>Nazwa składnika</label>
-          <input type="text" id="mName" placeholder="np. Śmietana 18%">
-        </div>
-        <div class="field-group">
-          <label>Kcal / 100g</label>
-          <input type="number" id="mKcal" placeholder="150" min="0">
-        </div>
-        <div class="field-group">
-          <label>Białko (g)</label>
-          <input type="number" id="mProt" placeholder="3.5" min="0" step="0.1">
-        </div>
-        <div class="field-group">
-          <label>Tłuszcz (g)</label>
-          <input type="number" id="mFat" placeholder="18" min="0" step="0.1">
-        </div>
-        <div class="field-group">
-          <label>Nasyc. (g)</label>
-          <input type="number" id="mSat" placeholder="11" min="0" step="0.1">
-        </div>
-        <div class="field-group">
-          <label>Węglowod. (g)</label>
-          <input type="number" id="mCarb" placeholder="4.2" min="0" step="0.1">
-        </div>
-        <div class="field-group">
-          <label>Cukry (g)</label>
-          <input type="number" id="mSugar" placeholder="4.2" min="0" step="0.1">
-        </div>
-        <div class="field-group">
-          <label>Sól (g)</label>
-          <input type="number" id="mSalt" placeholder="0.1" min="0" step="0.01">
-        </div>
-        <div class="field-group" style="display:flex;align-items:flex-end;">
-          <button class="btn" onclick="addManual()" style="width:100%">Dodaj</button>
-        </div>
-      </div>
-      <div>
-        <div class="field-group">
-          <label>Alergeny tego składnika</label>
-          <div id="manualAllergenCheck" class="allergen-check-grid" style="margin-top:8px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Ingredients table -->
-    <div class="ingredients-table-wrap">
-      <table id="ingredientsTable">
-        <thead>
-          <tr>
-            <th>Składnik</th>
-            <th>Alergeny</th>
-            <th>Waga (g)</th>
-            <th>Kcal</th>
-            <th>Białko</th>
-            <th>Tłuszcz</th>
-            <th>Węglow.</th>
-            <th>Sól</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="ingredientRows">
-          <tr id="emptyRow">
-            <td colspan="9" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">
-              Dodaj składniki powyżej, aby rozpocząć
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- STEP 3: Cooked weight -->
-    <div class="cooked-section">
-      <div class="icon">🍲</div>
-      <div class="cw-label">
-        <h4>Masa po obróbce termicznej</h4>
-        <p>Zważ gotowe danie przed porcjowaniem. Składniki zagęszczają się podczas gotowania.</p>
-      </div>
-      <div class="cw-input">
-        <div class="field-group">
-          <label>Masa ugotowana (g)</label>
-          <input type="number" id="cookedWeight" placeholder="auto" min="1" oninput="updateLiters()">
-        </div>
-
-        <div id="ratioDisplay" class="ratio-badge" style="display:none"></div>
-      </div>
-    </div>
-
-    <!-- Totals bar -->
-    <div id="totalsBar" style="display:none;margin-top:20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 20px;">
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;">
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Energia</div>
-          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent)" id="totalKcal">—</div>
-          <div style="font-size:10px;color:var(--muted)" id="totalKj">—</div>
-        </div>
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Białko</div>
-          <div style="font-family:'DM Mono',monospace;font-size:16px" id="totalProt">—</div>
-          <div class="macro-bar"><div class="macro-bar-fill" id="barProt" style="background:#4caf7d;width:0%"></div></div>
-        </div>
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Tłuszcz</div>
-          <div style="font-family:'DM Mono',monospace;font-size:16px" id="totalFat">—</div>
-          <div class="macro-bar"><div class="macro-bar-fill" id="barFat" style="background:#d4a84b;width:0%"></div></div>
-        </div>
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Węglow.</div>
-          <div style="font-family:'DM Mono',monospace;font-size:16px" id="totalCarb">—</div>
-          <div class="macro-bar"><div class="macro-bar-fill" id="barCarb" style="background:#7eb8e0;width:0%"></div></div>
-        </div>
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Sól</div>
-          <div style="font-family:'DM Mono',monospace;font-size:16px" id="totalSalt">—</div>
-        </div>
-      </div>
-      <div style="margin-top:10px;font-size:11px;color:var(--muted)">
-        📦 Masa surowa łącznie: <span id="totalRawWeight" style="color:var(--text);font-family:'DM Mono',monospace">—</span> g &nbsp;|&nbsp;
-        🍲 Masa ugotowana: <span id="cookedDisplay" style="color:var(--text);font-family:'DM Mono',monospace">—</span> g &nbsp;|&nbsp;
-        Wartości na 100 g gotowego dania
-      </div>
-    </div>
-
-  </div>
-
-  <!-- RIGHT PANEL – LABEL -->
-  <div class="right-panel">
-    <h2>📋 Podgląd etykiety EU</h2>
-    <div id="labelOutput">
-      <div class="empty-label">
-        <div class="big-icon">🏷️</div>
-        <p>Dodaj składniki i wpisz masę po ugotowaniu,<br>aby zobaczyć podgląd etykiety<br>zgodnej z rozporządzeniem UE 1169/2011</p>
-      </div>
-    </div>
-    <div class="export-row">
-      <button class="btn btn-sm" onclick="window.print()">🖨️ Drukuj etykietę</button>
-      <button class="btn btn-sm btn-ghost" onclick="copyLabel()">📋 Kopiuj tekst</button>
-      <button class="btn btn-sm btn-ghost" onclick="exportJSON()">💾 Zapisz recepturę</button>
+  <div class="reveal">
+    <div class="newsletter-form">
+      <input class="newsletter-input" type="text" placeholder="Your name"/>
+      <input class="newsletter-input" type="email" placeholder="your@email.com"/>
+      <button class="newsletter-btn">Subscribe — It's Free</button>
+      <span class="newsletter-note">// No spam. Unsubscribe anytime.</span>
     </div>
   </div>
-</div>
+</section>
 
-<div class="toast" id="toast"></div>
-
-<script>
-
-// ── POLSKA BAZA PRODUKTÓW (NIZP PZH) ──
-const POLISH_DB = [
-  { name: 'Śmietana 30%', tags: ['śmietana','smietana','30%'], per100: { kcal:292, protein:2.4, fat:30.0, saturated:18.7, carbs:3.4, sugars:3.4, salt:0.1 } },
-  { name: 'Śmietana 18%', tags: ['śmietana 18','smietana 18'], per100: { kcal:185, protein:2.8, fat:18.0, saturated:11.2, carbs:3.8, sugars:3.8, salt:0.1 } },
-  { name: 'Śmietana 12%', tags: ['śmietana 12','smietana 12'], per100: { kcal:131, protein:3.1, fat:12.0, saturated:7.5, carbs:4.0, sugars:4.0, salt:0.1 } },
-  { name: 'Śmietanka 36%', tags: ['śmietanka','smietanka','kremówka'], per100: { kcal:337, protein:2.1, fat:36.0, saturated:22.4, carbs:3.1, sugars:3.1, salt:0.05 } },
-  { name: 'Masło ekstra 82%', tags: ['masło','maslo'], per100: { kcal:739, protein:0.6, fat:82.0, saturated:51.4, carbs:0.5, sugars:0.5, salt:0.07 } },
-  { name: 'Mleko 3.2%', tags: ['mleko 3','mleko pełne','mleko'], per100: { kcal:61, protein:3.2, fat:3.2, saturated:2.0, carbs:4.7, sugars:4.7, salt:0.1 } },
-  { name: 'Mleko 2%', tags: ['mleko 2'], per100: { kcal:49, protein:3.3, fat:2.0, saturated:1.2, carbs:4.8, sugars:4.8, salt:0.1 } },
-  { name: 'Jogurt naturalny', tags: ['jogurt','yogurt'], per100: { kcal:61, protein:4.3, fat:2.0, saturated:1.3, carbs:6.0, sugars:6.0, salt:0.1 } },
-  { name: 'Twaróg chudy', tags: ['twaróg','twarog','ser biały','ser bialy'], per100: { kcal:98, protein:18.0, fat:1.5, saturated:0.9, carbs:3.2, sugars:3.2, salt:0.1 } },
-  { name: 'Twaróg półtłusty', tags: ['twaróg półtłusty','twarog'], per100: { kcal:133, protein:16.0, fat:6.0, saturated:3.7, carbs:3.5, sugars:3.5, salt:0.1 } },
-  { name: 'Ser żółty Gouda', tags: ['gouda','ser żółty','ser zolty'], per100: { kcal:356, protein:25.0, fat:28.0, saturated:17.5, carbs:0.5, sugars:0.1, salt:1.7 } },
-  { name: 'Maślanka', tags: ['maślanka','maslanka'], per100: { kcal:40, protein:3.3, fat:1.0, saturated:0.6, carbs:4.5, sugars:4.5, salt:0.1 } },
-  { name: 'Kefir', tags: ['kefir'], per100: { kcal:52, protein:3.3, fat:2.0, saturated:1.3, carbs:4.5, sugars:4.5, salt:0.1 } },
-  { name: 'Pierś z kurczaka', tags: ['pierś','piersi','kurczak','chicken'], per100: { kcal:110, protein:23.1, fat:1.8, saturated:0.5, carbs:0.0, sugars:0.0, salt:0.1 } },
-  { name: 'Udko z kurczaka', tags: ['udko','udka'], per100: { kcal:158, protein:18.4, fat:9.3, saturated:2.6, carbs:0.0, sugars:0.0, salt:0.2 } },
-  { name: 'Wołowina chuda', tags: ['wołowina','wolowina'], per100: { kcal:136, protein:21.0, fat:5.4, saturated:2.1, carbs:0.0, sugars:0.0, salt:0.1 } },
-  { name: 'Wieprzowina szynka', tags: ['wieprzowina','szynka'], per100: { kcal:167, protein:20.0, fat:9.5, saturated:3.5, carbs:0.0, sugars:0.0, salt:0.1 } },
-  { name: 'Łosoś świeży', tags: ['łosoś','losos'], per100: { kcal:182, protein:19.9, fat:11.0, saturated:2.5, carbs:0.0, sugars:0.0, salt:0.1 } },
-  { name: 'Dorsz świeży', tags: ['dorsz'], per100: { kcal:76, protein:17.5, fat:0.7, saturated:0.1, carbs:0.0, sugars:0.0, salt:0.2 } },
-  { name: 'Boczek wieprzowy', tags: ['boczek'], per100: { kcal:476, protein:10.5, fat:47.0, saturated:17.3, carbs:0.5, sugars:0.0, salt:1.2 } },
-  { name: 'Marchew', tags: ['marchew'], per100: { kcal:35, protein:0.9, fat:0.2, saturated:0.0, carbs:7.4, sugars:5.7, salt:0.07 } },
-  { name: 'Ziemniaki', tags: ['ziemniak','ziemniaki','kartofel'], per100: { kcal:77, protein:2.1, fat:0.1, saturated:0.0, carbs:17.0, sugars:0.8, salt:0.01 } },
-  { name: 'Cebula', tags: ['cebula'], per100: { kcal:40, protein:1.1, fat:0.1, saturated:0.0, carbs:8.6, sugars:4.5, salt:0.01 } },
-  { name: 'Czosnek', tags: ['czosnek'], per100: { kcal:149, protein:6.4, fat:0.5, saturated:0.1, carbs:30.0, sugars:1.0, salt:0.02 } },
-  { name: 'Pomidory', tags: ['pomidor','pomidory'], per100: { kcal:18, protein:0.9, fat:0.2, saturated:0.0, carbs:3.1, sugars:2.6, salt:0.01 } },
-  { name: 'Papryka czerwona', tags: ['papryka'], per100: { kcal:31, protein:1.0, fat:0.3, saturated:0.0, carbs:6.0, sugars:4.2, salt:0.01 } },
-  { name: 'Kapusta biała', tags: ['kapusta biała','kapusta'], per100: { kcal:25, protein:1.3, fat:0.2, saturated:0.0, carbs:4.7, sugars:2.8, salt:0.02 } },
-  { name: 'Kapusta kiszona', tags: ['kapusta kiszona'], per100: { kcal:19, protein:1.1, fat:0.2, saturated:0.0, carbs:3.3, sugars:1.8, salt:0.9 } },
-  { name: 'Burak ćwikłowy', tags: ['burak','buraki'], per100: { kcal:43, protein:1.6, fat:0.1, saturated:0.0, carbs:9.0, sugars:7.0, salt:0.08 } },
-  { name: 'Pietruszka korzeń', tags: ['pietruszka'], per100: { kcal:55, protein:2.1, fat:0.4, saturated:0.0, carbs:10.5, sugars:3.9, salt:0.06 } },
-  { name: 'Seler korzeń', tags: ['seler'], per100: { kcal:42, protein:1.5, fat:0.3, saturated:0.0, carbs:8.3, sugars:2.9, salt:0.1 } },
-  { name: 'Por', tags: ['por'], per100: { kcal:61, protein:1.5, fat:0.3, saturated:0.0, carbs:13.0, sugars:3.9, salt:0.02 } },
-  { name: 'Pieczarki', tags: ['pieczarki','pieczarka'], per100: { kcal:22, protein:3.1, fat:0.3, saturated:0.0, carbs:2.3, sugars:1.7, salt:0.01 } },
-  { name: 'Szpinak', tags: ['szpinak'], per100: { kcal:23, protein:2.9, fat:0.4, saturated:0.1, carbs:1.4, sugars:0.4, salt:0.1 } },
-  { name: 'Brokuły', tags: ['brokuł','brokuły'], per100: { kcal:34, protein:2.8, fat:0.4, saturated:0.0, carbs:5.0, sugars:1.7, salt:0.03 } },
-  { name: 'Ogórek', tags: ['ogórek','ogurek'], per100: { kcal:15, protein:0.7, fat:0.1, saturated:0.0, carbs:2.7, sugars:1.7, salt:0.01 } },
-  { name: 'Ryż biały', tags: ['ryż','ryz'], per100: { kcal:358, protein:6.7, fat:0.7, saturated:0.2, carbs:79.7, sugars:0.1, salt:0.01 } },
-  { name: 'Makaron pszenny', tags: ['makaron'], per100: { kcal:357, protein:12.5, fat:1.5, saturated:0.3, carbs:71.5, sugars:2.8, salt:0.01 } },
-  { name: 'Kasza gryczana', tags: ['kasza gryczana'], per100: { kcal:343, protein:12.6, fat:3.1, saturated:0.7, carbs:65.0, sugars:0.9, salt:0.01 } },
-  { name: 'Kasza jaglana', tags: ['kasza jaglana'], per100: { kcal:354, protein:11.0, fat:4.2, saturated:0.7, carbs:68.0, sugars:0.0, salt:0.01 } },
-  { name: 'Mąka pszenna', tags: ['mąka','maka'], per100: { kcal:338, protein:10.0, fat:1.2, saturated:0.2, carbs:70.5, sugars:1.5, salt:0.01 } },
-  { name: 'Chleb żytni', tags: ['chleb'], per100: { kcal:224, protein:7.0, fat:1.3, saturated:0.3, carbs:46.0, sugars:2.5, salt:1.1 } },
-  { name: 'Olej rzepakowy', tags: ['olej'], per100: { kcal:884, protein:0.0, fat:100.0, saturated:7.4, carbs:0.0, sugars:0.0, salt:0.0 } },
-  { name: 'Oliwa z oliwek', tags: ['oliwa'], per100: { kcal:884, protein:0.0, fat:100.0, saturated:14.2, carbs:0.0, sugars:0.0, salt:0.0 } },
-  { name: 'Jajo kurze całe', tags: ['jajo','jajko','jaja'], per100: { kcal:143, protein:12.6, fat:9.9, saturated:3.1, carbs:0.7, sugars:0.4, salt:0.4 } },
-  { name: 'Sól kuchenna', tags: ['sól','sol'], per100: { kcal:0, protein:0.0, fat:0.0, saturated:0.0, carbs:0.0, sugars:0.0, salt:39.3 } },
-  { name: 'Cukier biały', tags: ['cukier'], per100: { kcal:405, protein:0.0, fat:0.0, saturated:0.0, carbs:99.8, sugars:99.8, salt:0.0 } },
-  { name: 'Koncentrat pomidorowy', tags: ['koncentrat pomidorowy','koncentrat'], per100: { kcal:82, protein:4.5, fat:0.5, saturated:0.1, carbs:14.5, sugars:9.0, salt:0.1 } },
-  { name: 'Bulion warzywny', tags: ['bulion','rosół'], per100: { kcal:27, protein:1.5, fat:1.2, saturated:0.5, carbs:2.8, sugars:0.5, salt:4.5 } },
-
-  // AZJATYCKIE I INNE
-  { name: 'Pasta Tom Yum', tags: ['pasta tom yum','tom yum'], per100: { kcal:120, protein:3.5, fat:5.0, saturated:1.2, carbs:15.0, sugars:8.0, salt:8.5 } },
-  { name: 'Sos rybny', tags: ['sos rybny','fish sauce'], per100: { kcal:35, protein:5.0, fat:0.0, saturated:0.0, carbs:3.5, sugars:3.5, salt:22.0 } },
-  { name: 'Sos sojowy', tags: ['sos sojowy','soy sauce'], per100: { kcal:53, protein:8.1, fat:0.1, saturated:0.0, carbs:4.9, sugars:1.7, salt:14.0 } },
-  { name: 'Mleko kokosowe', tags: ['mleko kokosowe','coconut milk'], per100: { kcal:197, protein:2.0, fat:21.0, saturated:18.5, carbs:2.8, sugars:2.8, salt:0.1 } },
-  { name: 'Trawa cytrynowa', tags: ['trawa cytrynowa','lemongrass'], per100: { kcal:99, protein:1.8, fat:0.5, saturated:0.1, carbs:25.3, sugars:0.0, salt:0.01 } },
-  { name: 'Imbir świeży', tags: ['imbir','ginger'], per100: { kcal:80, protein:1.8, fat:0.8, saturated:0.2, carbs:15.8, sugars:1.7, salt:0.01 } },
-  { name: 'Szalotka', tags: ['szalotka','shallot'], per100: { kcal:72, protein:2.5, fat:0.1, saturated:0.0, carbs:16.8, sugars:7.9, salt:0.01 } },
-  { name: 'Chili świeże', tags: ['chili','chilli'], per100: { kcal:40, protein:1.9, fat:0.4, saturated:0.0, carbs:7.3, sugars:5.1, salt:0.01 } },
-  { name: 'Kolendra świeża', tags: ['kolendra','coriander'], per100: { kcal:23, protein:2.1, fat:0.5, saturated:0.0, carbs:2.7, sugars:0.9, salt:0.05 } },
-  { name: 'Sok z limonki', tags: ['sok z limonki','lime juice','limonka'], per100: { kcal:25, protein:0.4, fat:0.1, saturated:0.0, carbs:8.4, sugars:1.7, salt:0.01 } },
-  { name: 'Kwas cytrynowy', tags: ['kwas cytrynowy','citric acid'], per100: { kcal:0, protein:0.0, fat:0.0, saturated:0.0, carbs:0.0, sugars:0.0, salt:0.0 } },
-  { name: 'Glutaminian monosodowy', tags: ['glutaminian','msg','monosodowy'], per100: { kcal:0, protein:0.0, fat:0.0, saturated:0.0, carbs:0.0, sugars:0.0, salt:0.0 } },
-  { name: 'Galangal', tags: ['galangal','galanga'], per100: { kcal:70, protein:1.5, fat:0.6, saturated:0.1, carbs:15.0, sugars:1.7, salt:0.01 } },
-  { name: 'Liście limonki Kaffir', tags: ['liście limonki','kaffir','kefir lime'], per100: { kcal:0, protein:0.0, fat:0.0, saturated:0.0, carbs:0.0, sugars:0.0, salt:0.0 } },
-  { name: 'Benzoesan sodu', tags: ['benzoesan','sodium benzoate'], per100: { kcal:0, protein:0.0, fat:0.0, saturated:0.0, carbs:0.0, sugars:0.0, salt:0.0 } },
-  { name: 'Ekstrakt z papryki', tags: ['ekstrakt z papryki','paprika extract'], per100: { kcal:282, protein:14.1, fat:12.9, saturated:2.4, carbs:34.0, sugars:10.3, salt:0.1 } },
-  { name: 'Olej sojowy', tags: ['olej sojowy','soybean oil'], per100: { kcal:884, protein:0.0, fat:100.0, saturated:15.6, carbs:0.0, sugars:0.0, salt:0.0 } },
-  { name: 'Ocet ryżowy', tags: ['ocet ryżowy','rice vinegar'], per100: { kcal:18, protein:0.0, fat:0.0, saturated:0.0, carbs:0.6, sugars:0.6, salt:0.0 } },
-  { name: 'Pasta miso', tags: ['miso'], per100: { kcal:199, protein:11.7, fat:6.0, saturated:1.1, carbs:26.5, sugars:6.2, salt:10.9 } },
-  { name: 'Tofu twarde', tags: ['tofu'], per100: { kcal:76, protein:8.1, fat:4.2, saturated:0.6, carbs:1.9, sugars:0.3, salt:0.1 } },
-  { name: 'Makaron ryżowy', tags: ['makaron ryżowy','rice noodle'], per100: { kcal:364, protein:0.6, fat:0.6, saturated:0.2, carbs:87.0, sugars:0.1, salt:0.01 } },
-  { name: 'Krewetki świeże', tags: ['krewetki','krewetka','shrimp'], per100: { kcal:85, protein:18.0, fat:1.0, saturated:0.2, carbs:0.9, sugars:0.0, salt:0.5 } },
-  // ZIOŁA I PRZYPRAWY
-  { name: 'Bazylia suszona', tags: ['bazylia'], per100: { kcal:251, protein:14.4, fat:4.0, saturated:0.0, carbs:47.8, sugars:1.7, salt:0.08 } },
-  { name: 'Oregano suszone', tags: ['oregano'], per100: { kcal:306, protein:11.0, fat:10.3, saturated:0.0, carbs:49.5, sugars:4.1, salt:0.03 } },
-  { name: 'Tymianek suszony', tags: ['tymianek'], per100: { kcal:276, protein:9.1, fat:7.4, saturated:2.1, carbs:45.3, sugars:1.7, salt:0.05 } },
-  { name: 'Pieprz czarny mielony', tags: ['pieprz'], per100: { kcal:251, protein:10.4, fat:3.3, saturated:1.4, carbs:49.2, sugars:0.6, salt:0.05 } },
-  { name: 'Papryka słodka mielona', tags: ['papryka słodka','papryka mielona','papryka wędzona'], per100: { kcal:282, protein:14.1, fat:12.9, saturated:2.4, carbs:34.0, sugars:10.3, salt:0.1 } },
-  { name: 'Liść laurowy', tags: ['liść laurowy','liście laurowe'], per100: { kcal:313, protein:7.6, fat:8.4, saturated:2.3, carbs:48.7, sugars:0.0, salt:0.05 } },
-  { name: 'Ziele angielskie', tags: ['ziele angielskie','allspice'], per100: { kcal:263, protein:6.1, fat:8.7, saturated:2.6, carbs:40.5, sugars:0.0, salt:0.05 } },
-  { name: 'Kmin rzymski', tags: ['kmin','kumin','cumin'], per100: { kcal:375, protein:17.8, fat:22.3, saturated:1.5, carbs:44.2, sugars:2.3, salt:0.17 } },
-  { name: 'Kurkuma', tags: ['kurkuma','turmeric'], per100: { kcal:354, protein:7.8, fat:9.9, saturated:3.1, carbs:64.9, sugars:3.2, salt:0.04 } },
-  { name: 'Cynamon', tags: ['cynamon','cinnamon'], per100: { kcal:247, protein:4.0, fat:1.2, saturated:0.3, carbs:55.5, sugars:2.2, salt:0.01 } },
-  { name: 'Ocet winny', tags: ['ocet winny','wine vinegar'], per100: { kcal:19, protein:0.0, fat:0.0, saturated:0.0, carbs:0.6, sugars:0.6, salt:0.0 } },
-  { name: 'Cukier brązowy', tags: ['cukier brązowy','brown sugar'], per100: { kcal:380, protein:0.1, fat:0.0, saturated:0.0, carbs:98.0, sugars:97.0, salt:0.03 } },
-  { name: 'Miód', tags: ['miód','honey'], per100: { kcal:304, protein:0.3, fat:0.0, saturated:0.0, carbs:82.4, sugars:82.1, salt:0.0 } },
-  { name: 'Musztarda', tags: ['musztarda','mustard'], per100: { kcal:66, protein:4.4, fat:3.8, saturated:0.2, carbs:5.3, sugars:2.8, salt:2.2 } },
-  { name: 'Majonez', tags: ['majonez','mayonnaise'], per100: { kcal:680, protein:1.2, fat:75.0, saturated:11.5, carbs:2.3, sugars:1.4, salt:1.3 } },
-];
-
-function searchPolishDB(query) {
-  const q = query.toLowerCase().trim();
-  return POLISH_DB.filter(item =>
-    item.name.toLowerCase().includes(q) ||
-    item.tags.some(tag => q.includes(tag) || tag.includes(q))
-  ).map(item => ({
-    description: item.name,
-    brandOwner: '',
-    foodCategory: '🇵🇱 Polska baza NIZP PZH',
-    _source: 'polish',
-    foodNutrients: [
-      { nutrientId: 1008, value: item.per100.kcal },
-      { nutrientId: 1003, value: item.per100.protein },
-      { nutrientId: 1004, value: item.per100.fat },
-      { nutrientId: 1258, value: item.per100.saturated },
-      { nutrientId: 1005, value: item.per100.carbs },
-      { nutrientId: 2000, value: item.per100.sugars },
-      { nutrientId: 1093, value: item.per100.salt / 2.5 * 1000 },
-    ]
-  }));
-}
-
-// ── API KEY ──
-function saveApiKey(val){ localStorage.setItem('anthropic_key', val); }
-function getApiKey(){ return localStorage.getItem('anthropic_key') || ''; }
-window.addEventListener('DOMContentLoaded', function(){
-  var k = getApiKey();
-  if(k) document.getElementById('apiKeyInput').value = k;
-});
-
-
-// ── JEDNOSTKI PRODUKTÓW ──
-const PRODUCT_UNITS = {
-  // Sztuki
-  'jajo': {unit:'szt', weightPerUnit:60},
-  'jajko': {unit:'szt', weightPerUnit:60},
-  // Litry/ml
-  'mleko': {unit:'l', weightPerUnit:1000},
-  'śmietana': {unit:'l', weightPerUnit:1000},
-  'śmietanka': {unit:'l', weightPerUnit:1000},
-  'maślanka': {unit:'l', weightPerUnit:1000},
-  'kefir': {unit:'l', weightPerUnit:1000},
-  'olej': {unit:'l', weightPerUnit:920},
-  'oliwa': {unit:'l', weightPerUnit:910},
-  'bulion': {unit:'l', weightPerUnit:1000},
-  'sok': {unit:'ml', weightPerUnit:1},
-  // Gramy/kg domyslnie
-};
-
-function getProductUnit(name) {
-  const lower = name.toLowerCase();
-  for (const [key, val] of Object.entries(PRODUCT_UNITS)) {
-    if (lower.includes(key)) return val;
-  }
-  return {unit:'g', weightPerUnit:1};
-}
-
-function convertToGrams(amount, unit, productName) {
-  const info = getProductUnit(productName);
-  if (unit === 'kg') return amount * 1000;
-  if (unit === 'l') return amount * 1000;
-  if (unit === 'ml') return amount;
-  if (unit === 'szt') return amount * info.weightPerUnit;
-  if (unit === 'dag') return amount * 10;
-  if (unit === 'g') return amount;
-  return amount; // domyslnie gramy
-}
-// ── ALLERGENS CONFIG ──
-const ALLERGENS = [
-  { id: 'gluten',    name: 'Gluten',     icon: '🌾', keywords: ['wheat','rye','barley','oats','spelt','flour','bread','pasta','semolina','mąka','chleb','makaron','orkisz','pszen','żyto','owies','jęczmień'] },
-  { id: 'crustacea', name: 'Skorupiaki', icon: '🦐', keywords: ['shrimp','crab','lobster','prawn','krab','krewetka','homar'] },
-  { id: 'eggs',      name: 'Jaja',       icon: '🥚', keywords: ['egg','jaj','jajko','jajca','mayonnaise','majonez'] },
-  { id: 'fish',      name: 'Ryby',       icon: '🐟', keywords: ['fish','salmon','tuna','cod','ryba','łosoś','tuńczyk','dorsz','śledź','anchov'] },
-  { id: 'peanuts',   name: 'Orzeszki',   icon: '🥜', keywords: ['peanut','orzeszki ziemne','orzech ziemny'] },
-  { id: 'soy',       name: 'Soja',       icon: '🫘', keywords: ['soy','soja','tofu','edamame','tempeh'] },
-  { id: 'milk',      name: 'Mleko',      icon: '🥛', keywords: ['milk','cream','butter','cheese','mleko','śmietana','masło','ser','jogurt','dairy','lactose','lakto','skyr','kefir'] },
-  { id: 'nuts',      name: 'Orzechy',    icon: '🌰', keywords: ['almond','walnut','hazelnut','cashew','pistachio','migdał','orzech','pistacj','nerkowc'] },
-  { id: 'celery',    name: 'Seler',      icon: '🥬', keywords: ['celery','seler','celeriac'] },
-  { id: 'mustard',   name: 'Gorczyca',   icon: '🌼', keywords: ['mustard','gorczyca','musztarda'] },
-  { id: 'sesame',    name: 'Sezam',      icon: '🫙', keywords: ['sesame','sezam','tahini'] },
-  { id: 'sulphites', name: 'Siarczyny',  icon: '🍷', keywords: ['sulphite','sulfite','wine','wino','ocet','vinegar','dried fruit','suszon'] },
-  { id: 'lupin',     name: 'Łubin',      icon: '🌻', keywords: ['lupin','łubin'] },
-  { id: 'molluscs',  name: 'Mięczaki',   icon: '🦑', keywords: ['mollusc','squid','oyster','mussel','ślimak','małż','kalmary','ostryg'] },
-];
-
-let ingredients = [];
-let selectedManualAllergens = [];
-
-// ── BUILD MANUAL ALLERGEN CHECKBOXES ──
-function buildManualAllergenCheck() {
-  const el = document.getElementById('manualAllergenCheck');
-  el.innerHTML = '';
-  ALLERGENS.forEach(a => {
-    const div = document.createElement('div');
-    div.className = 'ac-item';
-    div.innerHTML = `<span class="ac-icon">${a.icon}</span>${a.name}`;
-    div.onclick = () => {
-      const idx = selectedManualAllergens.indexOf(a.id);
-      if (idx === -1) { selectedManualAllergens.push(a.id); div.classList.add('selected'); }
-      else { selectedManualAllergens.splice(idx,1); div.classList.remove('selected'); }
-    };
-    el.appendChild(div);
-  });
-}
-buildManualAllergenCheck();
-
-// ── AUTO-DETECT ALLERGENS ──
-function detectAllergens(name) {
-  const lower = name.toLowerCase();
-  return ALLERGENS.filter(a => a.keywords.some(k => lower.includes(k))).map(a => a.id);
-}
-
-// ── TRANSLATION PL->EN (MyMemory) ──
-async function translateToEN(text) {
-  try {
-    const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=pl|en');
-    const data = await res.json();
-    const translated = data?.responseData?.translatedText;
-    if (translated && translated.toLowerCase() !== text.toLowerCase()) {
-      return { text: translated, original: text };
-    }
-  } catch(e) {}
-  return { text: text, original: text };
-}
-
-// ── USDA SEARCH ──
-const USDA_KEY = 'DEMO_KEY'; // DEMO_KEY działa dla testów; zamień na własny z api.nal.usda.gov/api-key-signup
-async function searchFood() {
-  const q = document.getElementById('searchInput').value.trim();
-  if (!q) return;
-  const btn = document.getElementById('searchBtn');
-  btn.innerHTML = '<span class="spinner"></span>';
-  btn.disabled = true;
-  const hint = document.getElementById('translateHint');
-  const translated = await translateToEN(q);
-  if (translated.text !== translated.original && hint) {
-    hint.textContent = '🔤 Tłumaczenie: "' + translated.original + '" → "' + translated.text + '"';
-    hint.style.display = 'block';
-  }
-  try {
-    // Szukaj w USDA
-    const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(translated.text)}&pageSize=10&api_key=${USDA_KEY}&dataType=Foundation,SR Legacy,Branded`);
-    const data = await res.json();
-    let usdaFoods = data.foods || [];
-
-    // Szukaj równolegle w Open Food Facts
-    const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&lc=pl`);
-    const offData = await offRes.json();
-    const offFoods = (offData.products || [])
-      .filter(p => p.nutriments && p.product_name)
-      .map(p => ({
-        description: p.product_name_pl || p.product_name,
-        brandOwner: p.brands || '',
-        foodCategory: 'Open Food Facts',
-        _source: 'off',
-        foodNutrients: [
-          { nutrientId: 1008, value: p.nutriments['energy-kcal_100g'] || 0 },
-          { nutrientId: 1003, value: p.nutriments.proteins_100g || 0 },
-          { nutrientId: 1004, value: p.nutriments.fat_100g || 0 },
-          { nutrientId: 1258, value: p.nutriments['saturated-fat_100g'] || 0 },
-          { nutrientId: 1005, value: p.nutriments.carbohydrates_100g || 0 },
-          { nutrientId: 2000, value: p.nutriments.sugars_100g || 0 },
-          { nutrientId: 1093, value: (p.nutriments.salt_100g || 0) / 2.5 * 1000 },
-        ]
-      }));
-
-    // Połącz wyniki — polska baza pierwsza, potem USDA, potem OFF
-    const polishResults = searchPolishDB(q);
-    const combined = [...polishResults, ...usdaFoods, ...offFoods].slice(0, 12);
-    if (combined.length === 0) {
-      showToast('Brak wyników. Użyj trybu ręcznego.', true);
-    } else {
-      showSearchResults(combined);
-    }
-  } catch(e) {
-    showToast('Błąd połączenia z API. Użyj trybu ręcznego.', true);
-  }
-  btn.innerHTML = 'Szukaj';
-  btn.disabled = false;
-}
-
-function getNutrient(food, id) {
-  const n = (food.foodNutrients || []).find(x => x.nutrientId === id || x.nutrientNumber == String(id));
-  return n ? (n.value || 0) : 0;
-}
-
-async function showSearchResults(foods, translatedQuery) {
-  const el = document.getElementById('searchResults');
-  if (!foods.length) {
-    el.innerHTML = '<div class="result-item"><span class="r-name">Brak wyników. Spróbuj inaczej lub użyj trybu ręcznego.</span></div>';
-    el.style.display='block';
-    return;
-  }
-  el.innerHTML = '<div class="result-item"><span class="r-name" style="color:var(--muted)">⏳ Tłumaczenie wyników...</span></div>';
-  el.style.display = 'block';
-  const top = foods.slice(0,10);
-  const plNames = await Promise.all(top.map(async (item) => {
-    try {
-      const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(item.description) + '&langpair=en|pl');
-      const data = await res.json();
-      const t = data?.responseData?.translatedText;
-      return (t && t.toLowerCase() !== item.description.toLowerCase()) ? t : item.description;
-    } catch(e) { return item.description; }
-  }));
-  el.innerHTML = '';
-  top.forEach((item, i) => {
-    const kcal = Math.round(getNutrient(item,1008));
-    const div = document.createElement('div');
-    div.className = 'result-item';
-    const plName = plNames[i];
-    div.innerHTML = '<div><div class="r-name">' + plName + '</div><div class="r-cat" style="font-size:10px;color:var(--muted)">' + item.description + '</div></div><div class="r-kcal">' + kcal + ' kcal</div>';
-    div.onclick = () => pickFood(item, plName);
-    div.appendChild(document.createElement('span'));
-    el.appendChild(div);
-  });
-  document.addEventListener('click', closeSearchOnce);
-}
-function closeSearchOnce(e) {
-  if (!document.getElementById('searchResults').contains(e.target)) {
-    document.getElementById('searchResults').style.display = 'none';
-    document.removeEventListener('click', closeSearchOnce);
-  }
-}
-
-function pickFood(f, plName) {
-  document.getElementById('searchResults').style.display = 'none';
-  document.getElementById('searchInput').value = '';
-  const allergens = detectAllergens(f.description);
-  const displayName = plName && plName !== f.description ? plName : f.description;
-  const item = {
-    id: Date.now(),
-    name: displayName,
-    source: 'USDA',
-    weight: 100,
-    per100: {
-      kcal: parseFloat(getNutrient(f,1008).toFixed(1)),
-      protein: parseFloat(getNutrient(f,1003).toFixed(2)),
-      fat: parseFloat(getNutrient(f,1004).toFixed(2)),
-      saturated: parseFloat(getNutrient(f,1258).toFixed(2)),
-      carbs: parseFloat(getNutrient(f,1005).toFixed(2)),
-      sugars: parseFloat(getNutrient(f,2000).toFixed(2)),
-      salt: parseFloat((getNutrient(f,1093)*2.5/1000).toFixed(3)),
-    },
-    allergens
-  };
-  ingredients.push(item);
-  renderTable();
-  showToast(`✓ Dodano: ${f.description.substring(0,40)}`);
-}
-
-// ── MANUAL ADD ──
-function toggleManual() {
-  const f = document.getElementById('manualForm');
-  f.classList.toggle('open');
-}
-function addManual() {
-  const name = document.getElementById('mName').value.trim();
-  if (!name) { showToast('Podaj nazwę składnika', true); return; }
-  const item = {
-    id: Date.now(),
-    name,
-    source: 'Ręczny',
-    weight: 100,
-    per100: {
-      kcal: parseFloat(document.getElementById('mKcal').value)||0,
-      protein: parseFloat(document.getElementById('mProt').value)||0,
-      fat: parseFloat(document.getElementById('mFat').value)||0,
-      saturated: parseFloat(document.getElementById('mSat').value)||0,
-      carbs: parseFloat(document.getElementById('mCarb').value)||0,
-      sugars: parseFloat(document.getElementById('mSugar').value)||0,
-      salt: parseFloat(document.getElementById('mSalt').value)||0,
-    },
-    allergens: [...selectedManualAllergens]
-  };
-  ingredients.push(item);
-  selectedManualAllergens = [];
-  document.querySelectorAll('#manualAllergenCheck .ac-item').forEach(el => el.classList.remove('selected'));
-  ['mName','mKcal','mProt','mFat','mSat','mCarb','mSugar','mSalt'].forEach(id => document.getElementById(id).value='');
-  renderTable();
-  showToast(`✓ Dodano: ${name}`);
-}
-
-// ── RENDER TABLE ──
-function renderTable() {
-  const tbody = document.getElementById('ingredientRows');
-  if (!ingredients.length) {
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Dodaj składniki powyżej, aby rozpocząć</td></tr>';
-    document.getElementById('totalsBar').style.display = 'none';
-    updateLabel();
-    return;
-  }
-  tbody.innerHTML = '';
-  ingredients.forEach((ing, idx) => {
-    if (!ing.pricePerKg) ing.pricePerKg = getPriceFromCache(ing.name);
-    const loss = ing.loss || 0;
-    const effectiveWeight = ing.weight * (1 - loss/100);
-    const fw = effectiveWeight/100;
-    const kcal = (ing.per100.kcal*fw).toFixed(0);
-    const prot = (ing.per100.protein*fw).toFixed(1);
-    const fat = (ing.per100.fat*fw).toFixed(1);
-    const carb = (ing.per100.carbs*fw).toFixed(1);
-    const salt = (ing.per100.salt*fw).toFixed(2);
-    const allergenNames = ing.allergens.map(id => ALLERGENS.find(a=>a.id===id)?.name||id);
-    const myPrice = ing.pricePerKg || 0;
-    const marketPrice = ing.marketPrice || 0;
-    const activePrice = myPrice > 0 ? myPrice : marketPrice;
-    const cost = activePrice > 0 ? (ing.weight/1000*activePrice).toFixed(2) : '—';
-    const needsLookup = ing.needsLookup;
-    const tr = document.createElement('tr');
-    tr.style.borderLeft = needsLookup ? '3px solid var(--danger)' : '';
-    tr.innerHTML = `
-      <td class="td-name">
-        <div style="display:flex;align-items:center;gap:6px;">
-          ${needsLookup ? '<span>⚠️</span>' : ''}
-          <div>
-            <div>${ing.name}</div>
-            <div style="font-size:10px;color:var(--muted)">${ing.source}</div>
-          </div>
-        </div>
-        ${needsLookup ? `<button id="lookup_${idx}" class="btn btn-sm" style="margin-top:4px;font-size:11px;background:var(--danger);width:100%;" onclick="aiLookupSingle(${idx})">🔍 Pobierz dane AI</button>` : ''}
-      </td>
-      <td>
-        <div class="td-badge">
-          ${allergenNames.length ? allergenNames.map(n=>`<span class="badge">${n}</span>`).join('') : '<span class="badge badge-muted">brak</span>'}
-        </div>
-      </td>
-      <td>
-        <div class="weight-cell">
-          <input type="number" value="${ing.weight}" min="0" step="1" oninput="updateWeight(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">g</span>
-        </div>
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" value="${loss}" min="0" max="99" step="1" onchange="updateLoss(${idx}, this.value)" style="width:45px;text-align:right;padding:5px 6px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">%</span>
-        </div>
-      </td>
-      <td>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">
-          ${marketPrice > 0 ? `<span style="color:var(--muted);">🤖 ${marketPrice.toFixed(2)} zł/kg</span>` : '<span style="color:var(--muted);font-size:9px;">pobieranie...</span>'}
-        </div>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" value="${myPrice||''}" min="0" step="0.01" placeholder="${marketPrice>0?marketPrice.toFixed(2):'—'}" onchange="updatePrice(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;${myPrice>0?'border-color:var(--accent);':''}" >
-          <span style="color:var(--muted);font-size:11px">zł/kg</span>
-        </div>
-      </td>
-      <td class="td-mono" style="color:${myPrice>0?'var(--accent)':marketPrice>0?'var(--muted)':'var(--muted)'}">
-        ${cost}${activePrice>0?' zł':''}
-        ${myPrice>0?'<div style="font-size:9px;color:var(--accent)">✓ moja</div>':marketPrice>0?'<div style="font-size:9px;color:var(--muted)">~ rynek</div>':''}
-      </td>
-      <td class="td-mono" style="color:${needsLookup?'var(--danger)':'inherit'}">${needsLookup?'?':kcal}</td>
-      <td class="td-mono">${needsLookup?'?':prot+'g'}</td>
-      <td class="td-mono">${needsLookup?'?':fat+'g'}</td>
-      <td class="td-mono">${needsLookup?'?':carb+'g'}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="removeIngredient(${idx})">✕</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  updateTotals();
-  updateFoodCost();
-  setTimeout(autoFillPrices, 500);
-}
-
-
-function updateWeight(idx, val) {
-  ingredients[idx].weight = parseFloat(val)||0;
-  updateTotals();
-  updateFoodCost();
-  // Zaktualizuj tylko kolumne koszt w tej samej linii
-  const rows = document.getElementById('ingredientRows').querySelectorAll('tr');
-  if (rows[idx]) {
-    const ing = ingredients[idx];
-    const myPrice = ing.pricePerKg || 0;
-    const marketPrice = ing.marketPrice || 0;
-    const activePrice = myPrice > 0 ? myPrice : marketPrice;
-    const cost = activePrice > 0 ? (ing.weight/1000*activePrice).toFixed(2) : '—';
-    const costCell = rows[idx].querySelectorAll('td')[5];
-    if (costCell) {
-      costCell.innerHTML = (cost!=='—'?cost+' zł':'—') + (myPrice>0?'<div style="font-size:9px;color:var(--accent)">✓ moja</div>':marketPrice>0?'<div style="font-size:9px;color:var(--muted)">~ rynek</div>':'');
-      costCell.style.color = myPrice>0?'var(--accent)':marketPrice>0?'var(--muted)':'var(--muted)';
-    }
-  }
-}
-function removeIngredient(idx) {
-  ingredients.splice(idx,1);
-  renderTable();
-}
-
-// ── TOTALS & LABEL ──
-function getTotals() {
-  let totRaw=0, totKcal=0, totProt=0, totFat=0, totSat=0, totCarb=0, totSugar=0, totSalt=0;
-  ingredients.forEach(ing => {
-    const f = ing.weight/100;
-    totRaw += ing.weight;
-    totKcal += ing.per100.kcal*f;
-    totProt += ing.per100.protein*f;
-    totFat += ing.per100.fat*f;
-    totSat += ing.per100.saturated*f;
-    totCarb += ing.per100.carbs*f;
-    totSugar += ing.per100.sugars*f;
-    totSalt += ing.per100.salt*f;
-  });
-  return { totRaw, totKcal, totProt, totFat, totSat, totCarb, totSugar, totSalt };
-}
-
-function updateTotals() {
-  const {totRaw, totKcal, totProt, totFat, totSat, totCarb, totSugar, totSalt} = getTotals();
-  const cooked = parseFloat(document.getElementById('cookedWeight').value) || totRaw;
-  const r = 100/cooked;
-
-  const kcal100 = totKcal*r;
-  const prot100 = totProt*r;
-  const fat100 = totFat*r;
-  const carb100 = totCarb*r;
-  const salt100 = totSalt*r;
-
-  const totBar = document.getElementById('totalsBar');
-  totBar.style.display = 'block';
-  document.getElementById('totalKcal').textContent = kcal100.toFixed(0)+' kcal';
-  document.getElementById('totalKj').textContent = (kcal100*4.184).toFixed(0)+' kJ';
-  document.getElementById('totalProt').textContent = prot100.toFixed(1)+'g';
-  document.getElementById('totalFat').textContent = fat100.toFixed(1)+'g';
-  document.getElementById('totalCarb').textContent = carb100.toFixed(1)+'g';
-  document.getElementById('totalSalt').textContent = salt100.toFixed(2)+'g';
-  document.getElementById('totalRawWeight').textContent = totRaw.toFixed(0);
-  document.getElementById('cookedDisplay').textContent = cooked.toFixed(0);
-
-  const maxMacro = Math.max(prot100, fat100, carb100, 1);
-  document.getElementById('barProt').style.width = Math.min(100, prot100/maxMacro*100)+'%';
-  document.getElementById('barFat').style.width = Math.min(100, fat100/maxMacro*100)+'%';
-  document.getElementById('barCarb').style.width = Math.min(100, carb100/maxMacro*100)+'%';
-
-  if (cooked !== totRaw) {
-    const ratio = ((totRaw-cooked)/totRaw*100).toFixed(0);
-    document.getElementById('ratioDisplay').textContent = `↓${ratio}% wody`;
-    document.getElementById('ratioDisplay').style.display = 'block';
-  }
-
-  updateLabel(kcal100, prot100, fat100, totSat*r, carb100, totSugar*r, salt100);
-}
-
-document.getElementById('cookedWeight').addEventListener('input', updateTotals);
-
-// ── LABEL RENDER ──
-function updateLabel(kcal100=0, prot100=0, fat100=0, sat100=0, carb100=0, sug100=0, salt100=0) {
-  const el = document.getElementById('labelOutput');
-  if (!ingredients.length) {
-    el.innerHTML = `<div class="empty-label"><div class="big-icon">🏷️</div><p>Dodaj składniki i wpisz masę po ugotowaniu,<br>aby zobaczyć podgląd etykiety<br>zgodnej z rozporządzeniem UE 1169/2011</p></div>`;
-    return;
-  }
-
-  const dishName = document.getElementById('dishName').value || 'Nazwa dania';
-  const portion = parseFloat(document.getElementById('portionSize').value)||300;
-  const cooked = parseFloat(document.getElementById('cookedWeight').value) || getTotals().totRaw;
-  const kj100 = kcal100*4.184;
-
-  // Portion values
-  const pf = portion/100;
-  const kcalP = (kcal100*pf).toFixed(0);
-  const kjP = (kj100*pf).toFixed(0);
-
-  // Sort ingredients by weight (descending)
-  const sorted = [...ingredients].sort((a,b) => b.weight - a.weight);
-
-  // Collect all allergen IDs
-  const allAllergenIds = [...new Set(sorted.flatMap(i => i.allergens))];
-  const allergenNames = allAllergenIds.map(id => ALLERGENS.find(a=>a.id===id));
-
-  // Build ingredients list with highlighted allergens
-  const ingList = sorted.map(ing => {
-    const allergenKeywords = ing.allergens.flatMap(id => ALLERGENS.find(a=>a.id===id)?.name||'');
-    let name = ing.name;
-    if (ing.allergens.length > 0) {
-      name = `<strong class="alergen-highlight">${ing.name.toUpperCase()}</strong>`;
-    }
-    return name;
-  }).join(', ');
-
-  el.innerHTML = `
-    <div class="label-card">
-      <div class="label-dish-name">${dishName}</div>
-      <div class="label-portion">Porcja: ${portion} g &nbsp;|&nbsp; Masa gotowego dania: ${cooked.toFixed(0)} g</div>
-
-      <table class="nv-table">
-        <thead>
-          <tr>
-            <th>Wartość odżywcza</th>
-            <th>na 100 g</th>
-            <th>na porcję (${portion}g)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="main-row energy-row">
-            <td>Wartość energetyczna</td>
-            <td>${kj100.toFixed(0)} kJ / ${kcal100.toFixed(0)} kcal</td>
-            <td>${kjP} kJ / ${kcalP} kcal</td>
-          </tr>
-          <tr class="main-row">
-            <td>Tłuszcz</td>
-            <td>${fat100.toFixed(1)} g</td>
-            <td>${(fat100*pf).toFixed(1)} g</td>
-          </tr>
-          <tr class="sub-row">
-            <td>w tym kwasy nasycone</td>
-            <td>${sat100.toFixed(1)} g</td>
-            <td>${(sat100*pf).toFixed(1)} g</td>
-          </tr>
-          <tr class="main-row">
-            <td>Węglowodany</td>
-            <td>${carb100.toFixed(1)} g</td>
-            <td>${(carb100*pf).toFixed(1)} g</td>
-          </tr>
-          <tr class="sub-row">
-            <td>w tym cukry</td>
-            <td>${sug100.toFixed(1)} g</td>
-            <td>${(sug100*pf).toFixed(1)} g</td>
-          </tr>
-          <tr class="main-row">
-            <td>Białko</td>
-            <td>${prot100.toFixed(1)} g</td>
-            <td>${(prot100*pf).toFixed(1)} g</td>
-          </tr>
-          <tr class="main-row">
-            <td>Sól</td>
-            <td>${salt100.toFixed(2)} g</td>
-            <td>${(salt100*pf).toFixed(2)} g</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="label-section-title">Wykaz składników</div>
-      <div class="ingredients-list">${ingList}</div>
-
-      ${allergenNames.length ? `
-        <div class="allergen-legend">
-          <strong style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;">Alergeny:</strong>
-          ${allergenNames.map(a => `<span class="legend-item">${a.icon} ${a.name}</span>`).join('')}
-        </div>
-      ` : ''}
-
-      <div style="margin-top:12px;font-size:9px;color:#a09070;border-top:1px solid #1a181422;padding-top:8px;">
-        Oznakowanie zgodne z Rozporządzeniem UE nr 1169/2011 · Obliczenia na podstawie receptury i masy po obróbce termicznej
-      </div>
-    </div>
-  `;
-}
-
-// ── COPY LABEL TEXT ──
-function copyLabel() {
-  const dishName = document.getElementById('dishName').value || 'Nazwa dania';
-  const {totRaw, totKcal, totProt, totFat, totSat, totCarb, totSugar, totSalt} = getTotals();
-  const cooked = parseFloat(document.getElementById('cookedWeight').value) || totRaw;
-  const r = 100/cooked;
-  const sorted = [...ingredients].sort((a,b)=>b.weight-a.weight);
-  const ingNames = sorted.map(i => i.allergens.length ? i.name.toUpperCase() : i.name).join(', ');
-  const text = `${dishName}\nWartość energetyczna: ${(totKcal*r).toFixed(0)} kcal / ${(totKcal*r*4.184).toFixed(0)} kJ\nTłuszcz: ${(totFat*r).toFixed(1)}g (nasycone: ${(totSat*r).toFixed(1)}g)\nWęglowodany: ${(totCarb*r).toFixed(1)}g (cukry: ${(totSugar*r).toFixed(1)}g)\nBiałko: ${(totProt*r).toFixed(1)}g\nSól: ${(totSalt*r).toFixed(2)}g\n\nSkładniki: ${ingNames}`;
-  navigator.clipboard.writeText(text).then(()=>showToast('✓ Skopiowano do schowka'));
-}
-
-// ── EXPORT JSON ──
-function exportJSON() {
-  const data = { dish: document.getElementById('dishName').value, date: new Date().toISOString().split('T')[0], ingredients };
-  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = (document.getElementById('dishName').value||'receptura').replace(/\s+/g,'_')+'.json';
-  a.click();
-  showToast('✓ Zapisano recepturę jako JSON');
-}
-
-// ── TOAST ──
-function showToast(msg, isError=false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError?' error':'');
-  clearTimeout(window._toastTimer);
-  window._toastTimer = setTimeout(()=>t.className='toast',3000);
-}
-</script>
-<div id="bulkModal" style="display:none;position:fixed;inset:0;background:#000a;z-index:200;align-items:center;justify-content:center;"><div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px #000c;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h3 style="font-family:Playfair Display,serif;color:var(--accent);font-size:18px;">📋 Importuj recepturę</h3><button onclick="closeBulkImport()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button></div><p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Wklej listę składników — AI rozdzieli i dopasuje każdy składnik do bazy.</p><textarea id="bulkText" style="width:100%;height:160px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text);font-family:DM Sans,sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Np: woda, przecier pomidorowy 7,7%, marchew, smietana, cebula, czosnek, sol..."></textarea><div style="margin-top:12px;display:flex;gap:10px;align-items:center;"><button class="btn" onclick="parseBulkIngredients()" id="parseBtn">✨ Analizuj</button><span id="parseStatus" style="font-size:12px;color:var(--muted);"></span></div><div id="parsedPreview" style="display:none;margin-top:20px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;">Rozpoznane skladniki:</div><div id="parsedList"></div><button class="btn" onclick="confirmBulkImport()" style="margin-top:14px;width:100%;">Dodaj wszystkie do receptury</button></div></div></div><script>
-function toggleBulkImport(){var m=document.getElementById('bulkModal');m.style.display=m.style.display==='flex'?'none':'flex';}
-function closeBulkImport(){var m=document.getElementById('bulkModal');m.style.display='none';m.style.setProperty('display','none','important');document.getElementById('parsedPreview').style.display='none';document.getElementById('bulkText').value='';parsedIngredients=[];}
-var parsedIngredients=[];
-async function parseBulkIngredients(){
-  var text=document.getElementById('bulkText').value.trim();
-  if(!text)return;
-  var btn=document.getElementById('parseBtn');
-  var status=document.getElementById('parseStatus');
-  btn.innerHTML='<span class=spinner></span>';
-  btn.disabled=true;
-  status.textContent='Analizuje AI...';
-  try{
-    var response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:'Przeanalizuj skladniki z polskiej receptury. Dla kazdego podaj: name (polska nazwa), amount (ilosc), unit (g/kg/l/ml/szt/lyzka/lyzeczka lub null), weight (masa w gramach: kg*1000, l*1000, szt jaj*60, lyzka*15, lyzeczka*5, domyslnie 100), percent (lub null). Zwroc TYLKO tablice JSON: [{"name":"marchew","amount":2,"unit":"szt","weight":200,"percent":null}]. Skladniki: '+text}]})});
-    var data=await response.json();
-    var raw=data.content[0].text.trim().replace(/```json|```/g,'').trim();
-    parsedIngredients=JSON.parse(raw);
-    renderParsedPreview();
-    status.textContent='';
-  }catch(e){status.textContent='Blad analizy.';}
-  btn.innerHTML='Analizuj';btn.disabled=false;
-}
-function renderParsedPreview(){
-  var list=document.getElementById('parsedList');
-  list.innerHTML='';
-  parsedIngredients.forEach(function(item,i){
-    var matches=searchPolishDB(item.name);
-    var matched=matches.length>0;
-    var div=document.createElement('div');
-    div.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px;border:1px solid var(--border);';
-    div.innerHTML='<span>'+(matched?'✅':'⚠️')+'</span><div style="flex:1"><div style="font-size:13px;font-weight:500">'+item.name+'</div><div style="font-size:11px;color:var(--muted)">'+(matched?'Znaleziono w bazie':'Nie znaleziono')+(item.percent?' · '+item.percent+'%':'')+'</div></div><input type="number" value="'+(item.weight||100)+'" min="0" style="width:70px;text-align:right;padding:5px 8px;font-size:12px;" onchange="parsedIngredients['+i+'].weight=parseFloat(this.value)||100"><span style="font-size:11px;color:var(--muted)">g</span>';
-    list.appendChild(div);
-  });
-  document.getElementById('parsedPreview').style.display='block';
-}
-function confirmBulkImport(){
-  let added = 0;
-  let unknown = 0;
-  parsedIngredients.forEach(function(item){
-    const matches = searchPolishDB(item.name);
-    if(matches.length > 0){
-      const fd = matches[0];
-      ingredients.push({
-        id: Date.now()+Math.random(),
-        name: fd.description,
-        source: '🇵🇱 NIZP PZH',
-        weight: item.weight||100,
-        loss: getAutoLoss(fd.description),
-        needsLookup: false,
-        pricePerKg: getPriceFromCache(fd.description),
-        per100:{
-          kcal:parseFloat(getNutrient(fd,1008).toFixed(1)),
-          protein:parseFloat(getNutrient(fd,1003).toFixed(2)),
-          fat:parseFloat(getNutrient(fd,1004).toFixed(2)),
-          saturated:parseFloat(getNutrient(fd,1258).toFixed(2)),
-          carbs:parseFloat(getNutrient(fd,1005).toFixed(2)),
-          sugars:parseFloat(getNutrient(fd,2000).toFixed(2)),
-          salt:parseFloat((getNutrient(fd,1093)*2.5/1000).toFixed(3))
-        },
-        allergens: detectAllergens(fd.description)
-      });
-      added++;
-    } else {
-      ingredients.push({
-        id: Date.now()+Math.random(),
-        name: item.name,
-        source: '⚠️ brak danych',
-        weight: item.weight||100,
-        loss: 0,
-        needsLookup: true,
-        pricePerKg: getPriceFromCache(item.name),
-        per100:{kcal:0,protein:0,fat:0,saturated:0,carbs:0,sugars:0,salt:0},
-        allergens: detectAllergens(item.name)
-      });
-      unknown++;
-    }
-  });
-  document.getElementById('bulkModal').style.display='none';
-  document.getElementById('parsedPreview').style.display='none';
-  document.getElementById('bulkText').value='';
-  renderTable();
-  showToast('✓ Dodano '+added+' · '+unknown+' wymaga uzupełnienia');
-}
-</script>
-<div id="recipeModal" style="display:none;position:fixed;inset:0;background:#000a;z-index:200;align-items:center;justify-content:center;">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;width:700px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px #000c;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h3 style="font-family:'Playfair Display',serif;color:var(--accent);font-size:18px;">📚 Moje receptury</h3>
-      <button onclick="closeRecipeManager()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
-    </div>
-    <div id="recipeList"></div>
-    <div id="noRecipes" style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">Brak zapisanych receptur. Stwórz pierwszą!</div>
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PROMPT<span>HAUS</span></div>
+  <div class="footer-links">
+    <a href="#gallery">Gallery</a>
+    <a href="#shop">Shop</a>
+    <a href="#faq">FAQ</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
   </div>
-</div>
+  <div class="footer-copy">© 2025 PROMPTHAUS — All rights reserved.</div>
+</footer>
 
 <script>
-// ── FOOD COST - dodaj kolumny ceny i strat do skladnikow ──
-// Patch renderTable zeby pokazywal food cost
-
-function updateLoss(idx, val) {
-  ingredients[idx].loss = parseFloat(val)||0;
-  renderTable();
-}
-function updatePrice(idx, val) {
-  ingredients[idx].pricePerKg = parseFloat(val)||0;
-  renderTable();
-}
-
-function updateFoodCost() {
-  const bar = document.getElementById('foodCostBar') || (() => {
-    const b = document.createElement('div');
-    b.id = 'foodCostBar';
-    b.style.cssText = 'margin-top:12px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:10px;padding:18px 20px;';
-    const tb = document.getElementById('totalsBar');
-    if(tb) tb.after(b);
-    return b;
-  })();
-
-  if(!ingredients.length){ bar.style.display='none'; return; }
-  bar.style.display='block';
-
-  let totalIngCost=0, allPriced=true;
-  ingredients.forEach(ing=>{
-    const activePrice = ing.pricePerKg > 0 ? ing.pricePerKg : (ing.marketPrice || 0);
-    if(activePrice > 0) totalIngCost += ing.weight/1000*activePrice;
-    else allPriced=false;
-  });
-
-  const portion = parseFloat(document.getElementById('portionSize').value)||300;
-  const rawWeight = ingredients.reduce((s,i)=>s+i.weight,0);
-  const cooked = parseFloat(document.getElementById('cookedWeight').value)||rawWeight;
-  const portions = cooked>0 ? cooked/portion : 1;
-  const ingCostPer = portions>0 ? totalIngCost/portions : 0;
-  const extraPer = (typeof getTotalExtraCosts==='function') ? getTotalExtraCosts() : 0;
-  const totalCostPer = ingCostPer + extraPer;
-  const savedSP = parseFloat(localStorage.getItem('bistro_selling_price'))||0;
-
-  bar.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px;margin-bottom:16px;">
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">💰 Koszt składników</div>
-        <div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--green)">${totalIngCost.toFixed(2)} zł</div>
-        <div style="font-size:10px;color:var(--muted)">${allPriced?'✓ wszystkie':'⚠️ niepełne ceny'}</div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">🍽️ Porcji</div>
-        <div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--text)">${portions.toFixed(1)}</div>
-        <div style="font-size:10px;color:var(--muted)">po ${portion}g</div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">📦 Koszt porcji</div>
-        <div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--danger)">${totalCostPer.toFixed(2)} zł</div>
-        <div style="font-size:10px;color:var(--muted)">skł. + dodatkowe</div>
-      </div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px;align-items:end;">
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">💵 Cena sprzedaży</div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <input type="number" id="sellingPriceMain" placeholder="0.00" min="0" step="0.5" value="${savedSP||''}" style="width:85px;padding:7px 10px;font-size:14px;font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;" oninput="calcProfitMain(${totalCostPer.toFixed(4)})">
-          <span style="color:var(--muted);font-size:12px">zł</span>
-        </div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">📊 Food cost %</div>
-        <div style="font-family:'DM Mono',monospace;font-size:24px;font-weight:600;" id="fcPctMain">—</div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">🤑 Zysk na porcji</div>
-        <div style="font-family:'DM Mono',monospace;font-size:24px;font-weight:600;" id="profitMain">—</div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">📅 Porcji/dzień</div>
-        <input type="number" id="dailyPortionsMain" placeholder="50" min="1" style="width:70px;padding:7px 10px;font-size:14px;font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;" oninput="calcProfitMain(${totalCostPer.toFixed(4)})">
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">💹 Zysk dzienny</div>
-        <div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--green)" id="dailyProfitMain">—</div>
-      </div>
-    </div>
-  `;
-  if(savedSP>0) setTimeout(()=>calcProfitMain(totalCostPer),50);
-  if(typeof renderExtraCosts==='function') renderExtraCosts();
-
-  // Info o litrach
-  const liters = parseFloat(document.getElementById('cookedLiters')?.value) ||
-                 (parseFloat(document.getElementById('cookedWeight')?.value)||0)/1000;
-  if(liters > 0) {
-    let literInfo = document.getElementById('literInfo');
-    if(!literInfo) {
-      literInfo = document.createElement('div');
-      literInfo.id = 'literInfo';
-      literInfo.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:24px;flex-wrap:wrap;';
-      const bar = document.getElementById('foodCostBar');
-      if(bar) bar.appendChild(literInfo);
-    }
-    const costPerLiter = (totalIngCost/liters).toFixed(2);
-    literInfo.innerHTML = `
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">🥣 Ilość zupy</div>
-        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--text)">${liters.toFixed(2)} l</div>
-        <div style="font-size:10px;color:var(--muted)">${(liters*1000/portions/portions*portions).toFixed(1)} porcji</div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">💧 Koszt / litr</div>
-        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--accent)">${costPerLiter} zł</div>
-      </div>
-    `;
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animCursor() {
+    cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animCursor);
   }
-}
+  animCursor();
 
-function calcProfitMain(costPerPortion){
-  const sp = parseFloat(document.getElementById('sellingPriceMain')?.value)||0;
-  const daily = parseFloat(document.getElementById('dailyPortionsMain')?.value)||0;
-  if(sp>0) localStorage.setItem('bistro_selling_price', sp);
-  const fcEl = document.getElementById('fcPctMain');
-  const profitEl = document.getElementById('profitMain');
-  const dailyEl = document.getElementById('dailyProfitMain');
-  if(!fcEl) return;
-  if(sp>0){
-    const pct = (costPerPortion/sp*100).toFixed(1);
-    const profit = (sp-costPerPortion).toFixed(2);
-    fcEl.textContent = pct+'%';
-    fcEl.style.color = pct<30?'var(--green)':pct<35?'var(--accent)':'var(--danger)';
-    profitEl.textContent = profit+' zł';
-    profitEl.style.color = profit>0?'var(--green)':'var(--danger)';
-    if(daily>0) dailyEl.textContent = (profit*daily).toFixed(2)+' zł';
-  }
-}
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => io.observe(el));
 
-
-function calcProfitMain(costPerPortion) {
-  const sp = parseFloat(document.getElementById('sellingPriceMain')?.value)||0;
-  const daily = parseFloat(document.getElementById('dailyPortionsMain')?.value)||0;
-  if (sp > 0) localStorage.setItem('bistro_selling_price', sp);
-  const fcEl = document.getElementById('fcPctMain');
-  const profitEl = document.getElementById('profitMain');
-  const dailyEl = document.getElementById('dailyProfitMain');
-  if (!fcEl) return;
-  if (sp > 0) {
-    const pct = (costPerPortion / sp * 100).toFixed(1);
-    const profit = (sp - costPerPortion).toFixed(2);
-    fcEl.textContent = pct + '%';
-    fcEl.style.color = pct < 30 ? 'var(--green)' : pct < 35 ? 'var(--accent)' : 'var(--danger)';
-    profitEl.textContent = profit + ' zł';
-    profitEl.style.color = profit > 0 ? 'var(--green)' : 'var(--danger)';
-    if (daily > 0) dailyEl.textContent = (profit * daily).toFixed(2) + ' zł';
-  }
-}
-
-function calcFCPercent(costPerPortion) {
-  const sp = parseFloat(document.getElementById('sellingPrice')?.value)||0;
-  const el = document.getElementById('fcPercent');
-  if (!el) return;
-  if (sp > 0) {
-    const pct = (costPerPortion / sp * 100).toFixed(1);
-    el.textContent = pct + '%';
-    el.style.color = pct < 30 ? 'var(--green)' : pct < 35 ? 'var(--accent)' : 'var(--danger)';
-  } else {
-    el.textContent = '—';
-  }
-}
-
-// Zaktualizuj naglowki tabeli
-window.addEventListener('DOMContentLoaded', function() {
-  const thead = document.querySelector('#ingredientsTable thead tr');
-  if (thead) {
-    thead.innerHTML = `
-      <th>Składnik</th>
-      <th>Alergeny</th>
-      <th>Waga (g)</th>
-      <th>Straty</th>
-      <th>Cena zakupu</th>
-      <th>Koszt</th>
-      <th>Kcal</th>
-      <th>Białko</th>
-      <th>Tłuszcz</th>
-      <th>Węglow.</th>
-      <th></th>
-    `;
-  }
-});
-
-// ── ZAPIS RECEPTUR ──
-function saveRecipe() {
-  const name = document.getElementById('dishName').value.trim();
-  if (!name) { showToast('Wpisz nazwę dania przed zapisem', true); return; }
-  if (!ingredients.length) { showToast('Dodaj składniki przed zapisem', true); return; }
-  const recipes = JSON.parse(localStorage.getItem('bistro_recipes') || '[]');
-  const existing = recipes.findIndex(r => r.name === name);
-  const recipe = {
-    id: existing >= 0 ? recipes[existing].id : Date.now(),
-    name,
-    category: document.getElementById('dishCategory').value,
-    portionSize: document.getElementById('portionSize').value,
-    cookedWeight: document.getElementById('cookedWeight').value,
-    ingredients: JSON.parse(JSON.stringify(ingredients)),
-    savedAt: new Date().toLocaleDateString('pl-PL')
-  };
-  if (existing >= 0) { recipes[existing] = recipe; showToast('✓ Zaktualizowano: ' + name); }
-  else { recipes.push(recipe); showToast('✓ Zapisano: ' + name); }
-  localStorage.setItem('bistro_recipes', JSON.stringify(recipes));
-}
-
-function toggleRecipeManager() {
-  const m = document.getElementById('recipeModal');
-  m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
-  if (m.style.display === 'flex') renderRecipeList();
-}
-function closeRecipeManager() {
-  document.getElementById('recipeModal').style.display = 'none';
-}
-
-function renderRecipeList() {
-  const recipes = JSON.parse(localStorage.getItem('bistro_recipes') || '[]');
-  const list = document.getElementById('recipeList');
-  const empty = document.getElementById('noRecipes');
-  if (!recipes.length) { list.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display = 'none';
-  list.innerHTML = '';
-  recipes.forEach((r, i) => {
-    const totalKcal = r.ingredients.reduce((s,ing) => s + ing.per100.kcal * ing.weight/100, 0);
-    const cooked = parseFloat(r.cookedWeight) || r.ingredients.reduce((s,i)=>s+i.weight,0);
-    const kcal100 = (totalKcal / cooked * 100).toFixed(0);
-    const totalCost = r.ingredients.reduce((s,ing) => s + (ing.pricePerKg||0) * ing.weight/1000, 0);
-    const portions = cooked / (parseFloat(r.portionSize)||300);
-    const costPortion = portions > 0 ? (totalCost/portions).toFixed(2) : '—';
-    const div = document.createElement('div');
-    div.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;';
-    div.innerHTML = `
-      <div style="flex:1">
-        <div style="font-size:15px;font-weight:600;margin-bottom:3px;">${r.name}</div>
-        <div style="font-size:11px;color:var(--muted);">${r.category} · ${r.ingredients.length} składników · ${kcal100} kcal/100g · zapisano ${r.savedAt}</div>
-        <div style="font-size:11px;color:var(--accent);margin-top:3px;">💰 ${costPortion !== '—' ? costPortion+' zł/porcję' : 'brak cen'} · 🍽️ porcja ${r.portionSize}g</div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-sm" onclick="loadRecipe(${i})">✏️ Edytuj</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteRecipe(${i})">🗑️</button>
-      </div>
-    `;
-    list.appendChild(div);
-  });
-}
-
-function loadRecipe(idx) {
-  const recipes = JSON.parse(localStorage.getItem('bistro_recipes') || '[]');
-  const r = recipes[idx];
-  document.getElementById('dishName').value = r.name;
-  document.getElementById('dishCategory').value = r.category;
-  document.getElementById('portionSize').value = r.portionSize;
-  document.getElementById('cookedWeight').value = r.cookedWeight || '';
-  ingredients = JSON.parse(JSON.stringify(r.ingredients));
-  renderTable();
-  closeRecipeManager();
-  showToast('✓ Wczytano: ' + r.name);
-}
-
-function deleteRecipe(idx) {
-  const recipes = JSON.parse(localStorage.getItem('bistro_recipes') || '[]');
-  const name = recipes[idx].name;
-  recipes.splice(idx, 1);
-  localStorage.setItem('bistro_recipes', JSON.stringify(recipes));
-  renderRecipeList();
-  showToast('Usunięto: ' + name);
-}
-</script>
-
-<script>
-// ── AUTOMATYCZNE STRATY W OBRÓBCE ──
-const COOKING_LOSSES = {
-  'marchew': 10, 'ziemniak': 8, 'ziemniaki': 8, 'cebula': 20, 'czosnek': 15,
-  'pomidor': 30, 'pomidory': 30, 'kapusta': 15, 'burak': 12, 'pietruszka': 10,
-  'seler': 10, 'por': 15, 'szpinak': 60, 'brokuły': 20, 'kalafior': 15,
-  'pieczarki': 40, 'ogórek': 5, 'papryka': 20,
-  'pierś z kurczaka': 25, 'udko z kurczaka': 28, 'wołowina': 30,
-  'wieprzowina': 28, 'boczek': 35, 'łosoś': 20, 'dorsz': 22,
-  'ryż': -100, 'makaron': -80, 'kasza gryczana': -90, 'kasza jaglana': -85,
-  'śmietana': 5, 'masło': 15, 'mleko': 5,
-  'jajo': 10, 'mąka': 0, 'cukier': 0, 'sól': 0, 'olej': 10, 'oliwa': 10,
-};
-
-function getAutoLoss(name) {
-  const lower = name.toLowerCase();
-  for (const [key, val] of Object.entries(COOKING_LOSSES)) {
-    if (lower.includes(key)) return val < 0 ? 0 : val;
-  }
-  return 0;
-}
-
-// Patch pickFood zeby automatycznie ustawial straty
-const _origPickFood = pickFood;
-function pickFood(f, plName) {
-  _origPickFood(f, plName);
-  const last = ingredients[ingredients.length - 1];
-  if (last && last.loss === undefined) {
-    last.loss = getAutoLoss(last.name);
-  }
-  renderTable();
-}
-
-</script>
-
-<script>
-// ── PRZYCISK PRZELICZ przy porcji ──
-window.addEventListener('DOMContentLoaded', function() {
-  const portionInput = document.getElementById('portionSize');
-  if (portionInput) {
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-sm';
-    btn.style.cssText = 'display:none;margin-top:6px;width:100%;';
-    btn.textContent = '🔄 Przelicz';
-    btn.onclick = function() { updateTotals(); btn.style.display='none'; showToast('✓ Przeliczono'); };
-    btn.id = 'recalcBtn';
-    portionInput.parentNode.appendChild(btn);
-    portionInput.addEventListener('input', function() {
-      btn.style.display = 'block';
+  // FAQ accordion
+  document.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
     });
-  }
-
-  // Dodaj tabelę dodatkowych kosztów po foodCostBar
-  const extraCostsEl = document.createElement('div');
-  extraCostsEl.id = 'extraCostsSection';
-  extraCostsEl.style.cssText = 'margin-top:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:none;';
-  extraCostsEl.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div style="font-size:12px;font-weight:600;color:var(--text);">📦 Dodatkowe koszty (opakowanie, prąd, itp.)</div>
-      <button class="btn btn-sm btn-ghost" onclick="addExtraCost()">+ Dodaj</button>
-    </div>
-    <div id="extraCostsList"></div>
-    <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;">
-      <span style="font-size:12px;color:var(--muted);">Suma dodatkowych kosztów:</span>
-      <span id="extraCostsTotal" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);">0.00 zł</span>
-    </div>
-  `;
-  document.querySelector('.left-panel').appendChild(extraCostsEl);
-});
-
-// ── DODATKOWE KOSZTY ──
-let extraCosts = JSON.parse(localStorage.getItem('bistro_extra_costs') || '[]');
-if (!extraCosts.length) {
-  extraCosts = [
-    { name: 'Opakowanie', cost: 0.50 },
-    { name: 'Prąd/gaz', cost: 0.30 },
-  ];
-}
-
-function saveExtraCosts() {
-  localStorage.setItem('bistro_extra_costs', JSON.stringify(extraCosts));
-}
-
-function addExtraCost() {
-  extraCosts.push({ name: 'Nowy koszt', cost: 0 });
-  renderExtraCosts();
-}
-
-function renderExtraCosts() {
-  const section = document.getElementById('extraCostsSection');
-  if (section) section.style.display = ingredients.length ? 'block' : 'none';
-  const list = document.getElementById('extraCostsList');
-  if (!list) return;
-  list.innerHTML = '';
-  let total = 0;
-  extraCosts.forEach((ec, i) => {
-    total += parseFloat(ec.cost)||0;
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:10px;align-items:center;margin-bottom:8px;';
-    row.innerHTML = `
-      <input type="text" value="${ec.name}" style="flex:1;padding:6px 10px;font-size:12px;" onchange="extraCosts[${i}].name=this.value;saveExtraCosts();">
-      <input type="number" value="${ec.cost}" min="0" step="0.01" style="width:80px;text-align:right;padding:6px 8px;font-size:12px;font-family:'DM Mono',monospace;" onchange="extraCosts[${i}].cost=parseFloat(this.value)||0;saveExtraCosts();updateExtraCostsTotal();updateFoodCost();">
-      <span style="font-size:11px;color:var(--muted)">zł/porcję</span>
-      <button class="btn btn-danger btn-sm" onclick="extraCosts.splice(${i},1);saveExtraCosts();renderExtraCosts();updateFoodCost();">✕</button>
-    `;
-    list.appendChild(row);
   });
-  updateExtraCostsTotal();
-  saveExtraCosts();
-}
-
-function updateExtraCostsTotal() {
-  const total = extraCosts.reduce((s,ec) => s+(parseFloat(ec.cost)||0), 0);
-  const el = document.getElementById('extraCostsTotal');
-  if (el) el.textContent = total.toFixed(2) + ' zł';
-  return total;
-}
-
-function getTotalExtraCosts() {
-  return extraCosts.reduce((s,ec) => s+(parseFloat(ec.cost)||0), 0);
-}
-
-</script>
-
-<script>
-// ── AI LOOKUP - gdy produkt nie w bazie ──
-async function aiLookupNutrients(productName) {
-  const key = getApiKey();
-  if (!key) return null;
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: `Podaj wartości odżywcze na 100g produktu: "${productName}".
-Zwróć TYLKO JSON bez żadnego tekstu:
-{"kcal":0,"protein":0,"fat":0,"saturated":0,"carbs":0,"sugars":0,"salt":0}
-Użyj danych z polskich tabel żywieniowych NIZP PZH lub europejskich baz. Wartość soli w gramach.`
-        }]
-      })
-    });
-    const data = await response.json();
-    const raw = data.content[0].text.trim().replace(/```json|```/g,'').trim();
-    return JSON.parse(raw);
-  } catch(e) { return null; }
-}
-
-</script>
-
-<script>
-// ── BAZA CEN (localStorage) ──
-function savePriceToCache(name, price) {
-  if (!price || price <= 0) return;
-  const cache = JSON.parse(localStorage.getItem('bistro_prices') || '{}');
-  cache[name.toLowerCase()] = price;
-  localStorage.setItem('bistro_prices', JSON.stringify(cache));
-}
-function getPriceFromCache(name) {
-  const cache = JSON.parse(localStorage.getItem('bistro_prices') || '{}');
-  return cache[name.toLowerCase()] || 0;
-}
-
-// Patch updatePrice zeby zapisywal ceny do cache
-const _origUpdatePrice = updatePrice;
-function updatePrice(idx, val) {
-  const price = parseFloat(val) || 0;
-  ingredients[idx].pricePerKg = price;
-  savePriceToCache(ingredients[idx].name, price);
-  renderTable();
-}
-
-// Przy dodawaniu skladnika - sprawdz czy mamy cene w cache
-const _origPickFood2 = pickFood;
-function pickFood(f, plName) {
-  _origPickFood2(f, plName);
-  const last = ingredients[ingredients.length - 1];
-  if (last) {
-    last.pricePerKg = getPriceFromCache(last.name);
-    last.loss = getAutoLoss(last.name);
-  }
-  renderTable();
-}
-
-// ── AI LOOKUP dla pojedynczego skladnika w tabeli ──
-async function aiLookupSingle(idx) {
-  const ing = ingredients[idx];
-  if (!ing) return;
-  const btn = document.getElementById('lookup_' + idx);
-  if (btn) { btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true; }
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': getApiKey(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 200,
-        messages: [{
-          role: 'user',
-          content: 'Wartości odżywcze na 100g: "' + ing.name + '". Zwróć TYLKO JSON: {"kcal":0,"protein":0,"fat":0,"saturated":0,"carbs":0,"sugars":0,"salt":0}'
-        }]
-      })
-    });
-    const data = await response.json();
-    const raw = data.content[0].text.trim().replace(/```json|```/g,'').trim();
-    const aiData = JSON.parse(raw);
-    ingredients[idx].per100 = {
-      kcal: aiData.kcal || 0,
-      protein: aiData.protein || 0,
-      fat: aiData.fat || 0,
-      saturated: aiData.saturated || 0,
-      carbs: aiData.carbs || 0,
-      sugars: aiData.sugars || 0,
-      salt: aiData.salt || 0
-    };
-    ingredients[idx].source = '🤖 AI';
-    ingredients[idx].needsLookup = false;
-    renderTable();
-    showToast('✓ Pobrano dane: ' + ing.name);
-  } catch(e) {
-    showToast('Błąd pobierania danych', true);
-    if (btn) { btn.innerHTML = '🔍 Pobierz dane'; btn.disabled = false; }
-  }
-}
-
-// ── PATCH renderTable - dodaj przycisk Pobierz dane + auto-ceny z cache ──
-</script>
-
-<script>
-// ── AI CENY - pobiera orientacyjne ceny hurtowe dla gastronomii ──
-const pricesFetchQueue = [];
-let pricesFetchRunning = false;
-
-async function fetchMarketPricesAI(names) {
-  const key = getApiKey();
-  if (!key || !names.length) return {};
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: 'Podaj orientacyjne ceny hurtowe dla gastronomii w Polsce (PLN/kg lub PLN/litr) dla tych produktów: ' + names.join(', ') + '. Zwróć TYLKO JSON: {"nazwa produktu": cena_numeryczna}. Ceny netto, hurt, rok 2025.'
-        }]
-      })
-    });
-    const data = await response.json();
-    const raw = data.content[0].text.trim().replace(/```json|```/g,'').trim();
-    console.log('AI ceny odpowiedz:', raw);
-    return JSON.parse(raw);
-  } catch(e) { console.error('fetchMarketPricesAI error:', e); return {}; }
-}
-
-async function autoFillPrices() {
-  if (pricesFetchRunning) return;
-  // Znajdz skladniki bez ceny i bez ceny z cache
-  const needsPrice = ingredients.filter(ing => 
-    !ing.pricePerKg && !ing._priceFetched
-  );
-  if (!needsPrice.length) return;
-  
-  pricesFetchRunning = true;
-  const names = needsPrice.map(ing => ing.name);
-  
-  // Pokaż że pobiera
-  needsPrice.forEach(ing => { ing._priceFetched = true; });
-  
-  const prices = await fetchMarketPricesAI(names);
-  
-  let updated = false;
-  ingredients.forEach(ing => {
-    if (ing.pricePerKg) return; // ma własną cenę - nie nadpisuj
-    // Szukaj w wynikach AI
-    for (const [key, price] of Object.entries(prices)) {
-      if (ing.name.toLowerCase().includes(key.toLowerCase()) || 
-          key.toLowerCase().includes(ing.name.toLowerCase())) {
-        ing.marketPrice = parseFloat(price) || 0;
-        updated = true;
-        break;
-      }
-    }
-  });
-  
-  pricesFetchRunning = false;
-  if (updated) {
-    renderTable();
-    showToast('💰 Pobrano orientacyjne ceny rynkowe');
-  }
-}
-
-// Patch renderTable zeby pokazywal kolumne z cenami
-
-// Zaktualizuj naglowki
-window.addEventListener('DOMContentLoaded', function() {
-  const thead = document.querySelector('#ingredientsTable thead tr');
-  if (thead) {
-    thead.innerHTML = `
-      <th>Składnik</th>
-      <th>Alergeny</th>
-      <th>Waga (g)</th>
-      <th>Straty</th>
-      <th>Cena (zł/kg)</th>
-      <th>Koszt</th>
-      <th>Kcal</th>
-      <th>Białko</th>
-      <th>Tłuszcz</th>
-      <th>Węglow.</th>
-      <th></th>
-    `;
-  }
-});
-</script>
-
-<script>
-// ── PRZELICZANIE LITRÓW ──
-function updateLiters() {
-  const g = parseFloat(document.getElementById('cookedWeight').value);
-  if (g > 0) document.getElementById('cookedLiters').value = (g/1000).toFixed(2);
-  updateTotals();
-}
-function updateFromLiters() {
-  const l = parseFloat(document.getElementById('cookedLiters').value);
-  if (l > 0) document.getElementById('cookedWeight').value = Math.round(l*1000);
-  updateTotals();
-}
-
-// ── PATCH renderParsedPreview - pokazuj jednostki i ilości ──
-const _origRenderParsed = renderParsedPreview;
-function renderParsedPreview() {
-  const list = document.getElementById('parsedList');
-  list.innerHTML = '';
-  parsedIngredients.forEach(function(item, i) {
-    const matches = searchPolishDB(item.name);
-    const matched = matches.length > 0;
-    const unitInfo = getProductUnit ? getProductUnit(item.name) : {unit:'g'};
-    const displayUnit = item.unit || unitInfo.unit;
-    const displayAmount = item.amount || (item.weight || 100);
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px;border:1px solid var(--border);';
-    div.innerHTML = '<span style="font-size:16px">'+(matched?'✅':'⚠️')+'</span>'
-      +'<div style="flex:1"><div style="font-size:13px;font-weight:500">'+item.name+'</div>'
-      +'<div style="font-size:11px;color:var(--muted)">'+(matched?'🇵🇱 Znaleziono w bazie':'Nie znaleziono')
-      +(item.percent?' · '+item.percent+'%':'')
-      +(item.unit?' · <span style="color:var(--accent)">'+displayAmount+' '+displayUnit+'</span>':'')
-      +'</div></div>'
-      +'<div style="display:flex;align-items:center;gap:4px;">'
-      +'<input type="number" value="'+(item.weight||100)+'" min="0" style="width:70px;text-align:right;padding:5px 8px;font-size:12px;font-family:DM Mono,monospace;" onchange="parsedIngredients['+i+'].weight=parseFloat(this.value)||100">'
-      +'<span style="font-size:11px;color:var(--muted)">g</span>'
-      +'</div>';
-    list.appendChild(div);
-  });
-  document.getElementById('parsedPreview').style.display = 'block';
-}
-
 </script>
 </body>
 </html>
