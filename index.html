@@ -667,7 +667,11 @@
       <div class="cw-input">
         <div class="field-group">
           <label>Masa ugotowana (g)</label>
-          <input type="number" id="cookedWeight" placeholder="auto" min="1">
+          <input type="number" id="cookedWeight" placeholder="auto" min="1" oninput="updateLiters()">
+        </div>
+        <div class="field-group">
+          <label>Objętość (litry)</label>
+          <input type="number" id="cookedLiters" placeholder="auto" min="0" step="0.1" oninput="updateFromLiters()">
         </div>
         <div id="ratioDisplay" class="ratio-badge" style="display:none"></div>
       </div>
@@ -854,6 +858,43 @@ window.addEventListener('DOMContentLoaded', function(){
   if(k) document.getElementById('apiKeyInput').value = k;
 });
 
+
+// ── JEDNOSTKI PRODUKTÓW ──
+const PRODUCT_UNITS = {
+  // Sztuki
+  'jajo': {unit:'szt', weightPerUnit:60},
+  'jajko': {unit:'szt', weightPerUnit:60},
+  // Litry/ml
+  'mleko': {unit:'l', weightPerUnit:1000},
+  'śmietana': {unit:'l', weightPerUnit:1000},
+  'śmietanka': {unit:'l', weightPerUnit:1000},
+  'maślanka': {unit:'l', weightPerUnit:1000},
+  'kefir': {unit:'l', weightPerUnit:1000},
+  'olej': {unit:'l', weightPerUnit:920},
+  'oliwa': {unit:'l', weightPerUnit:910},
+  'bulion': {unit:'l', weightPerUnit:1000},
+  'sok': {unit:'ml', weightPerUnit:1},
+  // Gramy/kg domyslnie
+};
+
+function getProductUnit(name) {
+  const lower = name.toLowerCase();
+  for (const [key, val] of Object.entries(PRODUCT_UNITS)) {
+    if (lower.includes(key)) return val;
+  }
+  return {unit:'g', weightPerUnit:1};
+}
+
+function convertToGrams(amount, unit, productName) {
+  const info = getProductUnit(productName);
+  if (unit === 'kg') return amount * 1000;
+  if (unit === 'l') return amount * 1000;
+  if (unit === 'ml') return amount;
+  if (unit === 'szt') return amount * info.weightPerUnit;
+  if (unit === 'dag') return amount * 10;
+  if (unit === 'g') return amount;
+  return amount; // domyslnie gramy
+}
 // ── ALLERGENS CONFIG ──
 const ALLERGENS = [
   { id: 'gluten',    name: 'Gluten',     icon: '🌾', keywords: ['wheat','rye','barley','oats','spelt','flour','bread','pasta','semolina','mąka','chleb','makaron','orkisz','pszen','żyto','owies','jęczmień'] },
@@ -2214,6 +2255,92 @@ window.addEventListener('DOMContentLoaded', function() {
     `;
   }
 });
+</script>
+
+<script>
+// ── PRZELICZANIE LITRÓW ──
+function updateLiters() {
+  const g = parseFloat(document.getElementById('cookedWeight').value);
+  if (g > 0) document.getElementById('cookedLiters').value = (g/1000).toFixed(2);
+  updateTotals();
+}
+function updateFromLiters() {
+  const l = parseFloat(document.getElementById('cookedLiters').value);
+  if (l > 0) document.getElementById('cookedWeight').value = Math.round(l*1000);
+  updateTotals();
+}
+
+// ── PATCH renderParsedPreview - pokazuj jednostki i ilości ──
+const _origRenderParsed = renderParsedPreview;
+function renderParsedPreview() {
+  const list = document.getElementById('parsedList');
+  list.innerHTML = '';
+  parsedIngredients.forEach(function(item, i) {
+    const matches = searchPolishDB(item.name);
+    const matched = matches.length > 0;
+    const unitInfo = getProductUnit ? getProductUnit(item.name) : {unit:'g'};
+    const displayUnit = item.unit || unitInfo.unit;
+    const displayAmount = item.amount || (item.weight || 100);
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px;border:1px solid var(--border);';
+    div.innerHTML = '<span style="font-size:16px">'+(matched?'✅':'⚠️')+'</span>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:500">'+item.name+'</div>'
+      +'<div style="font-size:11px;color:var(--muted)">'+(matched?'🇵🇱 Znaleziono w bazie':'Nie znaleziono')
+      +(item.percent?' · '+item.percent+'%':'')
+      +(item.unit?' · <span style="color:var(--accent)">'+displayAmount+' '+displayUnit+'</span>':'')
+      +'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:4px;">'
+      +'<input type="number" value="'+(item.weight||100)+'" min="0" style="width:70px;text-align:right;padding:5px 8px;font-size:12px;font-family:DM Mono,monospace;" onchange="parsedIngredients['+i+'].weight=parseFloat(this.value)||100">'
+      +'<span style="font-size:11px;color:var(--muted)">g</span>'
+      +'</div>';
+    list.appendChild(div);
+  });
+  document.getElementById('parsedPreview').style.display = 'block';
+}
+
+// ── PATCH updateFoodCost - dodaj info o litrach ──
+const _origUpdateFC = updateFoodCost;
+function updateFoodCost() {
+  _origUpdateFC();
+  // Dodaj info o litrach do sekcji porcji
+  setTimeout(() => {
+    const liters = parseFloat(document.getElementById('cookedLiters')?.value) || 
+                   (parseFloat(document.getElementById('cookedWeight')?.value)||0)/1000;
+    const portion = parseFloat(document.getElementById('portionSize').value)||300;
+    const portions = liters > 0 ? (liters*1000/portion).toFixed(1) : '—';
+    const costsEl = document.getElementById('foodCostBar');
+    if (!costsEl || !liters) return;
+    let literInfo = document.getElementById('literInfo');
+    if (!literInfo) {
+      literInfo = document.createElement('div');
+      literInfo.id = 'literInfo';
+      literInfo.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:24px;flex-wrap:wrap;';
+      costsEl.appendChild(literInfo);
+    }
+    const totalCost = (() => {
+      let t=0;
+      ingredients.forEach(ing=>{
+        const p = ing.pricePerKg>0?ing.pricePerKg:(ing.marketPrice||0);
+        if(p>0) t+=ing.weight/1000*p;
+      });
+      return t;
+    })();
+    const extraPer = (typeof getTotalExtraCosts==='function')?getTotalExtraCosts():0;
+    const costPerLiter = liters>0?(totalCost/liters+extraPer/(liters*1000/portion)).toFixed(2):'—';
+    literInfo.innerHTML = `
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">🥣 Ilość zupy</div>
+        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--text)">${liters.toFixed(2)} l</div>
+        <div style="font-size:10px;color:var(--muted)">${portions} porcji po ${portion}g</div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">💧 Koszt / litr</div>
+        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--accent)">${costPerLiter} zł</div>
+        <div style="font-size:10px;color:var(--muted)">składniki</div>
+      </div>
+    `;
+  }, 200);
+}
 </script>
 </body>
 </html>
