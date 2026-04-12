@@ -291,7 +291,9 @@ tbody td:nth-child(2) { text-align: left; }
     <div class="subtitle">Kalkulator wartości odżywczych · EU 1169/2011</div>
   </div>
   <div class="header-right">
-    <button class="btn btn-ghost btn-sm" onclick="toggleRecipeManager()">📚 Moje receptury</button>
+    <button class="btn" onclick="newDish()" style="font-size:13px;">✨ Nowe danie</button>
+    <button class="btn btn-ghost" onclick="saveRecipe()" style="font-size:13px;">💾 Zapisz</button>
+    <button class="btn btn-ghost" onclick="toggleRecipeManager()" style="font-size:13px;">📚 Moje receptury</button>
     <input type="password" id="apiKeyInput" class="api-key-input" placeholder="sk-ant-... (klucz Anthropic)" oninput="saveApiKey(this.value)">
     <div class="eu-badge">🇪🇺 UE 1169/2011</div>
   </div>
