@@ -1519,6 +1519,10 @@ async function loadRecipe(id) {
     document.getElementById('cookedLiters').value = r.cookedLiters||'';
     ingredients = JSON.parse(JSON.stringify(r.ingredients||[]));
     window._currentRecipeId = data.id;
+    const piEl = document.getElementById('przepisInstrukcja');
+    const pnEl = document.getElementById('przepisNotatki');
+    if(piEl) piEl.value = r.przepisInstrukcja || '';
+    if(pnEl) pnEl.value = r.przepisNotatki || '';
     renderTable();
     closeRecipeManager();
     showToast('✓ Wczytano: '+r.name);
