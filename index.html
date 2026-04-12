@@ -343,6 +343,7 @@ tbody td:nth-child(2) { text-align: left; }
     </div>
     <div class="export-row">
       <button class="btn btn-sm" onclick="window.print()">🖨️ Drukuj</button>
+      <button class="btn btn-sm btn-ghost" onclick="toggleKarta()">🗒️ Karta dania</button>
       <button class="btn btn-sm btn-ghost" onclick="copyLabel()">📋 Kopiuj</button>
       <button class="btn btn-sm btn-ghost" onclick="exportJSON()">💾 JSON</button>
     </div>
@@ -1403,5 +1404,210 @@ function showToast(msg, isError=false) {
   window._toastTimer = setTimeout(()=>t.className='toast',3000);
 }
 </script>
+
+<div class="modal-overlay" id="kartaModal">
+  <div class="modal-box" style="width:800px;max-height:95vh;">
+    <div class="modal-header">
+      <span class="modal-title">🗒️ Karta Dania</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-sm" onclick="printKarta()">🖨️ Drukuj kartę</button>
+        <button class="modal-close" onclick="closeKarta()">✕</button>
+      </div>
+    </div>
+
+    <div id="kartaContent" style="background:#fff;color:#1a1814;padding:28px;border-radius:8px;font-family:'DM Sans',sans-serif;">
+
+      <!-- NAGŁÓWEK -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #1a1814;">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#1a1814" id="kartaDishName">—</div>
+          <div style="font-size:13px;color:#6b6252;margin-top:3px" id="kartaCategory">—</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'Playfair Display',serif;font-size:18px;color:#d4a84b;font-weight:600">🍲 Gruba Micha</div>
+          <div style="font-size:11px;color:#6b6252" id="kartaDate"></div>
+        </div>
+      </div>
+
+      <!-- OPIS/INSTRUKCJA -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b6252;margin-bottom:8px;">Instrukcja przygotowania</div>
+        <textarea id="kartaInstrukcja" style="width:100%;min-height:100px;border:1px solid #ddd;border-radius:6px;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1a1814;resize:vertical;background:#fafafa;" placeholder="Wpisz instrukcję przygotowania: czas gotowania, temperatura, kolejność dodawania składników..."></textarea>
+      </div>
+
+      <!-- SKŁADNIKI -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b6252;margin-bottom:8px;">Składniki receptury</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:#f5f0e8;">
+              <th style="padding:7px 10px;text-align:left;border:1px solid #ddd;">Składnik</th>
+              <th style="padding:7px 10px;text-align:right;border:1px solid #ddd;">Waga (g)</th>
+              <th style="padding:7px 10px;text-align:right;border:1px solid #ddd;">Straty</th>
+              <th style="padding:7px 10px;text-align:right;border:1px solid #ddd;">Netto (g)</th>
+              <th style="padding:7px 10px;text-align:right;border:1px solid #ddd;">Koszt</th>
+            </tr>
+          </thead>
+          <tbody id="kartaIngredients"></tbody>
+          <tfoot id="kartaIngredientsFoot"></tfoot>
+        </table>
+      </div>
+
+      <!-- WARTOŚCI ODŻYWCZE -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b6252;margin-bottom:8px;">Wartości odżywcze (na 100g)</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <tbody id="kartaNutrition"></tbody>
+          </table>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b6252;margin-bottom:8px;">Food Cost</div>
+          <div id="kartaFoodCost" style="font-size:12px;"></div>
+          <div style="margin-top:12px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b6252;margin-bottom:6px;">Porcjowanie</div>
+            <div id="kartaPorcje" style="font-size:12px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALERGENY I SKŁAD -->
+      <div style="background:#fff8f0;border:1px solid #f0d8b0;border-radius:6px;padding:12px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8b2020;margin-bottom:6px;">Wykaz składników i alergeny (EU 1169/2011)</div>
+        <div id="kartaAlergeny" style="font-size:11px;line-height:1.7;color:#1a1814;"></div>
+      </div>
+
+      <!-- NOTATKI -->
+      <div style="margin-top:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b6252;margin-bottom:6px;">Notatki</div>
+        <textarea id="kartaNotatki" style="width:100%;min-height:60px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:'DM Sans',sans-serif;font-size:12px;color:#1a1814;resize:vertical;background:#fafafa;" placeholder="Dodatkowe uwagi, sezonowość składników, warianty dania..."></textarea>
+      </div>
+
+      <div style="margin-top:14px;font-size:9px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:8px;">
+        Karta dania wygenerowana przez system Gruba Micha · EU 1169/2011
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleKarta() {
+  const m = document.getElementById('kartaModal');
+  m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+  if (m.style.display === 'flex') fillKarta();
+}
+function closeKarta() {
+  document.getElementById('kartaModal').style.display = 'none';
+}
+
+function fillKarta() {
+  // Nagłówek
+  document.getElementById('kartaDishName').textContent = document.getElementById('dishName').value || 'Nazwa dania';
+  document.getElementById('kartaCategory').textContent = document.getElementById('dishCategory').value;
+  document.getElementById('kartaDate').textContent = 'Data: ' + new Date().toLocaleDateString('pl-PL');
+
+  // Składniki
+  const tbody = document.getElementById('kartaIngredients');
+  const tfoot = document.getElementById('kartaIngredientsFoot');
+  tbody.innerHTML = '';
+  let totalCost = 0;
+  const sorted = [...ingredients].sort((a,b) => b.weight - a.weight);
+  sorted.forEach((ing, i) => {
+    const loss = ing.loss || 0;
+    const netto = (ing.weight * (1 - loss/100)).toFixed(0);
+    const price = ing.pricePerKg > 0 ? ing.pricePerKg : (ing.marketPrice||0);
+    const cost = price > 0 ? (ing.weight/1000*price).toFixed(2) : '—';
+    if (price > 0) totalCost += ing.weight/1000*price;
+    const bg = i % 2 === 0 ? '#fff' : '#fafaf8';
+    tbody.innerHTML += `<tr style="background:${bg}">
+      <td style="padding:6px 10px;border:1px solid #ddd;">${ing.needsLookup?'⚠️ ':''} ${ing.name}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">${ing.weight}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">${loss}%</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">${netto}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">${cost !== '—' ? cost+' zł' : '—'}</td>
+    </tr>`;
+  });
+  const rawWeight = ingredients.reduce((s,i)=>s+i.weight,0);
+  tfoot.innerHTML = `<tr style="background:#f5f0e8;font-weight:600;">
+    <td style="padding:6px 10px;border:1px solid #ddd;">ŁĄCZNIE</td>
+    <td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">${rawWeight}g</td>
+    <td style="padding:6px 10px;border:1px solid #ddd;"></td>
+    <td style="padding:6px 10px;border:1px solid #ddd;"></td>
+    <td style="padding:6px 10px;border:1px solid #ddd;text-align:right;color:#d4a84b;">${totalCost.toFixed(2)} zł</td>
+  </tr>`;
+
+  // Wartości odżywcze
+  const cooked = parseFloat(document.getElementById('cookedWeight').value) || rawWeight;
+  const r = 100/cooked;
+  const t = getTotals();
+  const nutrition = [
+    ['Wartość energetyczna', `${(t.totKcal*r).toFixed(0)} kcal / ${(t.totKcal*r*4.184).toFixed(0)} kJ`],
+    ['Tłuszcz', `${(t.totFat*r).toFixed(1)} g`],
+    ['— w tym nasycone', `${(t.totSat*r).toFixed(1)} g`],
+    ['Węglowodany', `${(t.totCarb*r).toFixed(1)} g`],
+    ['— w tym cukry', `${(t.totSugar*r).toFixed(1)} g`],
+    ['Białko', `${(t.totProt*r).toFixed(1)} g`],
+    ['Sól', `${(t.totSalt*r).toFixed(2)} g`],
+  ];
+  const nTbody = document.getElementById('kartaNutrition');
+  nTbody.innerHTML = nutrition.map((row,i) =>
+    `<tr style="background:${i%2===0?'#fff':'#fafaf8'}">
+      <td style="padding:5px 8px;border:1px solid #ddd;font-size:11px;">${row[0]}</td>
+      <td style="padding:5px 8px;border:1px solid #ddd;text-align:right;font-weight:600;">${row[1]}</td>
+    </tr>`
+  ).join('');
+
+  // Food cost
+  const portion = parseFloat(document.getElementById('portionSize').value)||300;
+  const portions = cooked/portion;
+  const extraPer = getTotalExtraCosts();
+  const ingCostPer = portions>0 ? totalCost/portions : 0;
+  const totalCostPer = ingCostPer + extraPer;
+  const sp = parseFloat(localStorage.getItem('bistro_selling_price'))||0;
+  const profit = sp > 0 ? (sp - totalCostPer).toFixed(2) : '—';
+  const fc = sp > 0 ? (totalCostPer/sp*100).toFixed(1)+'%' : '—';
+  document.getElementById('kartaFoodCost').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">Koszt składników</td><td style="padding:4px 8px;border:1px solid #ddd;text-align:right;font-weight:600;">${totalCost.toFixed(2)} zł</td></tr>
+      <tr style="background:#fafaf8"><td style="padding:4px 8px;border:1px solid #ddd;">Koszt porcji (${portion}g)</td><td style="padding:4px 8px;border:1px solid #ddd;text-align:right;font-weight:600;">${totalCostPer.toFixed(2)} zł</td></tr>
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">Cena sprzedaży</td><td style="padding:4px 8px;border:1px solid #ddd;text-align:right;font-weight:600;">${sp > 0 ? sp.toFixed(2)+' zł' : '—'}</td></tr>
+      <tr style="background:#fafaf8"><td style="padding:4px 8px;border:1px solid #ddd;">Food cost %</td><td style="padding:4px 8px;border:1px solid #ddd;text-align:right;font-weight:600;">${fc}</td></tr>
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">Zysk na porcji</td><td style="padding:4px 8px;border:1px solid #ddd;text-align:right;font-weight:600;color:${profit!=='—'&&parseFloat(profit)>0?'#4caf7d':'#c0392b'}">${profit !== '—' ? profit+' zł' : '—'}</td></tr>
+    </table>`;
+  document.getElementById('kartaPorcje').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">Masa surowa</td><td style="padding:4px 8px;border:1px solid #ddd;text-align:right;font-weight:600;">${rawWeight} g</td></tr>
+      <tr style="background:#fafaf8"><td style="padding:4px 8px;border:1px solid #ddd;">Masa ugotowana</td><td style="padding:4px 8px;border:1px solid #ddd;text-align:right;font-weight:600;">${cooked.toFixed(0)} g</td></tr>
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">Wielkość porcji</td><td style="padding:4px 8px;border:1px solid #ddd;text-align:right;font-weight:600;">${portion} g</td></tr>
+      <tr style="background:#fafaf8"><td style="padding:4px 8px;border:1px solid #ddd;">Ilość porcji</td><td style="padding:4px 8px;border:1px solid #ddd;text-align:right;font-weight:600;">${portions.toFixed(1)}</td></tr>
+    </table>`;
+
+  // Alergeny
+  const sortedIng = [...ingredients].sort((a,b)=>b.weight-a.weight);
+  const allergenIds = [...new Set(sortedIng.flatMap(i=>i.allergens))];
+  const allergenObjs = allergenIds.map(id=>ALLERGENS.find(a=>a.id===id)).filter(Boolean);
+  const ingList = sortedIng.map(ing =>
+    ing.allergens.length ? `<strong style="font-weight:800;text-decoration:underline;color:#8b2020">${ing.name.toUpperCase()}</strong>` : ing.name
+  ).join(', ');
+  document.getElementById('kartaAlergeny').innerHTML =
+    ingList + (allergenObjs.length ? `<div style="margin-top:6px;color:#8b2020;font-weight:600;">Alergeny: ${allergenObjs.map(a=>a.icon+' '+a.name).join(', ')}</div>` : '');
+}
+
+function printKarta() {
+  const content = document.getElementById('kartaContent').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>Karta Dania - ${document.getElementById('dishName').value||'Gruba Micha'}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: 'DM Sans', sans-serif; margin: 20px; color: #1a1814; font-size:12px; }
+      @media print { body { margin: 10px; } textarea { border: none !important; background: transparent !important; } }
+    </style>
+    </head><body>${content}<script>window.onload=()=>window.print()<\/script></body></html>`);
+  win.document.close();
+}
+</script>
+
 </body>
 </html>
