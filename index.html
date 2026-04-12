@@ -217,6 +217,8 @@ tbody td:nth-child(2) { text-align: left; }
 
 /* ── MOBILE ── */
 @media (max-width: 768px) {
+  #przepisMobile { display: block !important; }
+
   /* Layout - jedna kolumna */
   .app { grid-template-columns: 1fr; }
   .right-panel {
@@ -460,6 +462,19 @@ tbody td:nth-child(2) { text-align: left; }
         <textarea id="przepisNotatki" style="width:100%;min-height:80px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Warianty dania, sezonowość, uwagi..."></textarea>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- PRZEPIS MOBILE -->
+<div id="przepisMobile" style="display:none;padding:0 16px 16px;">
+  <div class="section-title" style="margin-top:16px;"><span class="step-num">📝</span> Przepis i notatki</div>
+  <div class="field-group" style="margin-bottom:12px;">
+    <label>Instrukcja przygotowania</label>
+    <textarea id="przepisInstrukcjaMobile" style="width:100%;min-height:100px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;" placeholder="Czas gotowania, temperatura..."></textarea>
+  </div>
+  <div class="field-group">
+    <label>Notatki kucharza</label>
+    <textarea id="przepisNotkiMobile" style="width:100%;min-height:70px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;" placeholder="Warianty, uwagi..."></textarea>
   </div>
 </div>
 
@@ -1439,6 +1454,8 @@ async function saveRecipe() {
     cookedWeight: document.getElementById('cookedWeight').value,
     cookedLiters: document.getElementById('cookedLiters').value,
     ingredients: JSON.parse(JSON.stringify(ingredients)),
+    przepisInstrukcja: document.getElementById('przepisInstrukcja')?.value || '',
+    przepisNotatki: document.getElementById('przepisNotatki')?.value || '',
     savedAt: new Date().toLocaleDateString('pl-PL')
   };
   try {
@@ -1517,6 +1534,37 @@ async function deleteRecipe(id, name) {
 // ═══════════════════════════════════════════════════════
 // TOAST
 // ═══════════════════════════════════════════════════════
+
+// Sync przepisu desktop <-> mobile
+function getPrzepisData() {
+  return {
+    instrukcja: document.getElementById('przepisInstrukcja')?.value || document.getElementById('przepisInstrukcjaMobile')?.value || '',
+    notatki: document.getElementById('przepisNotatki')?.value || document.getElementById('przepisNotkiMobile')?.value || ''
+  };
+}
+function setPrzepisData(instrukcja, notatki) {
+  ['przepisInstrukcja','przepisInstrukcjaMobile'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = instrukcja||'';
+  });
+  ['przepisNotatki','przepisNotkiMobile'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = notatki||'';
+  });
+}
+// Sync przy wpisywaniu
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'przepisInstrukcja') {
+    const m = document.getElementById('przepisInstrukcjaMobile'); if(m) m.value = e.target.value;
+  }
+  if (e.target.id === 'przepisInstrukcjaMobile') {
+    const d = document.getElementById('przepisInstrukcja'); if(d) d.value = e.target.value;
+  }
+  if (e.target.id === 'przepisNotatki') {
+    const m = document.getElementById('przepisNotkiMobile'); if(m) m.value = e.target.value;
+  }
+  if (e.target.id === 'przepisNotkiMobile') {
+    const d = document.getElementById('przepisNotatki'); if(d) d.value = e.target.value;
+  }
+});
 
 function showToast(msg, isError=false) {
   const t = document.getElementById('toast');
