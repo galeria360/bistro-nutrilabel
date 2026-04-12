@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit(0); }
 $host = 'localhost';
 $db   = 'u869576174_bistro';
 $user = 'u869576174_centrala';
-$pass = 'NOWE_HASLO';
+$pass = 'Bistro2026!';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
