@@ -217,7 +217,6 @@ tbody td:nth-child(2) { text-align: left; }
 
 /* ── MOBILE ── */
 @media (max-width: 768px) {
-  #przepisMobile { display: block !important; }
 
   /* Layout - jedna kolumna */
   .app { grid-template-columns: 1fr; }
@@ -343,6 +342,7 @@ tbody td:nth-child(2) { text-align: left; }
       <button class="btn btn-ghost btn-sm" onclick="toggleBulkImport()">📋 Wklej recepturę</button>
       <button class="btn btn-ghost btn-sm" onclick="saveRecipe()">💾 Zapisz</button>
       <button class="btn btn-ghost btn-sm" onclick="clearAll()" style="color:var(--danger);border-color:#c0392b33;">🗑️ Wyczyść</button>
+      <button class="btn btn-ghost btn-sm" onclick="newDish()">✨ Nowe danie</button>
     </div>
 
     <div id="translateHint"></div>
@@ -462,19 +462,6 @@ tbody td:nth-child(2) { text-align: left; }
         <textarea id="przepisNotatki" style="width:100%;min-height:80px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Warianty dania, sezonowość, uwagi..."></textarea>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- PRZEPIS MOBILE -->
-<div id="przepisMobile" style="display:none;padding:0 16px 16px;">
-  <div class="section-title" style="margin-top:16px;"><span class="step-num">📝</span> Przepis i notatki</div>
-  <div class="field-group" style="margin-bottom:12px;">
-    <label>Instrukcja przygotowania</label>
-    <textarea id="przepisInstrukcjaMobile" style="width:100%;min-height:100px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;" placeholder="Czas gotowania, temperatura..."></textarea>
-  </div>
-  <div class="field-group">
-    <label>Notatki kucharza</label>
-    <textarea id="przepisNotkiMobile" style="width:100%;min-height:70px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;" placeholder="Warianty, uwagi..."></textarea>
   </div>
 </div>
 
@@ -1031,6 +1018,22 @@ function updatePrice(idx, val) {
 }
 
 function removeIngredient(idx) { ingredients.splice(idx,1); renderTable(); }
+
+function newDish() {
+  if (ingredients.length && !confirm('Zacząć nowe danie? Niezapisane zmiany zostaną utracone.')) return;
+  ingredients = [];
+  window._currentRecipeId = null;
+  document.getElementById('dishName').value = '';
+  document.getElementById('dishCategory').value = 'Zupy';
+  document.getElementById('portionSize').value = '300';
+  document.getElementById('cookedWeight').value = '';
+  document.getElementById('cookedLiters').value = '';
+  ['przepisInstrukcja','przepisNotatki'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  renderTable();
+  showToast('✓ Nowe danie');
+}
 
 function clearAll() {
   if (!ingredients.length) return;
