@@ -1504,7 +1504,8 @@ function updateFoodCost() {
 
   let totalIngCost=0, allPriced=true;
   ingredients.forEach(ing=>{
-    if(ing.pricePerKg>0) totalIngCost += ing.weight/1000*ing.pricePerKg;
+    const activePrice = ing.pricePerKg > 0 ? ing.pricePerKg : (ing.marketPrice || 0);
+    if(activePrice > 0) totalIngCost += ing.weight/1000*activePrice;
     else allPriced=false;
   });
 
