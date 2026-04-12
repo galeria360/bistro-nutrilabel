@@ -1195,6 +1195,20 @@ function updateWeight(idx, val) {
   ingredients[idx].weight = parseFloat(val)||0;
   updateTotals();
   updateFoodCost();
+  // Zaktualizuj tylko kolumne koszt w tej samej linii
+  const rows = document.getElementById('ingredientRows').querySelectorAll('tr');
+  if (rows[idx]) {
+    const ing = ingredients[idx];
+    const myPrice = ing.pricePerKg || 0;
+    const marketPrice = ing.marketPrice || 0;
+    const activePrice = myPrice > 0 ? myPrice : marketPrice;
+    const cost = activePrice > 0 ? (ing.weight/1000*activePrice).toFixed(2) : '—';
+    const costCell = rows[idx].querySelectorAll('td')[5];
+    if (costCell) {
+      costCell.innerHTML = (cost!=='—'?cost+' zł':'—') + (myPrice>0?'<div style="font-size:9px;color:var(--accent)">✓ moja</div>':marketPrice>0?'<div style="font-size:9px;color:var(--muted)">~ rynek</div>':'');
+      costCell.style.color = myPrice>0?'var(--accent)':marketPrice>0?'var(--muted)':'var(--muted)';
+    }
+  }
 }
 function removeIngredient(idx) {
   ingredients.splice(idx,1);
