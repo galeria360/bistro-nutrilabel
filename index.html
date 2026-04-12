@@ -1114,27 +1114,40 @@ function addManual() {
 function renderTable() {
   const tbody = document.getElementById('ingredientRows');
   if (!ingredients.length) {
-    tbody.innerHTML = '<tr id="emptyRow"><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Dodaj składniki powyżej, aby rozpocząć</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Dodaj składniki powyżej, aby rozpocząć</td></tr>';
     document.getElementById('totalsBar').style.display = 'none';
     updateLabel();
     return;
   }
   tbody.innerHTML = '';
   ingredients.forEach((ing, idx) => {
-    const w = ing.weight;
-    const f = w/100;
-    const kcal = (ing.per100.kcal*f).toFixed(0);
-    const prot = (ing.per100.protein*f).toFixed(1);
-    const fat = (ing.per100.fat*f).toFixed(1);
-    const carb = (ing.per100.carbs*f).toFixed(1);
-    const salt = (ing.per100.salt*f).toFixed(2);
+    if (!ing.pricePerKg) ing.pricePerKg = getPriceFromCache(ing.name);
+    const loss = ing.loss || 0;
+    const effectiveWeight = ing.weight * (1 - loss/100);
+    const fw = effectiveWeight/100;
+    const kcal = (ing.per100.kcal*fw).toFixed(0);
+    const prot = (ing.per100.protein*fw).toFixed(1);
+    const fat = (ing.per100.fat*fw).toFixed(1);
+    const carb = (ing.per100.carbs*fw).toFixed(1);
+    const salt = (ing.per100.salt*fw).toFixed(2);
     const allergenNames = ing.allergens.map(id => ALLERGENS.find(a=>a.id===id)?.name||id);
-
+    const myPrice = ing.pricePerKg || 0;
+    const marketPrice = ing.marketPrice || 0;
+    const activePrice = myPrice > 0 ? myPrice : marketPrice;
+    const cost = activePrice > 0 ? (ing.weight/1000*activePrice).toFixed(2) : '—';
+    const needsLookup = ing.needsLookup;
     const tr = document.createElement('tr');
+    tr.style.borderLeft = needsLookup ? '3px solid var(--danger)' : '';
     tr.innerHTML = `
       <td class="td-name">
-        <div>${ing.name}</div>
-        <div style="font-size:10px;color:var(--muted)">${ing.source}</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          ${needsLookup ? '<span>⚠️</span>' : ''}
+          <div>
+            <div>${ing.name}</div>
+            <div style="font-size:10px;color:var(--muted)">${ing.source}</div>
+          </div>
+        </div>
+        ${needsLookup ? `<button id="lookup_${idx}" class="btn btn-sm" style="margin-top:4px;font-size:11px;background:var(--danger);width:100%;" onclick="aiLookupSingle(${idx})">🔍 Pobierz dane AI</button>` : ''}
       </td>
       <td>
         <div class="td-badge">
@@ -1143,21 +1156,42 @@ function renderTable() {
       </td>
       <td>
         <div class="weight-cell">
-          <input type="number" class="weight-input" value="${w}" min="0" step="1" onchange="updateWeight(${idx}, this.value)">
+          <input type="number" value="${ing.weight}" min="0" step="1" onchange="updateWeight(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
           <span style="color:var(--muted);font-size:11px">g</span>
         </div>
       </td>
-      <td class="td-mono">${kcal}</td>
-      <td class="td-mono">${prot}g</td>
-      <td class="td-mono">${fat}g</td>
-      <td class="td-mono">${carb}g</td>
-      <td class="td-mono">${salt}g</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input type="number" value="${loss}" min="0" max="99" step="1" onchange="updateLoss(${idx}, this.value)" style="width:45px;text-align:right;padding:5px 6px;font-family:'DM Mono',monospace;font-size:12px;">
+          <span style="color:var(--muted);font-size:11px">%</span>
+        </div>
+      </td>
+      <td>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">
+          ${marketPrice > 0 ? `<span style="color:var(--muted);">🤖 ${marketPrice.toFixed(2)} zł/kg</span>` : '<span style="color:var(--muted);font-size:9px;">pobieranie...</span>'}
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input type="number" value="${myPrice||''}" min="0" step="0.01" placeholder="${marketPrice>0?marketPrice.toFixed(2):'—'}" onchange="updatePrice(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;${myPrice>0?'border-color:var(--accent);':''}" >
+          <span style="color:var(--muted);font-size:11px">zł/kg</span>
+        </div>
+      </td>
+      <td class="td-mono" style="color:${myPrice>0?'var(--accent)':marketPrice>0?'var(--muted)':'var(--muted)'}">
+        ${cost}${activePrice>0?' zł':''}
+        ${myPrice>0?'<div style="font-size:9px;color:var(--accent)">✓ moja</div>':marketPrice>0?'<div style="font-size:9px;color:var(--muted)">~ rynek</div>':''}
+      </td>
+      <td class="td-mono" style="color:${needsLookup?'var(--danger)':'inherit'}">${needsLookup?'?':kcal}</td>
+      <td class="td-mono">${needsLookup?'?':prot+'g'}</td>
+      <td class="td-mono">${needsLookup?'?':fat+'g'}</td>
+      <td class="td-mono">${needsLookup?'?':carb+'g'}</td>
       <td><button class="btn btn-danger btn-sm" onclick="removeIngredient(${idx})">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
   updateTotals();
+  updateFoodCost();
+  setTimeout(autoFillPrices, 500);
 }
+
 
 function updateWeight(idx, val) {
   ingredients[idx].weight = parseFloat(val)||0;
@@ -1456,70 +1490,6 @@ function confirmBulkImport(){
 <script>
 // ── FOOD COST - dodaj kolumny ceny i strat do skladnikow ──
 // Patch renderTable zeby pokazywal food cost
-const _origRenderTable = renderTable;
-
-function renderTable() {
-  const tbody = document.getElementById('ingredientRows');
-  if (!ingredients.length) {
-    tbody.innerHTML = '<tr id="emptyRow"><td colspan="11" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Dodaj skladniki powyzej, aby rozpoczac</td></tr>';
-    document.getElementById('totalsBar').style.display = 'none';
-    updateLabel();
-    return;
-  }
-  tbody.innerHTML = '';
-  ingredients.forEach((ing, idx) => {
-    const loss = ing.loss || 0;
-    const effectiveWeight = ing.weight * (1 - loss/100);
-    const f = effectiveWeight/100;
-    const kcal = (ing.per100.kcal*f).toFixed(0);
-    const prot = (ing.per100.protein*f).toFixed(1);
-    const fat = (ing.per100.fat*f).toFixed(1);
-    const carb = (ing.per100.carbs*f).toFixed(1);
-    const salt = (ing.per100.salt*f).toFixed(2);
-    const allergenNames = ing.allergens.map(id => ALLERGENS.find(a=>a.id===id)?.name||id);
-    const pricePerKg = ing.pricePerKg || 0;
-    const cost = pricePerKg > 0 ? (ing.weight / 1000 * pricePerKg).toFixed(2) : '—';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="td-name">
-        <div>${ing.name}</div>
-        <div style="font-size:10px;color:var(--muted)">${ing.source}</div>
-      </td>
-      <td>
-        <div class="td-badge">
-          ${allergenNames.length ? allergenNames.map(n=>`<span class="badge">${n}</span>`).join('') : '<span class="badge badge-muted">brak</span>'}
-        </div>
-      </td>
-      <td>
-        <div class="weight-cell">
-          <input type="number" value="${ing.weight}" min="0" step="1" onchange="updateWeight(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">g</span>
-        </div>
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" value="${loss}" min="0" max="99" step="1" onchange="updateLoss(${idx}, this.value)" style="width:45px;text-align:right;padding:5px 6px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">%</span>
-        </div>
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" value="${pricePerKg||''}" min="0" step="0.01" placeholder="0.00" onchange="updatePrice(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">zł/kg</span>
-        </div>
-      </td>
-      <td class="td-mono" style="color:${pricePerKg>0?'var(--accent)':'var(--muted)'}">${cost}${pricePerKg>0?' zł':''}</td>
-      <td class="td-mono">${kcal}</td>
-      <td class="td-mono">${prot}g</td>
-      <td class="td-mono">${fat}g</td>
-      <td class="td-mono">${carb}g</td>
-      <td><button class="btn btn-danger btn-sm" onclick="removeIngredient(${idx})">✕</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  updateTotals();
-  updateFoodCost();
-}
 
 function updateLoss(idx, val) {
   ingredients[idx].loss = parseFloat(val)||0;
@@ -2029,82 +1999,6 @@ async function aiLookupSingle(idx) {
 }
 
 // ── PATCH renderTable - dodaj przycisk Pobierz dane + auto-ceny z cache ──
-const _origRenderTable2 = renderTable;
-function renderTable() {
-  const tbody = document.getElementById('ingredientRows');
-  if (!ingredients.length) {
-    tbody.innerHTML = '<tr id="emptyRow"><td colspan="11" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Dodaj składniki powyżej, aby rozpocząć</td></tr>';
-    document.getElementById('totalsBar').style.display = 'none';
-    updateLabel();
-    return;
-  }
-  tbody.innerHTML = '';
-  ingredients.forEach((ing, idx) => {
-    // Auto-uzupełnij cenę z cache jeśli nie ma
-    if (!ing.pricePerKg) {
-      ing.pricePerKg = getPriceFromCache(ing.name);
-    }
-    const loss = ing.loss || 0;
-    const effectiveWeight = ing.weight * (1 - loss/100);
-    const fw = effectiveWeight/100;
-    const kcal = (ing.per100.kcal*fw).toFixed(0);
-    const prot = (ing.per100.protein*fw).toFixed(1);
-    const fat = (ing.per100.fat*fw).toFixed(1);
-    const carb = (ing.per100.carbs*fw).toFixed(1);
-    const salt = (ing.per100.salt*fw).toFixed(2);
-    const allergenNames = ing.allergens.map(id => ALLERGENS.find(a=>a.id===id)?.name||id);
-    const pricePerKg = ing.pricePerKg || 0;
-    const cost = pricePerKg > 0 ? (ing.weight / 1000 * pricePerKg).toFixed(2) : '—';
-    const needsLookup = ing.needsLookup;
-
-    const tr = document.createElement('tr');
-    tr.style.borderLeft = needsLookup ? '3px solid var(--danger)' : '';
-    tr.innerHTML = `
-      <td class="td-name">
-        <div style="display:flex;align-items:center;gap:6px;">
-          ${needsLookup ? '<span title="Brak danych odżywczych">⚠️</span>' : ''}
-          <div>
-            <div>${ing.name}</div>
-            <div style="font-size:10px;color:var(--muted)">${ing.source}</div>
-          </div>
-        </div>
-        ${needsLookup ? `<button id="lookup_${idx}" class="btn btn-sm" style="margin-top:4px;font-size:11px;background:var(--danger);width:100%;" onclick="aiLookupSingle(${idx})">🔍 Pobierz dane AI</button>` : ''}
-      </td>
-      <td>
-        <div class="td-badge">
-          ${allergenNames.length ? allergenNames.map(n=>`<span class="badge">${n}</span>`).join('') : '<span class="badge badge-muted">brak</span>'}
-        </div>
-      </td>
-      <td>
-        <div class="weight-cell">
-          <input type="number" value="${ing.weight}" min="0" step="1" onchange="updateWeight(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">g</span>
-        </div>
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" value="${loss}" min="0" max="99" step="1" onchange="updateLoss(${idx}, this.value)" style="width:45px;text-align:right;padding:5px 6px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">%</span>
-        </div>
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" value="${pricePerKg||''}" min="0" step="0.01" placeholder="0.00" onchange="updatePrice(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">zł/kg</span>
-        </div>
-      </td>
-      <td class="td-mono" style="color:${pricePerKg>0?'var(--accent)':'var(--muted)'}">${cost}${pricePerKg>0?' zł':''}</td>
-      <td class="td-mono" style="color:${needsLookup?'var(--danger)':'inherit'}">${needsLookup?'?':kcal}</td>
-      <td class="td-mono">${needsLookup?'?':prot+'g'}</td>
-      <td class="td-mono">${needsLookup?'?':fat+'g'}</td>
-      <td class="td-mono">${needsLookup?'?':carb+'g'}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="removeIngredient(${idx})">✕</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  updateTotals();
-  updateFoodCost();
-}
 </script>
 
 <script>
