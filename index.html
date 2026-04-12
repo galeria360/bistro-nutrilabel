@@ -1371,7 +1371,7 @@ async function parseBulkIngredients(){
   btn.disabled=true;
   status.textContent='Analizuje AI...';
   try{
-    var response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:'Przeanalizuj skladniki z polskiej receptury. Dla kazdego podaj name, weight (gram na 300g porcji lub 100 jesli nieznana), percent (lub null). Zwroc TYLKO tablice JSON. Skladniki: '+text}]})});
+    var response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:'Przeanalizuj skladniki z polskiej receptury. Dla kazdego podaj: name (polska nazwa), amount (ilosc), unit (g/kg/l/ml/szt/lyzka/lyzeczka lub null), weight (masa w gramach: kg*1000, l*1000, szt jaj*60, lyzka*15, lyzeczka*5, domyslnie 100), percent (lub null). Zwroc TYLKO tablice JSON: [{"name":"marchew","amount":2,"unit":"szt","weight":200,"percent":null}]. Skladniki: '+text}]})});
     var data=await response.json();
     var raw=data.content[0].text.trim().replace(/```json|```/g,'').trim();
     parsedIngredients=JSON.parse(raw);
@@ -2109,8 +2109,9 @@ async function fetchMarketPricesAI(names) {
     });
     const data = await response.json();
     const raw = data.content[0].text.trim().replace(/```json|```/g,'').trim();
+    console.log('AI ceny odpowiedz:', raw);
     return JSON.parse(raw);
-  } catch(e) { return {}; }
+  } catch(e) { console.error('fetchMarketPricesAI error:', e); return {}; }
 }
 
 async function autoFillPrices() {
