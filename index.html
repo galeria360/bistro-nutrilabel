@@ -1312,24 +1312,30 @@ function confirmBulkImport() {
 // ZARZĄDZANIE RECEPTURAMI
 // ═══════════════════════════════════════════════════════
 
-function saveRecipe() {
+const API = 'api.php';
+
+async function saveRecipe() {
   const name = document.getElementById('dishName').value.trim();
   if (!name) { showToast('Wpisz nazwę dania przed zapisem', true); return; }
   if (!ingredients.length) { showToast('Dodaj składniki przed zapisem', true); return; }
-  const recipes = JSON.parse(localStorage.getItem('bistro_recipes')||'[]');
-  const existIdx = recipes.findIndex(r=>r.name===name);
   const recipe = {
-    id: existIdx>=0 ? recipes[existIdx].id : Date.now(),
-    name, category:document.getElementById('dishCategory').value,
-    portionSize:document.getElementById('portionSize').value,
-    cookedWeight:document.getElementById('cookedWeight').value,
-    cookedLiters:document.getElementById('cookedLiters').value,
-    ingredients:JSON.parse(JSON.stringify(ingredients)),
-    savedAt:new Date().toLocaleDateString('pl-PL')
+    id: window._currentRecipeId || null,
+    name,
+    category: document.getElementById('dishCategory').value,
+    portionSize: document.getElementById('portionSize').value,
+    cookedWeight: document.getElementById('cookedWeight').value,
+    cookedLiters: document.getElementById('cookedLiters').value,
+    ingredients: JSON.parse(JSON.stringify(ingredients)),
+    savedAt: new Date().toLocaleDateString('pl-PL')
   };
-  if (existIdx>=0) { recipes[existIdx]=recipe; showToast('✓ Zaktualizowano: '+name); }
-  else { recipes.push(recipe); showToast('✓ Zapisano: '+name); }
-  localStorage.setItem('bistro_recipes', JSON.stringify(recipes));
+  try {
+    const res = await fetch(API+'?action=save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(recipe)});
+    const data = await res.json();
+    if (data.ok) {
+      window._currentRecipeId = data.id;
+      showToast('✓ Zapisano: '+name);
+    } else { showToast('Błąd zapisu: '+data.error, true); }
+  } catch(e) { showToast('Błąd połączenia z serwerem', true); }
 }
 
 function toggleRecipeManager() {
@@ -1339,57 +1345,60 @@ function toggleRecipeManager() {
 }
 function closeRecipeManager() { document.getElementById('recipeModal').style.display='none'; }
 
-function renderRecipeList() {
-  const recipes = JSON.parse(localStorage.getItem('bistro_recipes')||'[]');
+async function renderRecipeList() {
   const list = document.getElementById('recipeList');
   const empty = document.getElementById('noRecipes');
-  if (!recipes.length) { list.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
-  list.innerHTML='';
-  recipes.forEach((r,i) => {
-    const totalKcal = r.ingredients.reduce((s,ing)=>s+ing.per100.kcal*ing.weight/100,0);
-    const cooked = parseFloat(r.cookedWeight)||r.ingredients.reduce((s,i)=>s+i.weight,0);
-    const kcal100 = (totalKcal/cooked*100).toFixed(0);
-    const totalCost = r.ingredients.reduce((s,ing)=>s+(ing.pricePerKg||0)*ing.weight/1000,0);
-    const portions = cooked/(parseFloat(r.portionSize)||300);
-    const costPortion = portions>0 ? (totalCost/portions).toFixed(2) : '—';
-    const div = document.createElement('div');
-    div.style.cssText='background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px 18px;margin-bottom:9px;display:flex;align-items:center;gap:14px';
-    div.innerHTML=`
-      <div style="flex:1">
-        <div style="font-size:15px;font-weight:600;margin-bottom:2px">${r.name}</div>
-        <div style="font-size:11px;color:var(--muted)">${r.category} · ${r.ingredients.length} składników · ${kcal100} kcal/100g · ${r.savedAt}</div>
-        <div style="font-size:11px;color:var(--accent);margin-top:2px">💰 ${costPortion!=='—'?costPortion+' zł/porcję':'brak cen'} · porcja ${r.portionSize}g</div>
-      </div>
-      <div style="display:flex;gap:7px">
-        <button class="btn btn-sm" onclick="loadRecipe(${i})">✏️ Edytuj</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteRecipe(${i})">🗑️</button>
-      </div>`;
-    list.appendChild(div);
-  });
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)"><span class="spinner"></span> Ładowanie...</div>';
+  empty.style.display = 'none';
+  try {
+    const res = await fetch(API+'?action=list');
+    const recipes = await res.json();
+    if (!recipes.length) { list.innerHTML=''; empty.style.display='block'; return; }
+    list.innerHTML = '';
+    recipes.forEach(r => {
+      const div = document.createElement('div');
+      div.style.cssText='background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px 18px;margin-bottom:9px;display:flex;align-items:center;gap:14px';
+      const date = new Date(r.updated_at).toLocaleDateString('pl-PL');
+      div.innerHTML=`
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600;margin-bottom:2px">${r.name}</div>
+          <div style="font-size:11px;color:var(--muted)">Ostatnia zmiana: ${date}</div>
+        </div>
+        <div style="display:flex;gap:7px">
+          <button class="btn btn-sm" onclick="loadRecipe(${r.id})">✏️ Edytuj</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteRecipe(${r.id},'${r.name.replace(/'/g,'')}')">🗑️</button>
+        </div>`;
+      list.appendChild(div);
+    });
+  } catch(e) { list.innerHTML='<div style="color:var(--danger);padding:20px">Błąd ładowania receptur</div>'; }
 }
 
-function loadRecipe(idx) {
-  const recipes = JSON.parse(localStorage.getItem('bistro_recipes')||'[]');
-  const r = recipes[idx];
-  document.getElementById('dishName').value = r.name;
-  document.getElementById('dishCategory').value = r.category;
-  document.getElementById('portionSize').value = r.portionSize;
-  document.getElementById('cookedWeight').value = r.cookedWeight||'';
-  document.getElementById('cookedLiters').value = r.cookedLiters||'';
-  ingredients = JSON.parse(JSON.stringify(r.ingredients));
-  renderTable();
-  closeRecipeManager();
-  showToast('✓ Wczytano: '+r.name);
+async function loadRecipe(id) {
+  try {
+    const res = await fetch(API+'?action=get&id='+id);
+    const data = await res.json();
+    if (data.error) { showToast('Błąd: '+data.error, true); return; }
+    const r = JSON.parse(data.data);
+    document.getElementById('dishName').value = r.name;
+    document.getElementById('dishCategory').value = r.category||'Zupy';
+    document.getElementById('portionSize').value = r.portionSize||300;
+    document.getElementById('cookedWeight').value = r.cookedWeight||'';
+    document.getElementById('cookedLiters').value = r.cookedLiters||'';
+    ingredients = JSON.parse(JSON.stringify(r.ingredients||[]));
+    window._currentRecipeId = data.id;
+    renderTable();
+    closeRecipeManager();
+    showToast('✓ Wczytano: '+r.name);
+  } catch(e) { showToast('Błąd wczytywania', true); }
 }
 
-function deleteRecipe(idx) {
-  const recipes = JSON.parse(localStorage.getItem('bistro_recipes')||'[]');
-  const name = recipes[idx].name;
-  recipes.splice(idx,1);
-  localStorage.setItem('bistro_recipes', JSON.stringify(recipes));
-  renderRecipeList();
-  showToast('Usunięto: '+name);
+async function deleteRecipe(id, name) {
+  if (!confirm('Usunąć recepturę: '+name+'?')) return;
+  try {
+    await fetch(API+'?action=delete&id='+id, {method:'DELETE'});
+    renderRecipeList();
+    showToast('Usunięto: '+name);
+  } catch(e) { showToast('Błąd usuwania', true); }
 }
 
 // ═══════════════════════════════════════════════════════
