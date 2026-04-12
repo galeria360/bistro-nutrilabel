@@ -179,10 +179,6 @@ tbody td:nth-child(2) { text-align: left; }
 }
 
 @media (max-width: 600px) {
-  .right-panel { display: none !important; }
-  #przepisMobile { display: block !important; }
-  .app { grid-template-columns: 1fr !important; }
-
   header { padding: 12px 16px; gap: 8px; }
   .logo { font-size: 17px; }
   .subtitle { display: none; }
@@ -387,28 +383,6 @@ tbody td:nth-child(2) { text-align: left; }
       <button class="btn btn-sm btn-ghost" onclick="toggleKarta()">🗒️ Karta dania</button>
       <button class="btn btn-sm btn-ghost" onclick="copyLabel()">📋 Kopiuj</button>
       <button class="btn btn-sm btn-ghost" onclick="exportJSON()">💾 JSON</button>
-    </div>
-  </div>
-</div>
-
-<!-- PRZEPIS MOBILE - widoczny tylko na telefonie -->
-<div id="przepisMobile" style="padding:16px;display:none;">
-  <div class="section-title"><span class="step-num">03</span> Przepis</div>
-  <div class="field-group" style="margin-bottom:14px;">
-    <label>Instrukcja przygotowania</label>
-    <textarea id="przepisInstrukcjaMobile" style="width:100%;min-height:120px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Czas gotowania, temperatura, kolejność..."></textarea>
-  </div>
-  <div class="field-group" style="margin-bottom:14px;">
-    <label>Notatki</label>
-    <textarea id="przepisNotkiMobile" style="width:100%;min-height:80px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Warianty, uwagi kucharza..."></textarea>
-  </div>
-  <!-- Etykieta EU na mobile -->
-  <div style="margin-top:20px;">
-    <div class="section-title"><span class="step-num">04</span> Etykieta EU</div>
-    <div id="labelOutputMobile"></div>
-    <div class="export-row">
-      <button class="btn btn-sm" onclick="window.print()">🖨️ Drukuj</button>
-      <button class="btn btn-sm btn-ghost" onclick="copyLabel()">📋 Kopiuj</button>
     </div>
   </div>
 </div>
@@ -1467,67 +1441,6 @@ async function deleteRecipe(id, name) {
 // ═══════════════════════════════════════════════════════
 // TOAST
 // ═══════════════════════════════════════════════════════
-
-// Sync przepisu desktop <-> mobile
-function syncPrzepisToMobile() {
-  const inst = document.getElementById('przepisInstrukcja')?.value || '';
-  const not = document.getElementById('przepisNotatki')?.value || '';
-  const instM = document.getElementById('przepisInstrukcjaMobile');
-  const notM = document.getElementById('przepisNotkiMobile');
-  if (instM && instM.value !== inst) instM.value = inst;
-  if (notM && notM.value !== not) notM.value = not;
-}
-function syncPrzepisFromMobile() {
-  const inst = document.getElementById('przepisInstrukcjaMobile')?.value || '';
-  const not = document.getElementById('przepisNotkiMobile')?.value || '';
-  const instD = document.getElementById('przepisInstrukcja');
-  const notD = document.getElementById('przepisNotatki');
-  if (instD && instD.value !== inst) instD.value = inst;
-  if (notD && notD.value !== not) notD.value = not;
-}
-
-// Sync etykiety na mobile
-const _origUpdateLabel = updateLabel;
-function updateLabel(kcal=0,prot=0,fat=0,sat=0,carb=0,sug=0,salt=0) {
-  _origUpdateLabel(kcal,prot,fat,sat,carb,sug,salt);
-  const mobileEl = document.getElementById('labelOutputMobile');
-  if (mobileEl) {
-    mobileEl.innerHTML = document.getElementById('labelOutput').innerHTML;
-  }
-}
-
-function getPrzepisData() {
-  return {
-    instrukcja: document.getElementById('przepisInstrukcja')?.value || document.getElementById('przepisInstrukcjaMobile')?.value || '',
-    notatki: document.getElementById('przepisNotatki')?.value || document.getElementById('przepisNotkiMobile')?.value || ''
-  };
-}
-
-function setPrzepisData(data) {
-  if (!data) return;
-  ['przepisInstrukcja','przepisInstrukcjaMobile'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = data.instrukcja || '';
-  });
-  ['przepisNotatki','przepisNotkiMobile'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = data.notatki || '';
-  });
-}
-
-// Dodaj przepis do zapisu receptury
-const _origSaveRecipe = saveRecipe;
-async function saveRecipe() {
-  window._przepisData = getPrzepisData();
-  await _origSaveRecipe();
-}
-
-// Wczytaj przepis przy loadRecipe
-const _origLoadRecipe = loadRecipe;
-async function loadRecipe(id) {
-  await _origLoadRecipe(id);
-  // przepis jest w danych receptury
-}
 
 function showToast(msg, isError=false) {
   const t = document.getElementById('toast');
