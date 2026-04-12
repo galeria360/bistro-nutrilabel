@@ -1154,7 +1154,7 @@ function renderTable() {
       </td>
       <td>
         <div class="weight-cell">
-          <input type="number" value="${ing.weight}" min="0" step="1" onchange="updateWeight(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
+          <input type="number" value="${ing.weight}" min="0" step="1" oninput="updateWeight(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
           <span style="color:var(--muted);font-size:11px">g</span>
         </div>
       </td>
