@@ -1353,24 +1353,52 @@ function renderParsedPreview(){
   document.getElementById('parsedPreview').style.display='block';
 }
 function confirmBulkImport(){
-  var added=0;
-  var skipped=0;
+  let added = 0;
+  let unknown = 0;
   parsedIngredients.forEach(function(item){
-    var matches=searchPolishDB(item.name);
-    if(matches.length>0){
-      var fd=matches[0];
-      var allergens=detectAllergens(fd.description);
-      ingredients.push({id:Date.now()+Math.random(),name:fd.description,source:'PL NIZP PZH',weight:item.weight||100,loss:getAutoLoss(fd.description),per100:{kcal:parseFloat(getNutrient(fd,1008).toFixed(1)),protein:parseFloat(getNutrient(fd,1003).toFixed(2)),fat:parseFloat(getNutrient(fd,1004).toFixed(2)),saturated:parseFloat(getNutrient(fd,1258).toFixed(2)),carbs:parseFloat(getNutrient(fd,1005).toFixed(2)),sugars:parseFloat(getNutrient(fd,2000).toFixed(2)),salt:parseFloat((getNutrient(fd,1093)*2.5/1000).toFixed(3))},allergens:allergens});
+    const matches = searchPolishDB(item.name);
+    if(matches.length > 0){
+      const fd = matches[0];
+      ingredients.push({
+        id: Date.now()+Math.random(),
+        name: fd.description,
+        source: '🇵🇱 NIZP PZH',
+        weight: item.weight||100,
+        loss: getAutoLoss(fd.description),
+        needsLookup: false,
+        pricePerKg: getPriceFromCache(fd.description),
+        per100:{
+          kcal:parseFloat(getNutrient(fd,1008).toFixed(1)),
+          protein:parseFloat(getNutrient(fd,1003).toFixed(2)),
+          fat:parseFloat(getNutrient(fd,1004).toFixed(2)),
+          saturated:parseFloat(getNutrient(fd,1258).toFixed(2)),
+          carbs:parseFloat(getNutrient(fd,1005).toFixed(2)),
+          sugars:parseFloat(getNutrient(fd,2000).toFixed(2)),
+          salt:parseFloat((getNutrient(fd,1093)*2.5/1000).toFixed(3))
+        },
+        allergens: detectAllergens(fd.description)
+      });
       added++;
     } else {
-      var allergens=detectAllergens(item.name);
-      ingredients.push({id:Date.now()+Math.random(),name:item.name,source:'⚠️ uzupełnij ręcznie',weight:item.weight||100,loss:0,per100:{kcal:0,protein:0,fat:0,saturated:0,carbs:0,sugars:0,salt:0},allergens:allergens});
-      skipped++;
+      ingredients.push({
+        id: Date.now()+Math.random(),
+        name: item.name,
+        source: '⚠️ brak danych',
+        weight: item.weight||100,
+        loss: 0,
+        needsLookup: true,
+        pricePerKg: getPriceFromCache(item.name),
+        per100:{kcal:0,protein:0,fat:0,saturated:0,carbs:0,sugars:0,salt:0},
+        allergens: detectAllergens(item.name)
+      });
+      unknown++;
     }
   });
+  document.getElementById('bulkModal').style.display='none';
+  document.getElementById('parsedPreview').style.display='none';
+  document.getElementById('bulkText').value='';
   renderTable();
-  closeBulkImport();
-  showToast('Dodano '+added+' z bazy + '+skipped+' do uzupełnienia');
+  showToast('✓ Dodano '+added+' · '+unknown+' wymaga uzupełnienia');
 }
 </script>
 <div id="recipeModal" style="display:none;position:fixed;inset:0;background:#000a;z-index:200;align-items:center;justify-content:center;">
@@ -1462,75 +1490,70 @@ function updatePrice(idx, val) {
 }
 
 function updateFoodCost() {
-  if (!ingredients.length) {
-    const bar = document.getElementById('foodCostBar');
-    if (bar) bar.style.display = 'none';
-    const extra = document.getElementById('extraCostsSection');
-    if (extra) extra.style.display = 'none';
-    return;
-  }
+  const bar = document.getElementById('foodCostBar') || (() => {
+    const b = document.createElement('div');
+    b.id = 'foodCostBar';
+    b.style.cssText = 'margin-top:12px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:10px;padding:18px 20px;';
+    const tb = document.getElementById('totalsBar');
+    if(tb) tb.after(b);
+    return b;
+  })();
 
-  let totalIngCost = 0;
-  let allPriced = true;
-  ingredients.forEach(ing => {
-    if (ing.pricePerKg > 0) totalIngCost += ing.weight / 1000 * ing.pricePerKg;
-    else allPriced = false;
+  if(!ingredients.length){ bar.style.display='none'; return; }
+  bar.style.display='block';
+
+  let totalIngCost=0, allPriced=true;
+  ingredients.forEach(ing=>{
+    if(ing.pricePerKg>0) totalIngCost += ing.weight/1000*ing.pricePerKg;
+    else allPriced=false;
   });
 
   const portion = parseFloat(document.getElementById('portionSize').value)||300;
-  const cooked = parseFloat(document.getElementById('cookedWeight').value) || ingredients.reduce((s,i)=>s+i.weight,0);
-  const portions = cooked > 0 ? cooked / portion : 1;
-  const ingCostPerPortion = portions > 0 ? totalIngCost / portions : 0;
-  const extraPerPortion = getTotalExtraCosts ? getTotalExtraCosts() : 0;
-  const totalCostPerPortion = ingCostPerPortion + extraPerPortion;
-
-  // Pobierz zapisaną cenę sprzedaży
+  const rawWeight = ingredients.reduce((s,i)=>s+i.weight,0);
+  const cooked = parseFloat(document.getElementById('cookedWeight').value)||rawWeight;
+  const portions = cooked>0 ? cooked/portion : 1;
+  const ingCostPer = portions>0 ? totalIngCost/portions : 0;
+  const extraPer = (typeof getTotalExtraCosts==='function') ? getTotalExtraCosts() : 0;
+  const totalCostPer = ingCostPer + extraPer;
   const savedSP = parseFloat(localStorage.getItem('bistro_selling_price'))||0;
 
-  let bar = document.getElementById('foodCostBar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'foodCostBar';
-    bar.style.cssText = 'margin-top:12px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:10px;padding:18px 20px;';
-    const totalsBar = document.getElementById('totalsBar');
-    if (totalsBar) totalsBar.after(bar);
-  }
-  bar.style.display = 'block';
-
   bar.innerHTML = `
-    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;margin-bottom:14px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px;margin-bottom:16px;">
       <div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">💰 Koszt składników</div>
         <div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--green)">${totalIngCost.toFixed(2)} zł</div>
-        <div style="font-size:10px;color:var(--muted)">${allPriced?'✓ wszystkie':'⚠️ brak cen przy niektórych'}</div>
+        <div style="font-size:10px;color:var(--muted)">${allPriced?'✓ wszystkie':'⚠️ niepełne ceny'}</div>
       </div>
       <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">🍽️ Porcji z receptury</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">🍽️ Porcji</div>
         <div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--text)">${portions.toFixed(1)}</div>
         <div style="font-size:10px;color:var(--muted)">po ${portion}g</div>
       </div>
       <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">📦 Koszt całkowity porcji</div>
-        <div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--danger)">${totalCostPerPortion.toFixed(2)} zł</div>
-        <div style="font-size:10px;color:var(--muted)">składniki + dodatkowe</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">📦 Koszt porcji</div>
+        <div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--danger)">${totalCostPer.toFixed(2)} zł</div>
+        <div style="font-size:10px;color:var(--muted)">skł. + dodatkowe</div>
       </div>
     </div>
-    <div style="border-top:1px solid var(--border);padding-top:14px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
+    <div style="border-top:1px solid var(--border);padding-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px;align-items:end;">
       <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">💵 Cena sprzedaży (zł)</div>
-        <input type="number" id="sellingPriceMain" placeholder="0.00" min="0" step="0.5" value="${savedSP||''}" style="width:90px;padding:7px 10px;font-size:15px;font-family:'DM Mono',monospace;border-radius:8px;" oninput="calcProfitMain(${totalCostPerPortion.toFixed(4)})">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">💵 Cena sprzedaży</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="sellingPriceMain" placeholder="0.00" min="0" step="0.5" value="${savedSP||''}" style="width:85px;padding:7px 10px;font-size:14px;font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;" oninput="calcProfitMain(${totalCostPer.toFixed(4)})">
+          <span style="color:var(--muted);font-size:12px">zł</span>
+        </div>
       </div>
       <div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">📊 Food cost %</div>
-        <div style="font-family:'DM Mono',monospace;font-size:22px;" id="fcPctMain">—</div>
+        <div style="font-family:'DM Mono',monospace;font-size:24px;font-weight:600;" id="fcPctMain">—</div>
       </div>
       <div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">🤑 Zysk na porcji</div>
-        <div style="font-family:'DM Mono',monospace;font-size:22px;" id="profitMain">—</div>
+        <div style="font-family:'DM Mono',monospace;font-size:24px;font-weight:600;" id="profitMain">—</div>
       </div>
       <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">📅 Porcji dziennie</div>
-        <input type="number" id="dailyPortionsMain" placeholder="50" min="1" style="width:70px;padding:7px 10px;font-size:14px;font-family:'DM Mono',monospace;border-radius:8px;" oninput="calcProfitMain(${totalCostPerPortion.toFixed(4)})">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">📅 Porcji/dzień</div>
+        <input type="number" id="dailyPortionsMain" placeholder="50" min="1" style="width:70px;padding:7px 10px;font-size:14px;font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;" oninput="calcProfitMain(${totalCostPer.toFixed(4)})">
       </div>
       <div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">💹 Zysk dzienny</div>
@@ -1538,12 +1561,29 @@ function updateFoodCost() {
       </div>
     </div>
   `;
-
-  // Auto-przelicz jeśli mamy zapisaną cenę
-  if (savedSP > 0) setTimeout(() => calcProfitMain(totalCostPerPortion), 50);
-
-  renderExtraCosts();
+  if(savedSP>0) setTimeout(()=>calcProfitMain(totalCostPer),50);
+  if(typeof renderExtraCosts==='function') renderExtraCosts();
 }
+
+function calcProfitMain(costPerPortion){
+  const sp = parseFloat(document.getElementById('sellingPriceMain')?.value)||0;
+  const daily = parseFloat(document.getElementById('dailyPortionsMain')?.value)||0;
+  if(sp>0) localStorage.setItem('bistro_selling_price', sp);
+  const fcEl = document.getElementById('fcPctMain');
+  const profitEl = document.getElementById('profitMain');
+  const dailyEl = document.getElementById('dailyProfitMain');
+  if(!fcEl) return;
+  if(sp>0){
+    const pct = (costPerPortion/sp*100).toFixed(1);
+    const profit = (sp-costPerPortion).toFixed(2);
+    fcEl.textContent = pct+'%';
+    fcEl.style.color = pct<30?'var(--green)':pct<35?'var(--accent)':'var(--danger)';
+    profitEl.textContent = profit+' zł';
+    profitEl.style.color = profit>0?'var(--green)':'var(--danger)';
+    if(daily>0) dailyEl.textContent = (profit*daily).toFixed(2)+' zł';
+  }
+}
+
 
 function calcProfitMain(costPerPortion) {
   const sp = parseFloat(document.getElementById('sellingPriceMain')?.value)||0;
@@ -1714,15 +1754,6 @@ function pickFood(f, plName) {
   renderTable();
 }
 
-// Patch confirmBulkImport zeby ustawial straty
-const _origConfirmBulk = confirmBulkImport;
-function confirmBulkImport() {
-  _origConfirmBulk();
-  ingredients.forEach(ing => {
-    if (ing.loss === undefined) ing.loss = getAutoLoss(ing.name);
-  });
-  renderTable();
-}
 </script>
 
 <script>
@@ -1846,52 +1877,6 @@ Użyj danych z polskich tabel żywieniowych NIZP PZH lub europejskich baz. Warto
   } catch(e) { return null; }
 }
 
-// confirmBulkImport - natychmiastowe dodanie wszystkich, nieznane z przyciskiem Znajdź
-const _origConfirmBulk2 = confirmBulkImport;
-function confirmBulkImport() {
-  let added = 0;
-  let unknown = 0;
-  parsedIngredients.forEach(item => {
-    const matches = searchPolishDB(item.name);
-    if (matches.length > 0) {
-      const fd = matches[0];
-      ingredients.push({
-        id: Date.now() + Math.random(),
-        name: fd.description,
-        source: '🇵🇱 NIZP PZH',
-        weight: item.weight || 100,
-        loss: getAutoLoss(fd.description),
-        needsLookup: false,
-        per100: {
-          kcal: parseFloat(getNutrient(fd,1008).toFixed(1)),
-          protein: parseFloat(getNutrient(fd,1003).toFixed(2)),
-          fat: parseFloat(getNutrient(fd,1004).toFixed(2)),
-          saturated: parseFloat(getNutrient(fd,1258).toFixed(2)),
-          carbs: parseFloat(getNutrient(fd,1005).toFixed(2)),
-          sugars: parseFloat(getNutrient(fd,2000).toFixed(2)),
-          salt: parseFloat((getNutrient(fd,1093)*2.5/1000).toFixed(3))
-        },
-        allergens: detectAllergens(fd.description)
-      });
-      added++;
-    } else {
-      ingredients.push({
-        id: Date.now() + Math.random(),
-        name: item.name,
-        source: '⚠️ brak danych',
-        weight: item.weight || 100,
-        loss: 0,
-        needsLookup: true,
-        per100: { kcal:0, protein:0, fat:0, saturated:0, carbs:0, sugars:0, salt:0 },
-        allergens: detectAllergens(item.name)
-      });
-      unknown++;
-    }
-  });
-  renderTable();
-  closeBulkImport();
-  showToast('✓ Dodano ' + added + ' · ' + unknown + ' wymaga uzupełnienia');
-}
 </script>
 
 <script>
