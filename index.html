@@ -1605,6 +1605,32 @@ function updateFoodCost() {
   `;
   if(savedSP>0) setTimeout(()=>calcProfitMain(totalCostPer),50);
   if(typeof renderExtraCosts==='function') renderExtraCosts();
+
+  // Info o litrach
+  const liters = parseFloat(document.getElementById('cookedLiters')?.value) ||
+                 (parseFloat(document.getElementById('cookedWeight')?.value)||0)/1000;
+  if(liters > 0) {
+    let literInfo = document.getElementById('literInfo');
+    if(!literInfo) {
+      literInfo = document.createElement('div');
+      literInfo.id = 'literInfo';
+      literInfo.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:24px;flex-wrap:wrap;';
+      const bar = document.getElementById('foodCostBar');
+      if(bar) bar.appendChild(literInfo);
+    }
+    const costPerLiter = (totalIngCost/liters).toFixed(2);
+    literInfo.innerHTML = `
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">🥣 Ilość zupy</div>
+        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--text)">${liters.toFixed(2)} l</div>
+        <div style="font-size:10px;color:var(--muted)">${(liters*1000/portions/portions*portions).toFixed(1)} porcji</div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">💧 Koszt / litr</div>
+        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--accent)">${costPerLiter} zł</div>
+      </div>
+    `;
+  }
 }
 
 function calcProfitMain(costPerPortion){
@@ -2152,90 +2178,6 @@ async function autoFillPrices() {
 }
 
 // Patch renderTable zeby pokazywal kolumne z cenami
-const _origRenderTable3 = renderTable;
-function renderTable() {
-  const tbody = document.getElementById('ingredientRows');
-  if (!ingredients.length) {
-    tbody.innerHTML = '<tr id="emptyRow"><td colspan="12" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Dodaj składniki powyżej, aby rozpocząć</td></tr>';
-    document.getElementById('totalsBar').style.display = 'none';
-    updateLabel();
-    return;
-  }
-  tbody.innerHTML = '';
-  ingredients.forEach((ing, idx) => {
-    if (!ing.pricePerKg) ing.pricePerKg = getPriceFromCache(ing.name);
-    const loss = ing.loss || 0;
-    const effectiveWeight = ing.weight * (1 - loss/100);
-    const fw = effectiveWeight/100;
-    const kcal = (ing.per100.kcal*fw).toFixed(0);
-    const prot = (ing.per100.protein*fw).toFixed(1);
-    const fat = (ing.per100.fat*fw).toFixed(1);
-    const carb = (ing.per100.carbs*fw).toFixed(1);
-    const salt = (ing.per100.salt*fw).toFixed(2);
-    const allergenNames = ing.allergens.map(id => ALLERGENS.find(a=>a.id===id)?.name||id);
-    const myPrice = ing.pricePerKg || 0;
-    const marketPrice = ing.marketPrice || 0;
-    const activePrice = myPrice > 0 ? myPrice : marketPrice;
-    const cost = activePrice > 0 ? (ing.weight / 1000 * activePrice).toFixed(2) : '—';
-    const needsLookup = ing.needsLookup;
-
-    const tr = document.createElement('tr');
-    tr.style.borderLeft = needsLookup ? '3px solid var(--danger)' : '';
-    tr.innerHTML = `
-      <td class="td-name">
-        <div style="display:flex;align-items:center;gap:6px;">
-          ${needsLookup ? '<span>⚠️</span>' : ''}
-          <div>
-            <div>${ing.name}</div>
-            <div style="font-size:10px;color:var(--muted)">${ing.source}</div>
-          </div>
-        </div>
-        ${needsLookup ? `<button id="lookup_${idx}" class="btn btn-sm" style="margin-top:4px;font-size:11px;background:var(--danger);width:100%;" onclick="aiLookupSingle(${idx})">🔍 Pobierz dane AI</button>` : ''}
-      </td>
-      <td>
-        <div class="td-badge">
-          ${allergenNames.length ? allergenNames.map(n=>`<span class="badge">${n}</span>`).join('') : '<span class="badge badge-muted">brak</span>'}
-        </div>
-      </td>
-      <td>
-        <div class="weight-cell">
-          <input type="number" value="${ing.weight}" min="0" step="1" onchange="updateWeight(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">g</span>
-        </div>
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" value="${loss}" min="0" max="99" step="1" onchange="updateLoss(${idx}, this.value)" style="width:45px;text-align:right;padding:5px 6px;font-family:'DM Mono',monospace;font-size:12px;">
-          <span style="color:var(--muted);font-size:11px">%</span>
-        </div>
-      </td>
-      <td>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">
-          ${marketPrice > 0 && !myPrice ? '<span style="color:var(--muted);font-size:10px;">🤖 ' + marketPrice.toFixed(2) + ' zł/kg</span>' : ''}
-          ${marketPrice > 0 && myPrice > 0 ? '<span style="color:var(--muted);font-size:10px;text-decoration:line-through;">' + marketPrice.toFixed(2) + '</span>' : ''}
-        </div>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <input type="number" value="${myPrice||''}" min="0" step="0.01" placeholder="${marketPrice>0?marketPrice.toFixed(2):'0.00'}" onchange="updatePrice(${idx}, this.value)" style="width:65px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;${myPrice>0?'border-color:var(--accent);':''}" title="${myPrice>0?'Twoja cena':'Wpisz własną cenę'}">
-          <span style="color:var(--muted);font-size:11px">zł/kg</span>
-        </div>
-      </td>
-      <td class="td-mono" style="color:${myPrice>0?'var(--accent)':marketPrice>0?'var(--muted)':'var(--muted)'}">
-        ${cost}${activePrice>0?' zł':''}
-        ${myPrice>0?'<div style="font-size:9px;color:var(--accent)">✓ moja</div>':marketPrice>0?'<div style="font-size:9px;color:var(--muted)">~ rynek</div>':''}
-      </td>
-      <td class="td-mono" style="color:${needsLookup?'var(--danger)':'inherit'}">${needsLookup?'?':kcal}</td>
-      <td class="td-mono">${needsLookup?'?':prot+'g'}</td>
-      <td class="td-mono">${needsLookup?'?':fat+'g'}</td>
-      <td class="td-mono">${needsLookup?'?':carb+'g'}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="removeIngredient(${idx})">✕</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  updateTotals();
-  updateFoodCost();
-  // Pobierz ceny w tle po renderowaniu
-  setTimeout(autoFillPrices, 500);
-}
 
 // Zaktualizuj naglowki
 window.addEventListener('DOMContentLoaded', function() {
@@ -2299,49 +2241,6 @@ function renderParsedPreview() {
   document.getElementById('parsedPreview').style.display = 'block';
 }
 
-// ── PATCH updateFoodCost - dodaj info o litrach ──
-const _origUpdateFC = updateFoodCost;
-function updateFoodCost() {
-  _origUpdateFC();
-  // Dodaj info o litrach do sekcji porcji
-  setTimeout(() => {
-    const liters = parseFloat(document.getElementById('cookedLiters')?.value) || 
-                   (parseFloat(document.getElementById('cookedWeight')?.value)||0)/1000;
-    const portion = parseFloat(document.getElementById('portionSize').value)||300;
-    const portions = liters > 0 ? (liters*1000/portion).toFixed(1) : '—';
-    const costsEl = document.getElementById('foodCostBar');
-    if (!costsEl || !liters) return;
-    let literInfo = document.getElementById('literInfo');
-    if (!literInfo) {
-      literInfo = document.createElement('div');
-      literInfo.id = 'literInfo';
-      literInfo.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:24px;flex-wrap:wrap;';
-      costsEl.appendChild(literInfo);
-    }
-    const totalCost = (() => {
-      let t=0;
-      ingredients.forEach(ing=>{
-        const p = ing.pricePerKg>0?ing.pricePerKg:(ing.marketPrice||0);
-        if(p>0) t+=ing.weight/1000*p;
-      });
-      return t;
-    })();
-    const extraPer = (typeof getTotalExtraCosts==='function')?getTotalExtraCosts():0;
-    const costPerLiter = liters>0?(totalCost/liters+extraPer/(liters*1000/portion)).toFixed(2):'—';
-    literInfo.innerHTML = `
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">🥣 Ilość zupy</div>
-        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--text)">${liters.toFixed(2)} l</div>
-        <div style="font-size:10px;color:var(--muted)">${portions} porcji po ${portion}g</div>
-      </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px">💧 Koszt / litr</div>
-        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--accent)">${costPerLiter} zł</div>
-        <div style="font-size:10px;color:var(--muted)">składniki</div>
-      </div>
-    `;
-  }, 200);
-}
 </script>
 </body>
 </html>
