@@ -449,6 +449,17 @@ tbody td:nth-child(2) { text-align: left; }
       <button class="btn btn-sm btn-ghost" onclick="copyLabel()">📋 Kopiuj</button>
       <button class="btn btn-sm btn-ghost" onclick="exportJSON()">💾 JSON</button>
     </div>
+    <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px;">
+      <h2>📝 Przepis</h2>
+      <div class="field-group" style="margin-bottom:12px;">
+        <label>Instrukcja przygotowania</label>
+        <textarea id="przepisInstrukcja" style="width:100%;min-height:120px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Czas gotowania, temperatura, kolejność dodawania składników..."></textarea>
+      </div>
+      <div class="field-group">
+        <label>Notatki kucharza</label>
+        <textarea id="przepisNotatki" style="width:100%;min-height:80px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:DM Sans,sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="Warianty dania, sezonowość, uwagi..."></textarea>
+      </div>
+    </div>
   </div>
 </div>
 
