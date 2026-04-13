@@ -395,7 +395,20 @@ tbody td:nth-child(2) { text-align: left; }
         <h4>Masa po obróbce termicznej</h4>
         <p>Zważ gotowe danie przed porcjowaniem.</p>
       </div>
-      <div class="cw-input">
+      <div style="margin-bottom:12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;">🔢 Przelicz recepturę na</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <input type="number" id="przeliczIlosc" placeholder="np. 10" min="0" step="0.1" style="width:90px;" oninput="updatePrzelicz()">
+        <select id="przeliczJednostka" style="width:80px;" onchange="updatePrzelicz()">
+          <option value="l">litrów</option>
+          <option value="porcji">porcji</option>
+          <option value="kg">kg</option>
+        </select>
+        <button class="btn btn-sm" onclick="applyPrzelicz()">✓ Zastosuj</button>
+        <span id="przeliczInfo" style="font-size:12px;color:var(--accent);"></span>
+      </div>
+    </div>
+    <div class="cw-input">
         <div class="field-group"><label>Masa ugotowana (g)</label><input type="number" id="cookedWeight" placeholder="auto" min="1" oninput="onCookedWeightChange()"></div>
         <div id="ratioDisplay" class="ratio-badge" style="display:none;align-self:flex-end;"></div>
       </div>
@@ -1596,6 +1609,42 @@ window.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+function updatePrzelicz() {
+  const ilosc = parseFloat(document.getElementById('przeliczIlosc').value);
+  const jednostka = document.getElementById('przeliczJednostka').value;
+  const info = document.getElementById('przeliczInfo');
+  if (!ilosc || !ingredients.length) { if(info) info.textContent=''; return; }
+  
+  const rawWeight = ingredients.reduce((s,i)=>s+i.weight,0);
+  const cooked = parseFloat(document.getElementById('cookedWeight').value) || rawWeight;
+  const portion = parseFloat(document.getElementById('portionSize').value)||300;
+  const liters = parseFloat(document.getElementById('cookedLiters').value) || cooked/1000;
+  
+  let ratio = 1;
+  if (jednostka === 'l') ratio = ilosc / liters;
+  else if (jednostka === 'porcji') ratio = ilosc / (cooked/portion);
+  else if (jednostka === 'kg') ratio = (ilosc*1000) / cooked;
+  
+  if(info) info.textContent = `× ${ratio.toFixed(2)} (surowe: ${(rawWeight*ratio/1000).toFixed(1)}kg)`;
+  window._przeliczRatio = ratio;
+}
+
+function applyPrzelicz() {
+  const ratio = window._przeliczRatio;
+  if (!ratio || ratio === 1) { showToast('Wpisz docelową ilość', true); return; }
+  if (!confirm('Zmienić gramatury wszystkich składników × '+ratio.toFixed(2)+'?')) return;
+  ingredients.forEach(ing => { ing.weight = Math.round(ing.weight * ratio); });
+  const cw = document.getElementById('cookedWeight');
+  const cl = document.getElementById('cookedLiters');
+  if (cw.value) cw.value = Math.round(parseFloat(cw.value)*ratio);
+  if (cl.value) cl.value = (parseFloat(cl.value)*ratio).toFixed(2);
+  window._przeliczRatio = 1;
+  document.getElementById('przeliczIlosc').value = '';
+  document.getElementById('przeliczInfo').textContent = '';
+  renderTable();
+  showToast('✓ Przeliczono recepturę');
+}
 
 function showToast(msg, isError=false) {
   const t = document.getElementById('toast');
