@@ -1124,6 +1124,7 @@ function updateTotals() {
   }
 
   updateLabel(totKcal*r, totProt*r, totFat*r, totSat*r, totCarb*r, totSugar*r, totSalt*r);
+  setTimeout(applyColVisibility, 10);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1695,11 +1696,7 @@ function applyColVisibility() {
 }
 
 // Wywolaj po renderTable
-const _origRenderTableToggle = renderTable;
-function renderTable() {
-  _origRenderTableToggle();
-  setTimeout(applyColVisibility, 10);
-}
+// applyColVisibility wywolywane po renderTable przez updateTotals
 
 function showToast(msg, isError=false) {
   const t = document.getElementById('toast');
