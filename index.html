@@ -929,7 +929,7 @@ function renderTable() {
     return;
   }
   tbody.innerHTML = '';
-  [...ingredients].map((ing,idx)=>({ing,idx})).sort((a,b)=>b.ing.weight-a.ing.weight).forEach(({ing,idx}) => {
+  ingredients.forEach((ing, idx) => {
     if (!ing.pricePerKg) ing.pricePerKg = getPriceFromCache(ing.name);
     const loss = ing.loss || 0;
     const fw = ing.weight * (1 - loss/100) / 100;
