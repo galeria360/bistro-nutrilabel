@@ -373,6 +373,16 @@ tbody td:nth-child(2) { text-align: left; }
       <div class="field-group"><label>Alergeny</label><div id="manualAllergenCheck" class="allergen-check-grid"></div></div>
     </div>
 
+    <!-- Toggle kolumn -->
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);align-self:center;">Kolumny:</span>
+      <button class="btn btn-sm btn-ghost" id="toggleKcal" onclick="toggleCol('kcal')" style="font-size:11px;">Kcal ✓</button>
+      <button class="btn btn-sm btn-ghost" id="toggleBialko" onclick="toggleCol('bialko')" style="font-size:11px;">Białko ✓</button>
+      <button class="btn btn-sm btn-ghost" id="toggleTluszcz" onclick="toggleCol('tluszcz')" style="font-size:11px;">Tłuszcz ✓</button>
+      <button class="btn btn-sm btn-ghost" id="toggleWegl" onclick="toggleCol('wegl')" style="font-size:11px;">Węglow. ✓</button>
+      <button class="btn btn-sm btn-ghost" id="toggleStraty" onclick="toggleCol('straty')" style="font-size:11px;">Straty ✓</button>
+    </div>
+
     <!-- Ingredients table -->
     <div class="ingredients-table-wrap">
       <table id="ingredientsTable">
@@ -1644,6 +1654,51 @@ function applyPrzelicz() {
   document.getElementById('przeliczInfo').textContent = '';
   renderTable();
   showToast('✓ Przeliczono recepturę');
+}
+
+// ── TOGGLE KOLUMN TABELI ──
+const hiddenCols = new Set();
+const colMap = {
+  'kcal':   { thIdx: 6, label: 'Kcal' },
+  'bialko': { thIdx: 7, label: 'Białko' },
+  'tluszcz':{ thIdx: 8, label: 'Tłuszcz' },
+  'wegl':   { thIdx: 9, label: 'Węglow.' },
+  'straty': { thIdx: 3, label: 'Straty' },
+};
+
+function toggleCol(col) {
+  if (hiddenCols.has(col)) {
+    hiddenCols.delete(col);
+    document.getElementById('toggle'+col.charAt(0).toUpperCase()+col.slice(1)).innerHTML = colMap[col].label + ' ✓';
+    document.getElementById('toggle'+col.charAt(0).toUpperCase()+col.slice(1)).style.opacity = '1';
+  } else {
+    hiddenCols.add(col);
+    document.getElementById('toggle'+col.charAt(0).toUpperCase()+col.slice(1)).innerHTML = colMap[col].label + ' ✗';
+    document.getElementById('toggle'+col.charAt(0).toUpperCase()+col.slice(1)).style.opacity = '0.4';
+  }
+  applyColVisibility();
+}
+
+function applyColVisibility() {
+  const table = document.getElementById('ingredientsTable');
+  if (!table) return;
+  const rows = table.querySelectorAll('tr');
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('th, td');
+    for (const [col, info] of Object.entries(colMap)) {
+      const idx = info.thIdx;
+      if (cells[idx]) {
+        cells[idx].style.display = hiddenCols.has(col) ? 'none' : '';
+      }
+    }
+  });
+}
+
+// Wywolaj po renderTable
+const _origRenderTableToggle = renderTable;
+function renderTable() {
+  _origRenderTableToggle();
+  setTimeout(applyColVisibility, 10);
 }
 
 function showToast(msg, isError=false) {
