@@ -1273,7 +1273,7 @@ function updateLabel(kcal=0,prot=0,fat=0,sat=0,carb=0,sug=0,salt=0) {
       ? '<strong class="alergen-highlight">'+ing.name.toUpperCase()+'</strong>'
       : ing.name;
     if (ing.skladSzczegolowy) {
-      return displayName + ' <span style="font-size:10px;color:#6b6252;">(' + ing.skladSzczegolowy + ')</span>';
+      return displayName + ' <span style="font-size:10px;color:#6b6252;">(' + (ing.skladSzczegolowy||'') + ')</span>';
     }
     return displayName;
   }).join(', ');
@@ -1803,7 +1803,7 @@ function showToast(msg, isError=false) {
 
 
 
-<script src="karty.js"></script>
+<script src="karty.js?v=202604152059">
 
 <div class="modal-overlay" id="skladModal">
   <div class="modal-box" style="width:600px;">
@@ -1876,9 +1876,10 @@ function saveSklad() {
   const baseAllergens = detectAllergens(ingredients[_skladIdx].name);
   const skladAllergens = detectAllergens(sklad);
   ingredients[_skladIdx].allergens = [...new Set([...baseAllergens, ...skladAllergens])];
+  const savedName = ingredients[_skladIdx] ? ingredients[_skladIdx].name : '';
   closeSkladModal();
   renderTable();
-  showToast('✓ Zapisano skład: ' + ingredients[_skladIdx].name);
+  if(savedName) showToast('✓ Zapisano skład: ' + savedName);
 }
 
 async function aiGetSklad() {
