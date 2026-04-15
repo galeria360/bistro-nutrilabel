@@ -85,7 +85,7 @@ function printKartaDania() {
   html += '<title>Karta Dania - '+d.name+'</title>';
   html += '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">';
   html += getStyles();
-  html += '</head><body>';
+  html += '</head><body><div class="no-print" style="position:fixed;top:15px;right:15px;z-index:999;"><button onclick="window.print()" style="background:#d4a84b;color:#1a1814;border:none;border-radius:8px;padding:10px 20px;font-size:13pt;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);">&#128438; Drukuj</button></div>';
   html += '<div class="header">';
   html += '<div><div class="dish-name">'+d.name+'</div><div style="font-size:9pt;color:#6b6252;margin-top:3px">'+d.category+'</div></div>';
   html += '<div style="text-align:right"><div class="brand">&#127858; Gruba Micha</div>';
@@ -96,7 +96,7 @@ function printKartaDania() {
   if (d.allergenObjs.length) html += '<div class="abox"><strong>Alergeny:</strong> '+d.allergenObjs.map(function(a){return a.icon+' '+a.name;}).join(' &middot; ')+'</div>';
   html += '<h3>Uwagi</h3><div class="pbox" style="min-height:60px;"></div>';
   html += '<div class="footer"><span>Oznakowanie zgodne z Rozporządzeniem UE nr 1169/2011</span><span>Porcja: '+d.portion+'g &middot; '+d.cooked.toFixed(0)+'g gotowego</span></div>';
-  html += '<scr'+'ipt>window.onload=function(){window.print();}<\/script></body></html>';
+  html += '</body></html>';
   openPrintWindow(html);
 }
 
@@ -113,7 +113,7 @@ function printKartaProduktu() {
   html += '<title>Karta Produktu - '+d.name+'</title>';
   html += '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">';
   html += getStyles();
-  html += '</head><body>';
+  html += '</head><body><div class="no-print" style="position:fixed;top:15px;right:15px;z-index:999;"><button onclick="window.print()" style="background:#d4a84b;color:#1a1814;border:none;border-radius:8px;padding:10px 20px;font-size:13pt;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);">&#128438; Drukuj</button></div>';
   html += '<div class="header">';
   html += '<div>';
   html += '<div class="dish-name">'+d.name+'</div>';
@@ -125,7 +125,7 @@ function printKartaProduktu() {
   html += '<div style="text-align:right">';
   html += '<div class="brand">&#127858; Gruba Micha</div>';
   html += '<div style="font-size:8.5pt;color:#6b6252;margin-top:4px">Data produkcji: <span class="fill-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>';
-  html += '<div style="font-size:8.5pt;color:#6b6252;margin-top:2px">Wydruk: '+new Date().toLocaleDateString('pl-PL')+'</div>';
+  
   html += '</div></div>';
   html += '<div class="info-grid">';
   html += '<div class="info-box"><div class="info-label">Masa gotowego produktu</div><div class="info-value">'+d.cooked.toFixed(0)+' g &middot; '+d.liters.toFixed(2)+' l</div></div>';
@@ -142,6 +142,6 @@ function printKartaProduktu() {
   if (d.przepisInstrukcja) html += '<h3>Instrukcja przygotowania</h3><div class="pbox">'+d.przepisInstrukcja+'</div>';
   if (d.przepisNotatki) html += '<h3>Notatki</h3><div class="pbox">'+d.przepisNotatki+'</div>';
   html += '<div class="footer"><span>Dokument wewnętrzny &middot; Gruba Micha &middot; EU 1169/2011</span><span>'+new Date().toLocaleDateString('pl-PL')+'</span></div>';
-  html += '<scr'+'ipt>window.onload=function(){window.print();}<\/script></body></html>';
+  html += '</body></html>';
   openPrintWindow(html);
 }
