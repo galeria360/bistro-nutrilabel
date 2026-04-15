@@ -1923,7 +1923,7 @@ function getKartaData() {
   const allergenObjs = allergenIds.map(id=>ALLERGENS.find(a=>a.id===id)).filter(Boolean);
   const ingList = sorted.map(ing =>
     ing.allergens.length
-      ? `<strong style="font-weight:800;text-decoration:underline;color:#8b2020">${ing.name.toUpperCase()}</strong>`
+      ? '<strong style="font-weight:800;text-decoration:underline;color:#8b2020">' + ing.name.toUpperCase() + '</strong>'
       : ing.name
   ).join(', ');
   return {
