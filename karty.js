@@ -11,9 +11,14 @@ function getKartaData() {
   var allergenIds = [...new Set(sorted.flatMap(function(i){return i.allergens;}))];
   var allergenObjs = allergenIds.map(function(id){return ALLERGENS.find(function(a){return a.id===id;});}).filter(Boolean);
   var ingList = sorted.map(function(ing){
-    return ing.allergens.length
+    var hasAllergen = ing.allergens.length > 0;
+    var displayName = hasAllergen
       ? '<strong style="font-weight:800;text-decoration:underline;color:#8b2020">'+ing.name.toUpperCase()+'</strong>'
       : ing.name;
+    if (ing.skladSzczegolowy) {
+      displayName += ' <span style="font-size:9pt;color:#6b6252;">(' + ing.skladSzczegolowy + ')</span>';
+    }
+    return displayName;
   }).join(', ');
   return {
     name:name, category:category, cooked:cooked, liters:liters, portion:portion,
