@@ -31,7 +31,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
 if ($method === 'GET' && $action === 'list') {
-    $stmt = $pdo->query("SELECT id, name, created_at, updated_at FROM recipes ORDER BY updated_at DESC");
+    $stmt = $pdo->query("SELECT id, name, data, created_at, updated_at FROM recipes ORDER BY updated_at DESC");
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 elseif ($method === 'GET' && $action === 'get') {
