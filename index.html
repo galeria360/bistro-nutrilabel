@@ -974,8 +974,11 @@ function renderTable() {
       <td style="font-weight:500">
         <div style="display:flex;align-items:center;gap:5px;">
           ${nl?'<span>⚠️</span>':''}
-          <div>
-            <div>${ing.name}</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:5px;">
+              <span>${ing.name}</span>
+              <button onclick="openSkladModal(${idx})" style="background:none;border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:10px;color:var(--muted);cursor:pointer;" title="Skład szczegółowy">${ing.skladSzczegolowy?'📋✓':'📋'}</button>
+            </div>
             <div style="font-size:10px;color:var(--muted)">${ing.source}</div>
           </div>
         </div>
@@ -1264,11 +1267,16 @@ function updateLabel(kcal=0,prot=0,fat=0,sat=0,carb=0,sug=0,salt=0) {
   const sorted = [...ingredients].sort((a,b) => b.weight-a.weight);
   const allergenIds = [...new Set(sorted.flatMap(i=>i.allergens))];
   const allergenObjs = allergenIds.map(id => ALLERGENS.find(a=>a.id===id)).filter(Boolean);
-  const ingList = sorted.map(ing =>
-    ing.allergens.length
-      ? `<strong class="alergen-highlight">${ing.name.toUpperCase()}</strong>`
-      : ing.name
-  ).join(', ');
+  const ingList = sorted.map(ing => {
+    const hasAllergen = ing.allergens.length > 0;
+    const displayName = hasAllergen
+      ? '<strong class="alergen-highlight">'+ing.name.toUpperCase()+'</strong>'
+      : ing.name;
+    if (ing.skladSzczegolowy) {
+      return displayName + ' <span style="font-size:10px;color:#6b6252;">(' + ing.skladSzczegolowy + ')</span>';
+    }
+    return displayName;
+  }).join(', ');
 
   el.innerHTML = `
     <div class="label-card">
@@ -1796,6 +1804,121 @@ function showToast(msg, isError=false) {
 
 
 <script src="karty.js"></script>
+
+<div class="modal-overlay" id="skladModal">
+  <div class="modal-box" style="width:600px;">
+    <div class="modal-header">
+      <span class="modal-title" id="skladModalTitle">📋 Skład szczegółowy</span>
+      <button class="modal-close" onclick="closeSkladModal()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Wpisz skład produktu złożonego (z etykiety). Aplikacja automatycznie wykryje alergeny i wyświetli go w etykiecie EU.</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-sm" id="aiSkladBtn" onclick="aiGetSklad()">🤖 Pobierz skład AI</button>
+      <span id="aiSkladStatus" style="font-size:12px;color:var(--muted);align-self:center;"></span>
+    </div>
+    <textarea id="skladInput" style="width:100%;min-height:120px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="np. olej sojowy, trawa cytrynowa (10%), szalotka, woda, sól, chili, cukier..."></textarea>
+    <div id="skladAlergenyPreview" style="margin-top:10px;display:none;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;">Wykryte alergeny:</div>
+      <div id="skladAlergenyList"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn" onclick="saveSklad()">✓ Zapisz skład</button>
+      <button class="btn btn-ghost" onclick="closeSkladModal()">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+let _skladIdx = null;
+
+function openSkladModal(idx) {
+  _skladIdx = idx;
+  const ing = ingredients[idx];
+  document.getElementById('skladModalTitle').textContent = '📋 Skład: ' + ing.name;
+  document.getElementById('skladInput').value = ing.skladSzczegolowy || '';
+  document.getElementById('aiSkladStatus').textContent = '';
+  document.getElementById('skladAlergenyPreview').style.display = 'none';
+  document.getElementById('skladModal').style.display = 'flex';
+  // Pokaz wykryte alergeny jesli jest juz skład
+  if (ing.skladSzczegolowy) previewSkladAlergeny(ing.skladSzczegolowy);
+}
+
+function closeSkladModal() {
+  document.getElementById('skladModal').style.display = 'none';
+  _skladIdx = null;
+}
+
+function previewSkladAlergeny(text) {
+  const detected = detectAllergens(text);
+  const el = document.getElementById('skladAlergenyPreview');
+  const list = document.getElementById('skladAlergenyList');
+  if (detected.length) {
+    list.innerHTML = detected.map(id => {
+      const a = ALLERGENS.find(x=>x.id===id);
+      return '<span style="background:#c0392b22;color:var(--danger);border:1px solid #c0392b44;border-radius:4px;font-size:11px;padding:2px 7px;margin-right:4px;">'+a.icon+' '+a.name+'</span>';
+    }).join('');
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'skladInput') previewSkladAlergeny(e.target.value);
+});
+
+function saveSklad() {
+  if (_skladIdx === null) return;
+  const sklad = document.getElementById('skladInput').value.trim();
+  ingredients[_skladIdx].skladSzczegolowy = sklad;
+  // Merge alergeny z podstawowych + ze składu szczegółowego
+  const baseAllergens = detectAllergens(ingredients[_skladIdx].name);
+  const skladAllergens = detectAllergens(sklad);
+  ingredients[_skladIdx].allergens = [...new Set([...baseAllergens, ...skladAllergens])];
+  closeSkladModal();
+  renderTable();
+  showToast('✓ Zapisano skład: ' + ingredients[_skladIdx].name);
+}
+
+async function aiGetSklad() {
+  if (_skladIdx === null) return;
+  const ing = ingredients[_skladIdx];
+  const key = getApiKey();
+  if (!key) { showToast('Brak klucza API', true); return; }
+  const btn = document.getElementById('aiSkladBtn');
+  const status = document.getElementById('aiSkladStatus');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  status.textContent = 'Pobieranie...';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: 'Podaj typowy skład produktu "'+ing.name+'" stosowanego w gastronomii w Polsce. Podaj TYLKO listę składników oddzielonych przecinkami, bez dodatkowego tekstu. Uwzględnij typowe składniki z etykiety.'
+        }]
+      })
+    });
+    const data = await res.json();
+    if (data.content && data.content[0]) {
+      const sklad = data.content[0].text.trim();
+      document.getElementById('skladInput').value = sklad;
+      previewSkladAlergeny(sklad);
+      status.textContent = '✓ Pobrano';
+    }
+  } catch(e) {
+    status.textContent = 'Błąd pobierania';
+  }
+  btn.innerHTML = '🤖 Pobierz skład AI';
+  btn.disabled = false;
+}
+</script>
+
 </body></html>`);
   win.document.close();
 }
