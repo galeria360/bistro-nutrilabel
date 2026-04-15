@@ -479,7 +479,8 @@ tbody td:nth-child(2) { text-align: left; }
     </div>
     <div class="export-row">
       <button class="btn btn-sm" onclick="window.print()">🖨️ Drukuj</button>
-      <button class="btn btn-sm btn-ghost" onclick="toggleKarta()">🗒️ Karta dania</button>
+      <button class="btn btn-sm btn-ghost" onclick="printKartaDania()">📋 Karta Dania</button>
+      <button class="btn btn-sm btn-ghost" onclick="printKartaProduktu()">🏭 Karta Produktu</button>
       <button class="btn btn-sm btn-ghost" onclick="copyLabel()">📋 Kopiuj</button>
       <button class="btn btn-sm btn-ghost" onclick="exportJSON()">💾 JSON</button>
     </div>
@@ -1906,7 +1907,226 @@ function printKarta() {
       body { font-family: 'DM Sans', sans-serif; margin: 20px; color: #1a1814; font-size:12px; }
       @media print { body { margin: 10px; } textarea { border: none !important; background: transparent !important; } }
     </style>
-    </head><body>${content}<script>window.onload=()=>window.print()<\/script></body></html>`);
+    </head><body>${content}<script>window.onload=()=>window.print()<\/script>
+<script>
+function getKartaData() {
+  const {totRaw,totKcal,totProt,totFat,totSat,totCarb,totSugar,totSalt} = getTotals();
+  const cooked = parseFloat(document.getElementById('cookedWeight').value) || totRaw;
+  const liters = parseFloat(document.getElementById('cookedLiters').value) || cooked/1000;
+  const portion = parseFloat(document.getElementById('portionSize').value)||300;
+  const r = 100/cooked;
+  const pf = portion/100;
+  const name = document.getElementById('dishName').value || 'Nazwa dania';
+  const category = document.getElementById('dishCategory').value;
+  const sorted = [...ingredients].sort((a,b)=>b.weight-a.weight);
+  const allergenIds = [...new Set(sorted.flatMap(i=>i.allergens))];
+  const allergenObjs = allergenIds.map(id=>ALLERGENS.find(a=>a.id===id)).filter(Boolean);
+  const ingList = sorted.map(ing =>
+    ing.allergens.length
+      ? `<strong style="font-weight:800;text-decoration:underline;color:#8b2020">${ing.name.toUpperCase()}</strong>`
+      : ing.name
+  ).join(', ');
+  return {
+    name, category, cooked, liters, portion, totRaw, sorted,
+    allergenObjs, ingList, r, pf,
+    kcal: totKcal*r, prot: totProt*r, fat: totFat*r, sat: totSat*r,
+    carb: totCarb*r, sug: totSugar*r, salt: totSalt*r,
+    kcalP: totKcal*r*pf, kjP: totKcal*r*4.184*pf,
+    kj: totKcal*r*4.184,
+    przepisInstrukcja: document.getElementById('przepisInstrukcja')?.value || '',
+    przepisNotatki: document.getElementById('przepisNotatki')?.value || '',
+  };
+}
+
+function printKartaDania() {
+  const d = getKartaData();
+  const uwagi = prompt('Uwagi (opcjonalnie):', '') || '';
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>Karta Dania - ${d.name}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'DM Sans', sans-serif; color: #1a1814; padding: 20mm; font-size: 11pt; }
+      @page { size: A4; margin: 0; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1a1814; padding-bottom: 12px; margin-bottom: 20px; }
+      .dish-name { font-family: 'Playfair Display', serif; font-size: 24pt; font-weight: 700; }
+      .brand { font-family: 'Playfair Display', serif; font-size: 14pt; color: #d4a84b; font-weight: 600; }
+      .category { font-size: 10pt; color: #6b6252; margin-top: 4px; }
+      h3 { font-size: 9pt; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #6b6252; margin: 18px 0 8px; }
+      table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+      th { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #6b6252; padding: 5px 8px; text-align: right; border-bottom: 2px solid #1a1814; }
+      th:first-child { text-align: left; }
+      td { padding: 5px 8px; border-bottom: 1px solid #e0d8cc; text-align: right; }
+      td:first-child { text-align: left; }
+      .main-row td { font-weight: 600; }
+      .sub-row td:first-child { padding-left: 16px; color: #6b6252; font-size: 9pt; }
+      .sub-row td { color: #6b6252; font-size: 9pt; }
+      .energy-row td { font-size: 9pt; }
+      .ingredients-box { background: #f9f5ec; border: 1px solid #e0d8cc; border-radius: 6px; padding: 12px; font-size: 10pt; line-height: 1.7; }
+      .allergen-box { background: #fff0f0; border: 1px solid #f0b0b0; border-radius: 6px; padding: 10px 12px; margin-top: 10px; font-size: 9pt; color: #8b2020; }
+      .uwagi-box { border: 1px solid #e0d8cc; border-radius: 6px; padding: 12px; font-size: 10pt; min-height: 60px; }
+      .footer { margin-top: 24px; font-size: 8pt; color: #aaa; border-top: 1px solid #e0d8cc; padding-top: 8px; display: flex; justify-content: space-between; }
+      @media print { body { padding: 15mm; } }
+    </style>
+  </head><body>
+    <div class="header">
+      <div>
+        <div class="dish-name">${d.name}</div>
+        <div class="category">${d.category}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="brand">🍲 Gruba Micha</div>
+        <div style="font-size:9pt;color:#6b6252;margin-top:4px">Data: ${new Date().toLocaleDateString('pl-PL')}</div>
+      </div>
+    </div>
+
+    <h3>Wartość odżywcza</h3>
+    <table>
+      <thead><tr><th>Wartość odżywcza</th><th>na 100 g</th><th>na porcję (${d.portion}g)</th></tr></thead>
+      <tbody>
+        <tr class="main-row energy-row"><td>Wartość energetyczna</td><td>${d.kj.toFixed(0)} kJ / ${d.kcal.toFixed(0)} kcal</td><td>${d.kjP.toFixed(0)} kJ / ${d.kcalP.toFixed(0)} kcal</td></tr>
+        <tr class="main-row"><td>Tłuszcz</td><td>${d.fat.toFixed(1)} g</td><td>${(d.fat*d.pf).toFixed(1)} g</td></tr>
+        <tr class="sub-row"><td>w tym kwasy nasycone</td><td>${d.sat.toFixed(1)} g</td><td>${(d.sat*d.pf).toFixed(1)} g</td></tr>
+        <tr class="main-row"><td>Węglowodany</td><td>${d.carb.toFixed(1)} g</td><td>${(d.carb*d.pf).toFixed(1)} g</td></tr>
+        <tr class="sub-row"><td>w tym cukry</td><td>${d.sug.toFixed(1)} g</td><td>${(d.sug*d.pf).toFixed(1)} g</td></tr>
+        <tr class="main-row"><td>Białko</td><td>${d.prot.toFixed(1)} g</td><td>${(d.prot*d.pf).toFixed(1)} g</td></tr>
+        <tr class="main-row"><td>Sól</td><td>${d.salt.toFixed(2)} g</td><td>${(d.salt*d.pf).toFixed(2)} g</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Wykaz składników</h3>
+    <div class="ingredients-box">${d.ingList}</div>
+    ${d.allergenObjs.length ? `<div class="allergen-box"><strong>Alergeny:</strong> ${d.allergenObjs.map(a=>a.icon+' '+a.name).join(' · ')}</div>` : ''}
+
+    ${uwagi ? `<h3>Uwagi</h3><div class="uwagi-box">${uwagi}</div>` : ''}
+
+    <div class="footer">
+      <span>Oznakowanie zgodne z Rozporządzeniem UE nr 1169/2011</span>
+      <span>Porcja: ${d.portion}g · Masa gotowego: ${d.cooked.toFixed(0)}g</span>
+    </div>
+    <script>window.onload=()=>window.print()<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+function printKartaProduktu() {
+  const d = getKartaData();
+  const partia = prompt('Numer partii:', '') || '—';
+  const dataProdukcji = prompt('Data produkcji:', new Date().toLocaleDateString('pl-PL')) || new Date().toLocaleDateString('pl-PL');
+
+  const skladnikiRows = d.sorted.map(ing => {
+    const loss = ing.loss || 0;
+    const netto = Math.round(ing.weight * (1 - loss/100));
+    return `<tr>
+      <td>${ing.allergens.length ? '<strong style="color:#8b2020">'+ing.name.toUpperCase()+'</strong>' : ing.name}</td>
+      <td style="text-align:right">${ing.weight} g</td>
+      <td style="text-align:right">${loss > 0 ? loss+'%' : '—'}</td>
+      <td style="text-align:right">${netto} g</td>
+    </tr>`;
+  }).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>Karta Produktu - ${d.name}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'DM Sans', sans-serif; color: #1a1814; padding: 20mm; font-size: 10pt; }
+      @page { size: A4; margin: 0; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1a1814; padding-bottom: 12px; margin-bottom: 16px; }
+      .dish-name { font-family: 'Playfair Display', serif; font-size: 22pt; font-weight: 700; }
+      .brand { font-family: 'Playfair Display', serif; font-size: 13pt; color: #d4a84b; font-weight: 600; }
+      .badge { background: #1a1814; color: #fff; font-size: 8pt; padding: 2px 8px; border-radius: 3px; display: inline-block; margin-top: 4px; }
+      h3 { font-size: 8pt; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #6b6252; margin: 14px 0 6px; border-bottom: 1px solid #e0d8cc; padding-bottom: 4px; }
+      table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+      th { font-size: 8pt; font-weight: 700; text-transform: uppercase; color: #6b6252; padding: 4px 6px; text-align: right; border-bottom: 2px solid #1a1814; }
+      th:first-child { text-align: left; }
+      td { padding: 4px 6px; border-bottom: 1px solid #e0d8cc; }
+      .main-row td { font-weight: 600; }
+      .sub-row td:first-child { padding-left: 14px; color: #6b6252; font-size: 8.5pt; }
+      .sub-row td { color: #6b6252; font-size: 8.5pt; }
+      .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+      .info-box { background: #f5f0e8; border-radius: 5px; padding: 8px 12px; }
+      .info-label { font-size: 8pt; text-transform: uppercase; letter-spacing: .08em; color: #6b6252; }
+      .info-value { font-size: 12pt; font-weight: 700; margin-top: 2px; }
+      .ingredients-box { background: #f9f5ec; border: 1px solid #e0d8cc; border-radius: 5px; padding: 10px; font-size: 9.5pt; line-height: 1.7; }
+      .allergen-box { background: #fff0f0; border: 1px solid #f0b0b0; border-radius: 5px; padding: 8px 10px; margin-top: 8px; font-size: 8.5pt; color: #8b2020; }
+      .przepis-box { border: 1px solid #e0d8cc; border-radius: 5px; padding: 10px; font-size: 9.5pt; line-height: 1.6; white-space: pre-wrap; }
+      .footer { margin-top: 16px; font-size: 7.5pt; color: #aaa; border-top: 1px solid #e0d8cc; padding-top: 6px; display: flex; justify-content: space-between; }
+      .partia-box { border: 2px solid #1a1814; border-radius: 5px; padding: 8px 14px; display: inline-block; margin-top: 4px; }
+      @media print { body { padding: 12mm; } }
+    </style>
+  </head><body>
+    <div class="header">
+      <div>
+        <div class="dish-name">${d.name}</div>
+        <div style="font-size:9pt;color:#6b6252;margin-top:3px">${d.category} · DOKUMENT WEWNĘTRZNY</div>
+        <div class="partia-box" style="margin-top:8px;">
+          <div style="font-size:8pt;color:#6b6252;text-transform:uppercase;letter-spacing:.08em">Nr partii</div>
+          <div style="font-size:14pt;font-weight:700">${partia}</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="brand">🍲 Gruba Micha</div>
+        <div style="font-size:8.5pt;color:#6b6252;margin-top:4px">Data produkcji: <strong>${dataProdukcji}</strong></div>
+        <div style="font-size:8.5pt;color:#6b6252;margin-top:2px">Wydruk: ${new Date().toLocaleDateString('pl-PL')}</div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-box"><div class="info-label">Masa gotowego produktu</div><div class="info-value">${d.cooked.toFixed(0)} g · ${d.liters.toFixed(2)} l</div></div>
+      <div class="info-box"><div class="info-label">Porcja / ilość porcji</div><div class="info-value">${d.portion}g · ${(d.cooked/d.portion).toFixed(1)} szt</div></div>
+    </div>
+
+    <h3>Składniki — ilości dla ${d.liters.toFixed(2)} l</h3>
+    <table>
+      <thead><tr><th>Składnik</th><th style="text-align:right">Brutto (g)</th><th style="text-align:right">Straty</th><th style="text-align:right">Netto (g)</th></tr></thead>
+      <tbody>${skladnikiRows}</tbody>
+      <tfoot>
+        <tr style="font-weight:700;background:#f5f0e8">
+          <td>ŁĄCZNIE</td>
+          <td style="text-align:right">${d.totRaw} g</td>
+          <td></td>
+          <td style="text-align:right">${d.cooked.toFixed(0)} g</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <h3>Wartość odżywcza (na 100g)</h3>
+    <table>
+      <thead><tr><th>Składnik</th><th style="text-align:right">na 100g</th><th style="text-align:right">na porcję (${d.portion}g)</th></tr></thead>
+      <tbody>
+        <tr class="main-row"><td>Energia</td><td style="text-align:right">${d.kj.toFixed(0)} kJ / ${d.kcal.toFixed(0)} kcal</td><td style="text-align:right">${d.kjP.toFixed(0)} kJ / ${d.kcalP.toFixed(0)} kcal</td></tr>
+        <tr class="main-row"><td>Tłuszcz</td><td style="text-align:right">${d.fat.toFixed(1)} g</td><td style="text-align:right">${(d.fat*d.pf).toFixed(1)} g</td></tr>
+        <tr class="sub-row"><td>w tym nasycone</td><td style="text-align:right">${d.sat.toFixed(1)} g</td><td style="text-align:right">${(d.sat*d.pf).toFixed(1)} g</td></tr>
+        <tr class="main-row"><td>Węglowodany</td><td style="text-align:right">${d.carb.toFixed(1)} g</td><td style="text-align:right">${(d.carb*d.pf).toFixed(1)} g</td></tr>
+        <tr class="sub-row"><td>w tym cukry</td><td style="text-align:right">${d.sug.toFixed(1)} g</td><td style="text-align:right">${(d.sug*d.pf).toFixed(1)} g</td></tr>
+        <tr class="main-row"><td>Białko</td><td style="text-align:right">${d.prot.toFixed(1)} g</td><td style="text-align:right">${(d.prot*d.pf).toFixed(1)} g</td></tr>
+        <tr class="main-row"><td>Sól</td><td style="text-align:right">${d.salt.toFixed(2)} g</td><td style="text-align:right">${(d.salt*d.pf).toFixed(2)} g</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Wykaz składników i alergeny</h3>
+    <div class="ingredients-box">${d.ingList}</div>
+    ${d.allergenObjs.length ? `<div class="allergen-box"><strong>Alergeny:</strong> ${d.allergenObjs.map(a=>a.icon+' '+a.name).join(' · ')}</div>` : ''}
+
+    ${d.przepisInstrukcja ? `<h3>Instrukcja przygotowania</h3><div class="przepis-box">${d.przepisInstrukcja}</div>` : ''}
+    ${d.przepisNotatki ? `<h3>Notatki</h3><div class="przepis-box">${d.przepisNotatki}</div>` : ''}
+
+    <div class="footer">
+      <span>Dokument wewnętrzny · Gruba Micha · EU 1169/2011</span>
+      <span>Partia: ${partia} · ${dataProdukcji}</span>
+    </div>
+    <script>window.onload=()=>window.print()<\/script>
+  </body></html>`);
+  win.document.close();
+}
+</script>
+
+</body></html>`);
   win.document.close();
 }
 </script>
