@@ -1848,5 +1848,28 @@ function showToast(msg, isError=false) {
 </script>
 
 <script src="karty.js?v=202604151944"></script>
+
+<div class="modal-overlay" id="skladModal">
+  <div class="modal-box" style="width:600px;">
+    <div class="modal-header">
+      <span class="modal-title" id="skladModalTitle">📋 Skład szczegółowy</span>
+      <button class="modal-close" onclick="closeSkladModal()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Wpisz skład produktu złożonego (z etykiety). Aplikacja automatycznie wykryje alergeny i wyświetli go w etykiecie EU.</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-sm" id="aiSkladBtn" onclick="aiGetSklad()">🤖 Pobierz skład AI</button>
+      <span id="aiSkladStatus" style="font-size:12px;color:var(--muted);align-self:center;"></span>
+    </div>
+    <textarea id="skladInput" style="width:100%;min-height:120px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;line-height:1.6;" placeholder="np. olej sojowy, trawa cytrynowa (10%), szalotka, woda, sól, chili, cukier..."></textarea>
+    <div id="skladAlergenyPreview" style="margin-top:10px;display:none;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;">Wykryte alergeny:</div>
+      <div id="skladAlergenyList"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn" onclick="saveSklad()">✓ Zapisz skład</button>
+      <button class="btn btn-ghost" onclick="closeSkladModal()">Anuluj</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
