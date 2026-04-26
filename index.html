@@ -180,10 +180,11 @@ tbody td:nth-child(2) { text-align: left; }
   .manual-grid .field-group:first-child { grid-column: span 2; }
 }
 @media print {
-  #printPreviewOverlay > div > div:first-child { display: none !important; }
-  #printPreviewOverlay { position: static !important; background: white !important; }
-  #printPreviewContent { padding: 0 !important; max-width: 100% !important; }
   body > *:not(#printPreviewOverlay) { display: none !important; }
+  #printPreviewOverlay { position: static !important; display: block !important; background: white !important; }
+  #printPreviewOverlay > div { height: auto !important; }
+  #printPreviewOverlay > div > div:first-child { display: none !important; }
+  #printPreviewContent { padding: 0 !important; max-width: 100% !important; box-shadow: none !important; margin: 0 !important; background: white !important; }
 
   body { background: white; color: black; }
   .left-panel, header, .export-row, #foodCostBar, #extraCostsSection { display: none !important; }
