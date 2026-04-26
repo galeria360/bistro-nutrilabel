@@ -275,6 +275,10 @@ async function printSelectedRecipes() {
   const btn = document.querySelector('#batchPrintBar .btn');
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
+  // Otworz okno PRZED async - inaczej przeglądarka blokuje jako popup
+  var win = window.open('', '_blank');
+  if (!win) { alert('Zezwol na wyskakujące okna dla tej strony'); btn.innerHTML='🖨️ Drukuj zaznaczone'; btn.disabled=false; return; }
+  win.document.write('<html><body style="background:#111;color:#fff;font-family:sans-serif;padding:40px;text-align:center;"><p>⏳ Generowanie kart...</p></body></html>');
 
   // Pobierz wszystkie receptury jednym zapytaniem
   const recipes = [];
