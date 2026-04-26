@@ -291,7 +291,7 @@ async function printSelectedRecipes() {
   html += '<title>Karty Dania - ' + recipes.length + ' dań</title>';
   html += '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">';
   html += getStyles();
-  html += '<style>@media print { .page-break { page-break-after: always; } } .no-print { position:fixed;top:15px;right:15px; }</style>';
+  html += '<style>@media print { .page-break { page-break-after: always; } .no-print { display:none !important; } } .no-print { position:fixed;top:15px;right:15px;z-index:999; }</style>';
   html += '</head><body>';
   html += '<div class="no-print"><button onclick="window.print()" style="background:#d4a84b;color:#1a1814;border:none;border-radius:8px;padding:10px 20px;font-size:13pt;font-weight:700;cursor:pointer;">🖨️ Drukuj wszystkie (' + recipes.length + ')</button></div>';
 
