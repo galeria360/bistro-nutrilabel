@@ -346,15 +346,36 @@ async function printSelectedRecipes() {
     html += '</div>';
   });
 
-  html += '</body></html>';
-  var win = window.open('','_blank');
-  if (!win) { alert('Zezwól na wyskakujące okna dla tej strony i spróbuj ponownie.'); btn.innerHTML='🖨️ Drukuj zaznaczone'; btn.disabled=false; return; }
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  // Generuj PDF przez ukryty iframe
+  var container = document.getElementById('pdfContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'pdfContainer';
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;background:white;';
+    document.body.appendChild(container);
+  }
+  container.innerHTML = html;
 
-  btn.innerHTML = '🖨️ Drukuj zaznaczone';
-  btn.disabled = false;
+  // Uzyj html2pdf
+  var script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+  script.onload = function() {
+    var name = 'Karty_Dania_' + new Date().toLocaleDateString('pl-PL').replace(/\./g,'-') + '.pdf';
+    html2pdf().set({
+      margin: 10,
+      filename: name,
+      image: {type:'jpeg', quality:0.98},
+      html2canvas: {scale:2, useCORS:true},
+      jsPDF: {unit:'mm', format:'a4', orientation:'portrait'},
+      pagebreak: {mode:'css', before:'.page-break'}
+    }).from(container).save().then(function() {
+      container.innerHTML = '';
+      btn.innerHTML = '🖨️ Drukuj zaznaczone';
+      btn.disabled = false;
+      showToast('✓ PDF wygenerowany');
+    });
+  };
+  document.head.appendChild(script);
 }
 
 function getNvTableFromData(d) {
