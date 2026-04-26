@@ -348,7 +348,8 @@ async function printSelectedRecipes() {
 
   html += '</body></html>';
   var win = window.open('','_blank');
-  if (!win) { alert('Zezwól na wyskakujące okna'); return; }
+  if (!win) { alert('Zezwól na wyskakujące okna dla tej strony i spróbuj ponownie.'); btn.innerHTML='🖨️ Drukuj zaznaczone'; btn.disabled=false; return; }
+  win.document.open();
   win.document.write(html);
   win.document.close();
 
