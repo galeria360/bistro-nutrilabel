@@ -1538,7 +1538,7 @@ function toggleRecipeManager() {
   } else {
     d.style.display = 'flex';
     o.style.display = 'block';
-    _selectedRecipes.clear();
+    if(window._selectedRecipes) _selectedRecipes.clear();
     renderRecipeList();
   }
 }
