@@ -1503,6 +1503,7 @@ function confirmBulkImport() {
 // ═══════════════════════════════════════════════════════
 
 const API = 'api.php';
+let _selectedRecipes = new Set();
 
 async function saveRecipe() {
   const name = document.getElementById('dishName').value.trim();
