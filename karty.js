@@ -240,3 +240,132 @@ async function aiGetSklad() {
   btn.innerHTML = '🤖 Pobierz skład AI';
   btn.disabled = false;
 }
+// ── BATCH PRINT ──
+let _selectedRecipes = new Set();
+
+function toggleRecipeSelect(id, checkbox) {
+  if (checkbox.checked) {
+    _selectedRecipes.add(id);
+  } else {
+    _selectedRecipes.delete(id);
+  }
+  updateBatchBar();
+}
+
+function updateBatchBar() {
+  const bar = document.getElementById('batchPrintBar');
+  const count = document.getElementById('batchCount');
+  if (!bar) return;
+  if (_selectedRecipes.size > 0) {
+    bar.style.display = 'flex';
+    count.textContent = _selectedRecipes.size + ' zaznaczon' + (_selectedRecipes.size === 1 ? 'a' : 'ych');
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function clearSelection() {
+  _selectedRecipes.clear();
+  document.querySelectorAll('.recipe-checkbox').forEach(cb => cb.checked = false);
+  updateBatchBar();
+}
+
+async function printSelectedRecipes() {
+  if (!_selectedRecipes.size) return;
+  const ids = [..._selectedRecipes];
+  const btn = document.querySelector('#batchPrintBar .btn');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+
+  // Pobierz dane wszystkich zaznaczonych receptur
+  const recipes = [];
+  for (const id of ids) {
+    try {
+      const res = await fetch('api.php?action=get&id=' + id);
+      const data = await res.json();
+      recipes.push(JSON.parse(data.data));
+    } catch(e) {}
+  }
+
+  // Generuj karty w jednym oknie
+  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+  html += '<title>Karty Dania - ' + recipes.length + ' dań</title>';
+  html += '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">';
+  html += getStyles();
+  html += '<style>@media print { .page-break { page-break-after: always; } } .no-print { position:fixed;top:15px;right:15px; }</style>';
+  html += '</head><body>';
+  html += '<div class="no-print"><button onclick="window.print()" style="background:#d4a84b;color:#1a1814;border:none;border-radius:8px;padding:10px 20px;font-size:13pt;font-weight:700;cursor:pointer;">🖨️ Drukuj wszystkie (' + recipes.length + ')</button></div>';
+
+  recipes.forEach(function(r, i) {
+    // Zbuduj obiekt d jak w getKartaData ale z danych receptury
+    var ings = (r.ingredients || []).sort(function(a,b){return b.weight-a.weight;});
+    var totRaw = ings.reduce(function(s,i){return s+i.weight;},0);
+    var cooked = parseFloat(r.cookedWeight) || totRaw;
+    var liters = parseFloat(r.cookedLiters) || cooked/1000;
+    var portion = parseFloat(r.portionSize) || 300;
+    var pf = portion/100;
+    var rc = 100/cooked;
+
+    var totKcal=0,totProt=0,totFat=0,totSat=0,totCarb=0,totSug=0,totSalt=0;
+    ings.forEach(function(ing){
+      var f=ing.weight/100;
+      totKcal+=ing.per100.kcal*f; totProt+=ing.per100.protein*f;
+      totFat+=ing.per100.fat*f; totSat+=ing.per100.saturated*f;
+      totCarb+=ing.per100.carbs*f; totSug+=ing.per100.sugars*f;
+      totSalt+=ing.per100.salt*f;
+    });
+
+    var allergenIds = [];
+    ings.forEach(function(ing){ ing.allergens.forEach(function(a){ if(!allergenIds.includes(a)) allergenIds.push(a); }); });
+    var allergenObjs = allergenIds.map(function(id){ return ALLERGENS.find(function(a){return a.id===id;}); }).filter(Boolean);
+    var ingList = ings.map(function(ing){
+      var hasA = ing.allergens.length > 0;
+      var dn = hasA ? '<strong style="font-weight:800;text-decoration:underline;color:#8b2020">'+ing.name.toUpperCase()+'</strong>' : ing.name;
+      if (ing.skladSzczegolowy) dn += ' <span style="font-size:9pt;color:#6b6252;">('+ing.skladSzczegolowy+')</span>';
+      return dn;
+    }).join(', ');
+
+    var kj = totKcal*rc*4.184;
+    var kcal = totKcal*rc;
+
+    html += '<div class="' + (i < recipes.length-1 ? 'page-break' : '') + '">';
+    html += '<div class="header">';
+    html += '<div><div class="dish-name">'+r.name+'</div><div style="font-size:9pt;color:#6b6252;margin-top:3px">'+(r.category||'')+'</div></div>';
+    html += '<div style="text-align:right"><div class="brand">&#127858; Gruba Micha</div>';
+    html += '<div style="font-size:9pt;color:#6b6252;margin-top:4px">'+new Date().toLocaleDateString('pl-PL')+'</div></div>';
+    html += '</div>';
+
+    // Tabela NV
+    var d = {kcal:kcal,kj:kj,fat:totFat*rc,sat:totSat*rc,carb:totCarb*rc,sug:totSug*rc,prot:totProt*rc,salt:totSalt*rc,pf:pf,portion:portion};
+    html += '<h3>Wartość odżywcza</h3>';
+    html += getNvTableFromData(d);
+
+    html += '<h3>Wykaz składników</h3><div class="ibox">'+ingList+'</div>';
+    if (allergenObjs.length) html += '<div class="abox"><strong>Alergeny:</strong> '+allergenObjs.map(function(a){return a.icon+' '+a.name;}).join(' &middot; ')+'</div>';
+    html += '<h3>Uwagi</h3><div style="border:1px solid #1a1814;border-radius:6px;padding:12px;min-height:50px;"></div>';
+    html += '<div class="footer"><span>Oznakowanie zgodne z Rozporządzeniem UE nr 1169/2011</span><span>Porcja: '+portion+'g &middot; '+cooked.toFixed(0)+'g gotowego</span></div>';
+    html += '</div>';
+  });
+
+  html += '</body></html>';
+  var win = window.open('','_blank');
+  if (!win) { alert('Zezwól na wyskakujące okna'); return; }
+  win.document.write(html);
+  win.document.close();
+
+  btn.innerHTML = '🖨️ Drukuj zaznaczone';
+  btn.disabled = false;
+}
+
+function getNvTableFromData(d) {
+  var html = '<table><thead><tr><th>Wartość odżywcza</th><th>na 100 g</th><th>na porcję ('+d.portion+'g)</th></tr></thead><tbody>';
+  html += '<tr class="mr"><td>Wartość energetyczna</td><td>'+d.kj.toFixed(0)+' kJ / '+d.kcal.toFixed(0)+' kcal</td><td>'+(d.kjP||d.kj*d.pf).toFixed(0)+' kJ / '+(d.kcalP||d.kcal*d.pf).toFixed(0)+' kcal</td></tr>';
+  html += '<tr class="mr"><td>Tłuszcz</td><td>'+d.fat.toFixed(1)+' g</td><td>'+(d.fat*d.pf).toFixed(1)+' g</td></tr>';
+  html += '<tr class="sr"><td>w tym kwasy nasycone</td><td>'+d.sat.toFixed(1)+' g</td><td>'+(d.sat*d.pf).toFixed(1)+' g</td></tr>';
+  html += '<tr class="mr"><td>Węglowodany</td><td>'+d.carb.toFixed(1)+' g</td><td>'+(d.carb*d.pf).toFixed(1)+' g</td></tr>';
+  html += '<tr class="sr"><td>w tym cukry</td><td>'+d.sug.toFixed(1)+' g</td><td>'+(d.sug*d.pf).toFixed(1)+' g</td></tr>';
+  html += '<tr class="mr"><td>Białko</td><td>'+d.prot.toFixed(1)+' g</td><td>'+(d.prot*d.pf).toFixed(1)+' g</td></tr>';
+  html += '<tr class="mr"><td>Sól</td><td>'+d.salt.toFixed(2)+' g</td><td>'+(d.salt*d.pf).toFixed(2)+' g</td></tr>';
+  html += '</tbody></table>';
+  return html;
+}
