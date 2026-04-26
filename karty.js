@@ -370,9 +370,9 @@ function getNvTableFromData(d) {
 }
 
 function selectAllRecipes() {
-  if (window._allRecipes) {
-    _allRecipes.forEach(function(r) { _selectedRecipes.add(r.id); });
-  }
-  document.querySelectorAll('.recipe-checkbox').forEach(function(cb) { cb.checked = true; });
+  document.querySelectorAll('.recipe-checkbox').forEach(function(cb) {
+    cb.checked = true;
+    cb.dispatchEvent(new Event('change'));
+  });
   updateBatchBar();
 }
