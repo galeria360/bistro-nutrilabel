@@ -180,6 +180,11 @@ tbody td:nth-child(2) { text-align: left; }
   .manual-grid .field-group:first-child { grid-column: span 2; }
 }
 @media print {
+  #printPreviewOverlay > div > div:first-child { display: none !important; }
+  #printPreviewOverlay { position: static !important; background: white !important; }
+  #printPreviewContent { padding: 0 !important; max-width: 100% !important; }
+  body > *:not(#printPreviewOverlay) { display: none !important; }
+
   body { background: white; color: black; }
   .left-panel, header, .export-row, #foodCostBar, #extraCostsSection { display: none !important; }
   .right-panel { position: static; height: auto; background: white; border: none; padding: 20px; }
@@ -1886,6 +1891,21 @@ function showToast(msg, isError=false) {
     <div style="display:flex;gap:8px;margin-top:14px;">
       <button class="btn" onclick="saveSklad()">✓ Zapisz skład</button>
       <button class="btn btn-ghost" onclick="closeSkladModal()">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<div id="printPreviewOverlay" style="display:none;position:fixed;inset:0;background:#000a;z-index:300;">
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;">
+    <div style="background:var(--bg2);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:1px solid var(--border);">
+      <span style="font-family:Playfair Display,serif;color:var(--accent);font-size:16px;">🖨️ Podgląd kart do druku</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="window.print()" class="btn">🖨️ Drukuj / Zapisz PDF</button>
+        <button onclick="closePrintPreview()" class="btn btn-ghost">✕ Zamknij</button>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;background:#e0e0e0;padding:20px;">
+      <div id="printPreviewContent" style="background:white;max-width:210mm;margin:0 auto;padding:20mm;"></div>
     </div>
   </div>
 </div>
