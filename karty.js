@@ -241,7 +241,6 @@ async function aiGetSklad() {
   btn.disabled = false;
 }
 // ── BATCH PRINT ──
-let _selectedRecipes = new Set();
 
 function toggleRecipeSelect(id, checkbox) {
   if (checkbox.checked) {
