@@ -276,15 +276,15 @@ async function printSelectedRecipes() {
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
 
-  // Pobierz dane wszystkich zaznaczonych receptur
+  // Pobierz wszystkie receptury jednym zapytaniem
   const recipes = [];
-  for (const id of ids) {
-    try {
-      const res = await fetch('api.php?action=get&id=' + id);
-      const data = await res.json();
-      recipes.push(JSON.parse(data.data));
-    } catch(e) {}
-  }
+  try {
+    const res = await fetch('api.php?action=batch&ids=' + ids.join(','));
+    const rows = await res.json();
+    rows.forEach(function(row) {
+      try { recipes.push(JSON.parse(row.data)); } catch(e) {}
+    });
+  } catch(e) {}
 
   // Generuj karty w jednym oknie
   let html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
