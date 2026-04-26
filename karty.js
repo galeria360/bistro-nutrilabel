@@ -370,15 +370,9 @@ function getNvTableFromData(d) {
 }
 
 function selectAllRecipes() {
-  document.querySelectorAll('.recipe-checkbox').forEach(function(cb) {
-    cb.checked = true;
-    var id = parseInt(cb.closest('[data-id]') ? cb.closest('[data-id]').dataset.id : 0);
-    if (id) _selectedRecipes.add(id);
-  });
-  // Pobierz id z _allRecipes bo checkboxy mogą nie mieć data-id
   if (window._allRecipes) {
     _allRecipes.forEach(function(r) { _selectedRecipes.add(r.id); });
-    document.querySelectorAll('.recipe-checkbox').forEach(function(cb) { cb.checked = true; });
   }
+  document.querySelectorAll('.recipe-checkbox').forEach(function(cb) { cb.checked = true; });
   updateBatchBar();
 }
