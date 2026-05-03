@@ -85,6 +85,21 @@
     m.innerHTML = `<div class="pm-box">
       <div class="mg-head"><h2 id="pmTitle">Porcje i ceny</h2><button class="mg-close" onclick="MenuGen.closePortionModal()">&#10005;</button></div>
       <div style="padding:10px 20px 0;font-size:12px;color:#666;">Pierwsza porcja = miska (na miejscu + wynos), druga = słoik (tylko wynos).</div>
+      <div style="padding:10px 20px 0;display:flex;align-items:center;gap:12px;">
+        <label style="font-size:11px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Wielkość nazwy</label>
+        <input type="range" id="pmFontSize" min="40" max="200" value="122" step="2" style="flex:1;">
+        <span id="pmFontSizeVal" style="font-size:12px;font-weight:700;color:#1a1a1a;min-width:40px;">122px</span>
+      </div>
+      <div style="padding:6px 20px 0;display:flex;align-items:center;gap:12px;">
+        <label style="font-size:11px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Wielkość składników</label>
+        <input type="range" id="pmIngSize" min="8" max="60" value="32" step="1" style="flex:1;">
+        <span id="pmIngSizeVal" style="font-size:12px;font-weight:700;color:#1a1a1a;min-width:40px;">32px</span>
+      </div>
+      <div style="padding:6px 20px 10px;display:flex;align-items:center;gap:12px;">
+        <label style="font-size:11px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Wielkość ceny</label>
+        <input type="range" id="pmPriceSize" min="24" max="120" value="81" step="2" style="flex:1;">
+        <span id="pmPriceSizeVal" style="font-size:12px;font-weight:700;color:#1a1a1a;min-width:40px;">81px</span>
+      </div>
       <div class="pm-list" id="pmList"></div>
       <button class="pm-add" onclick="MenuGen.addPortionRow()">+ Dodaj porcję</button>
       <div class="pm-footer">
@@ -204,7 +219,19 @@
     m.classList.add('open');
   }
 
-  function renderPmRows(portions) {
+  function initFontSlider() {
+  const slider = document.getElementById('pmFontSize');
+  const label  = document.getElementById('pmFontSizeVal');
+  if (slider && label) slider.oninput = function() { label.textContent = this.value + 'px'; };
+  const ingSlider = document.getElementById('pmIngSize');
+  const ingLabel  = document.getElementById('pmIngSizeVal');
+  if (ingSlider && ingLabel) ingSlider.oninput = function() { ingLabel.textContent = this.value + 'px'; };
+  const priceSlider = document.getElementById('pmPriceSize');
+  const priceLabel  = document.getElementById('pmPriceSizeVal');
+  if (priceSlider && priceLabel) priceSlider.oninput = function() { priceLabel.textContent = this.value + 'px'; };
+}
+
+function renderPmRows(portions) {
     document.getElementById('pmList').innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;padding:0 0 6px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">
         <span>Nazwa</span><span>Wielkość</span><span>Cena (zł)</span><span></span>
@@ -244,8 +271,19 @@
       price: row.querySelector('[data-field="price"]').value.trim(),
     })).filter(p => p.label || p.size || p.price);
 
+    // Zapisz wybrane rozmiary czcionek
+    const fontSlider = document.getElementById('pmFontSize');
+    const fontSize = fontSlider ? parseInt(fontSlider.value) : 122;
+    const ingSlider = document.getElementById('pmIngSize');
+    const ingSize = ingSlider ? parseInt(ingSlider.value) : 32;
+    const priceSlider = document.getElementById('pmPriceSize');
+    const priceSize = priceSlider ? parseInt(priceSlider.value) : 81;
+
     if(m.dataset.mode === 'current') {
       selectedForMenu[0].portions = rows;
+      selectedForMenu[0].fontSize = fontSize;
+      selectedForMenu[0].ingSize = ingSize;
+      selectedForMenu[0].priceSize = priceSize;
       closePortionModal();
       generateAndPrint();
       setTimeout(() => { selectedForMenu = []; }, 500);
@@ -357,6 +395,7 @@
     document.getElementById('pmTitle').textContent = `Porcje i ceny: ${name}`;
     renderPmRows(selectedForMenu[0].portions);
     m.classList.add('open');
+    setTimeout(initFontSlider, 50);
   }
 
   function cleanNum(txt) {
@@ -381,7 +420,7 @@
   }
 
   function buildFullHTML() {
-    const cards = selectedForMenu.map(({recipe, portions}) => buildCard(recipe, portions)).join('');
+    const cards = selectedForMenu.map(({recipe, portions, fontSize, ingSize, priceSize}) => buildCard(recipe, portions, fontSize, ingSize, priceSize)).join('');
     const count = selectedForMenu.length;
 
     return `<!DOCTYPE html>
@@ -537,7 +576,8 @@ ${cards}
   const INFO_ICON = `<svg width="12" height="12" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#000" stroke-width="1.5"/><line x1="10" y1="9" x2="10" y2="14" stroke="#000" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="6" r="1" fill="#000"/></svg>`;
 
   // ── BUDUJ KARTĘ ───────────────────────────────────────────
-  function buildCard(recipe, portions) {
+  function buildCard(recipe, portions, fontSize, ingSize, priceSize) {
+    priceSize = priceSize || 81;
     const name  = recipe.name || '—';
     const cat   = recipe.category || 'Danie gorące';
     const sklad = recipe.ingredients || '';
@@ -562,7 +602,7 @@ ${cards}
       : '—';
 
     // Dla UFO - rozdziel skład na główne i pod-składniki
-    const skladHtml = isUFO ? buildUFOSklad(sklad, recipe._ings) : (sklad||'—');
+    const skladHtml = isUFO ? buildUFOSklad(sklad, recipe._ings, ingSize||32) : (sklad||'—');
 
     const jarTile = (!isUFO && p2)
       ? `<div class="mc-tile">
@@ -574,7 +614,7 @@ ${cards}
             </div>
             <div class="mc-div"></div>
             <div><div class="mc-plbl">${p2.label||'Duża'}</div>
-            <div><span class="mc-price">${fmtPrice(p2.price)}</span><span class="mc-zl"> zł</span></div></div>
+            <div><span class="mc-price" style="font-size:${priceSize}px;">${fmtPrice(p2.price)}</span><span class="mc-zl" style="font-size:${Math.round(priceSize*0.42)}px;"> zł</span></div></div>
           </div>
         </div>`
       : (!isUFO ? `<div class="mc-tile" style="justify-content:center;align-items:center;font-size:11px;color:#ccc;font-style:italic;">brak drugiej opcji</div>` : '');
@@ -588,7 +628,7 @@ ${cards}
   <div class="mc-hero">
     <div class="mc-h-cat">${isUFO ? cat : "Zupa"}</div>
     <div class="mc-h-rule"></div>
-    <div class="mc-h-title-wrap"><div class="mc-h-title">${name}</div></div>
+    <div class="mc-h-title-wrap"><div class="mc-h-title" style="font-size:${fontSize||122}px;">${name}</div></div>
     <div class="mc-deco"><div class="mc-deco-line"></div><div class="mc-deco-dot"></div><div class="mc-deco-line"></div></div>
   </div>
 
@@ -609,7 +649,7 @@ ${cards}
       </div>
       <div class="mc-div"></div>
       <div><div class="mc-plbl">${p1.label||'Kanapka'}</div>
-      <div><span class="mc-price">${fmtPrice(p1.price)}</span><span class="mc-zl"> zł</span></div></div>
+      <div><span class="mc-price" style="font-size:${priceSize}px;">${fmtPrice(p1.price)}</span><span class="mc-zl" style="font-size:${Math.round(priceSize*0.42)}px;"> zł</span></div></div>
     </div>
   </div>` : `
   <div class="mc-prices">
@@ -622,7 +662,7 @@ ${cards}
         </div>
         <div class="mc-div"></div>
         <div><div class="mc-plbl">${p1.label||'Porcja'}</div>
-        <div><span class="mc-price">${fmtPrice(p1.price)}</span><span class="mc-zl"> zł</span></div></div>
+        <div><span class="mc-price" style="font-size:${priceSize}px;">${fmtPrice(p1.price)}</span><span class="mc-zl" style="font-size:${Math.round(priceSize*0.42)}px;"> zł</span></div></div>
       </div>
     </div>
     ${jarTile}
@@ -660,7 +700,8 @@ ${cards}
 
   // Buduje skład UFO z tablicy składników (ing.name + ing.skladSzczegolowy)
   // ings = window.ingredients posortowane wg wagi
-  function buildUFOSklad(sklad, ings) {
+  function buildUFOSklad(sklad, ings, ingSize) {
+    ingSize = ingSize || 32;
     // Jeśli mamy bezpośredni dostęp do tablicy składników - użyj jej
     if (ings && ings.length) {
       const sorted = [...ings].sort((a,b) => (parseFloat(b.weight)||0)-(parseFloat(a.weight)||0));
@@ -668,7 +709,7 @@ ${cards}
       const subParts  = sorted.filter(ing => ing.skladSzczegolowy)
                               .map(ing => ing.name + ' (' + ing.skladSzczegolowy + ')');
       const mainHtml = mainParts.length
-        ? '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:32px;font-weight:800;text-transform:uppercase;display:block;line-height:1.1;margin-bottom:8px;letter-spacing:0;">' + mainParts.join(', ') + '</span>'
+        ? '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:' + ingSize + 'px;font-weight:800;text-transform:uppercase;display:block;line-height:1.1;margin-bottom:8px;letter-spacing:0;">' + mainParts.join(', ') + '</span>'
         : '';
       const subHtml = subParts.length
         ? '<span style="font-size:9.5px;color:#555;display:block;line-height:1.55;">' + subParts.join(' · ') + '</span>'
