@@ -475,49 +475,36 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 </style>
 <script>
 function autoFitTitle() {
-  // A4 = 210mm. Przy typowym zoom przeglądarki karta ma ~794px (96dpi)
-  // 82% z 794px = ~651px — to nasz cel
-  const TARGET_W = 651;
-
   document.querySelectorAll('.mc-h-title').forEach(title => {
-    title.style.letterSpacing = '0px';
+    // Ustaw duży font bazowy
+    title.style.fontSize = '90px';
+    title.style.letterSpacing = '4px';
+    title.style.transform = '';
+    title.style.transformOrigin = 'center top';
+    title.style.display = 'block';
+    title.style.whiteSpace = 'nowrap';
 
-    // Szukaj od dużego do małego
-    let size = 110;
-    title.style.fontSize = size + 'px';
+    // Kontener = hero sekcja
+    const container = title.closest('.mc-hero') || title.parentElement;
+    const maxW = (container ? container.offsetWidth : 680) * 0.84;
+    const titleW = title.scrollWidth;
 
-    // Zmniejszaj aż scrollWidth <= TARGET_W
-    while (title.scrollWidth > TARGET_W && size > 24) {
-      size -= 2;
-      title.style.fontSize = size + 'px';
-    }
-    // Jeden krok do tyłu dla pewności
-    if (title.scrollWidth > TARGET_W && size > 24) {
-      size -= 2;
-      title.style.fontSize = size + 'px';
-    }
-
-    // Letter-spacing — rozciągnij krótkie nazwy
-    const slack = TARGET_W - title.scrollWidth;
-    if (slack > 40 && size >= 50) {
+    if (titleW > maxW) {
+      // Skaluj w poziomie
+      const scale = maxW / titleW;
+      title.style.transform = 'scaleX(' + scale + ')';
+    } else if (titleW < maxW * 0.6) {
+      // Rozciągnij letter-spacing
       const chars = Math.max(title.textContent.trim().length - 1, 1);
-      const extra = Math.min(slack / chars, 14);
-      title.style.letterSpacing = extra.toFixed(1) + 'px';
+      const extra = (maxW - titleW) / chars;
+      title.style.letterSpacing = Math.min(extra, 18).toFixed(1) + 'px';
     }
   });
 }
 
-// Uruchom po foncie I po renderze
-function runFit() {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(autoFitTitle);
-  });
-}
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(runFit);
-} else {
-  window.addEventListener('load', runFit);
-}
+window.addEventListener('load', function() {
+  setTimeout(autoFitTitle, 100);
+});
 </script>
 </head>
 <body>
