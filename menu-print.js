@@ -478,31 +478,9 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 }
 </style>
 <script>
-function autoFitTitle() {
-  document.querySelectorAll('.mc-h-title').forEach(title => {
-    const wrap = title.parentElement;
-    if (!wrap) return;
-    const wrapW = wrap.offsetWidth;
-    const titleW = title.offsetWidth;
-    if (wrapW <= 0 || titleW <= 0) return;
-    if (titleW > wrapW) {
-      const scale = wrapW / titleW;
-      title.style.transform = 'scaleX(' + scale + ')';
-    } else {
-      // rozciągnij
-      const scale = Math.min(wrapW / titleW, 1.0);
-      title.style.transform = 'scaleX(' + scale + ')';
-    }
-    // zawsze wypełnij 100% wrappera
-    title.style.transform = 'scaleX(' + (wrapW / titleW) + ')';
-  });
-}
+// autoFit zastąpiony przez CSS clamp
 
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(function() { setTimeout(autoFitTitle, 500); });
-} else {
-  window.addEventListener('load', function() { setTimeout(autoFitTitle, 800); });
-});
+
 </script>
 </head>
 <body>
