@@ -361,7 +361,6 @@ async function printSelectedRecipes() {
   btn.innerHTML = '🖨️ Drukuj zaznaczone';
   btn.disabled = false;
 }
-}
 
 function getNvTableFromData(d) {
   var html = '<table><thead><tr><th>Wartość odżywcza</th><th>na 100 g</th><th>na porcję ('+d.portion+'g)</th></tr></thead><tbody>';
