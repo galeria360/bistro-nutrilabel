@@ -515,6 +515,12 @@ function autoFitTitle() {
       title.style.letterSpacing = (4 + Math.min(slack / chars, 24)).toFixed(1) + 'px';
     }
   });
+}
+
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(function() { setTimeout(autoFitTitle, 500); });
+} else {
+  window.addEventListener('load', function() { setTimeout(autoFitTitle, 800); });
 });
 </script>
 </head>
