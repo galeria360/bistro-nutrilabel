@@ -421,6 +421,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-atag{display:inline-block;border:1.5px solid #000;border-radius:100px;padding:2px 8px;font-size:9.5px;font-weight:600;color:#000;margin:2px 2px 0 0;}
 
 /* ceny */
+.mc-price-ufo{padding:20px 48px 18px;display:flex;align-items:center;gap:28px;border-bottom:1px solid #e4e4e4;flex-shrink:0;}
 .mc-prices{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #e4e4e4;flex-shrink:0;}
 .mc-tile{padding:16px 18px 14px;display:flex;flex-direction:row;align-items:center;gap:16px;}
 .mc-tile:first-child{border-right:1px solid #e4e4e4;}
@@ -519,6 +520,15 @@ ${cards}
     <path d="M14 54 Q26 57 38 54" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
   </svg>`;
 
+
+  const UFO = `<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 15h16a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4"/>
+    <path d="M12 4c3.783 0 6.953 2.133 7.786 5h-15.572c.833 -2.867 4.003 -5 7.786 -5"/>
+    <path d="M5 12h14"/>
+    <ellipse cx="9" cy="7.5" rx="0.8" ry="0.4" fill="#1a1a1a" stroke="none" transform="rotate(-20 9 7.5)"/>
+    <ellipse cx="12" cy="6.2" rx="0.8" ry="0.4" fill="#1a1a1a" stroke="none"/>
+    <ellipse cx="15" cy="7.5" rx="0.8" ry="0.4" fill="#1a1a1a" stroke="none" transform="rotate(15 15 7.5)"/>
+  </svg>`;
   const INFO_ICON = `<svg width="12" height="12" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#000" stroke-width="1.5"/><line x1="10" y1="9" x2="10" y2="14" stroke="#000" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="6" r="1" fill="#000"/></svg>`;
 
   // ── BUDUJ KARTĘ ───────────────────────────────────────────
@@ -526,6 +536,7 @@ ${cards}
     const name  = recipe.name || '—';
     const cat   = recipe.category || 'Danie gorące';
     const sklad = recipe.ingredients || '';
+    const isUFO = cat === 'UFO kanapka';
     const alerg = Array.isArray(recipe.allergens)
       ? recipe.allergens
       : String(recipe.allergens||'').split(/[,;]+/).map(s=>s.trim()).filter(Boolean);
@@ -538,14 +549,17 @@ ${cards}
     const bial = fmtN(recipe.protein|| recipe.bialko);
     const sol  = fmtN(recipe.salt   || recipe.sol);
 
-    const p1 = portions[0] || {label:'Porcja',size:'',price:''};
+    const p1 = portions[0] || {label:'Kanapka',size:'1 szt.',price:''};
     const p2 = portions[1] || null;
 
     const alergHtml = alerg.length
       ? alerg.map(a=>`<span class="mc-atag">${a}</span>`).join('')
       : '—';
 
-    const jarTile = p2
+    // Dla UFO - rozdziel skład na główne i pod-składniki
+    const skladHtml = isUFO ? buildUFOSklad(sklad) : (sklad||'—');
+
+    const jarTile = (!isUFO && p2)
       ? `<div class="mc-tile">
           <div class="mc-tl">${JAR}<div class="mc-vol">${p2.size||'—'}</div></div>
           <div class="mc-tr2">
@@ -558,7 +572,7 @@ ${cards}
             <div><span class="mc-price">${fmtPrice(p2.price)}</span><span class="mc-zl"> zł</span></div></div>
           </div>
         </div>`
-      : `<div class="mc-tile" style="justify-content:center;align-items:center;font-size:11px;color:#ccc;font-style:italic;">brak drugiej opcji</div>`;
+      : (!isUFO ? `<div class="mc-tile" style="justify-content:center;align-items:center;font-size:11px;color:#ccc;font-style:italic;">brak drugiej opcji</div>` : '');
 
     return `<div class="menu-card">
   <div class="mc-tr">
@@ -575,11 +589,24 @@ ${cards}
 
   <div class="mc-info">
     <div class="mc-ik">Skład</div>
-    <div class="mc-iv">${sklad||'—'}</div>
+    <div class="mc-iv">${skladHtml}</div>
     <div class="mc-ik">Alergeny</div>
     <div class="mc-iv">${alergHtml}</div>
   </div>
 
+  ${isUFO ? `
+  <div class="mc-price-ufo">
+    <div class="mc-tl">${UFO}<div class="mc-vol">${p1.size||'1 szt.'}</div></div>
+    <div class="mc-tr2">
+      <div class="mc-avail">
+        <div class="mc-ar"><div class="mc-dot"></div>Na miejscu</div>
+        <div class="mc-ar"><div class="mc-dot"></div>Na wynos</div>
+      </div>
+      <div class="mc-div"></div>
+      <div><div class="mc-plbl">${p1.label||'Kanapka'}</div>
+      <div><span class="mc-price">${fmtPrice(p1.price)}</span><span class="mc-zl"> zł</span></div></div>
+    </div>
+  </div>` : `
   <div class="mc-prices">
     <div class="mc-tile">
       <div class="mc-tl">${BOWL}<div class="mc-vol">${p1.size||'—'}</div></div>
@@ -594,9 +621,9 @@ ${cards}
       </div>
     </div>
     ${jarTile}
-  </div>
+  </div>`}
 
-  <div class="mc-kaucja">
+  <div class="mc-kaucja" style="${isUFO ? 'display:none' : ''}">
     ${INFO_ICON}
     <div class="mc-ktxt">Na wynos podajemy w słoiku zwrotnym. Kaucja: <b>mały 450 ml — 2 zł</b>, <b>duży 900 ml — 3 zł</b>. Zwrot kaucji przy oddaniu czystego słoika.</div>
   </div>
@@ -623,6 +650,32 @@ ${cards}
     <span class="mc-fr">grubamicha.pl</span>
   </div>
 </div>`;
+  }
+
+
+  // Rozdziela skład na główne składniki i pod-składniki w nawiasach
+  function buildUFOSklad(sklad) {
+    if (!sklad) return '—';
+    // Wyodrębnij składniki główne (bez nawiasów) i pod-składniki (w nawiasach)
+    const parts = sklad.split(',').map(s => s.trim()).filter(Boolean);
+    const mainParts = [];
+    const subParts = [];
+    parts.forEach(p => {
+      if (p.includes('(')) {
+        const mainName = p.replace(/\s*\(.*?\)/g, '').trim();
+        if (mainName) mainParts.push(mainName);
+        subParts.push(p);
+      } else {
+        mainParts.push(p);
+      }
+    });
+    const mainHtml = mainParts.length
+      ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;text-transform:uppercase;display:block;line-height:1.1;margin-bottom:6px;letter-spacing:0;">${mainParts.join(', ')}</span>`
+      : '';
+    const subHtml = subParts.length
+      ? `<span style="font-size:9.5px;color:#555;display:block;line-height:1.5;">${subParts.join(' · ')}</span>`
+      : '';
+    return mainHtml + subHtml;
   }
 
   function fmtN(v) {
