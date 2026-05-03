@@ -341,10 +341,14 @@
       allergens: allergenNames,
     };
 
-    selectedForMenu = [{ recipe, portions: [
-      { label: 'Porcja', size: '450 ml', price: '' },
-      { label: 'Duża',   size: '900 ml', price: '' },
-    ]}];
+    const isUFOcat = category === 'UFO kanapka';
+    const defaultPortions = isUFOcat
+      ? [{ label: 'Kanapka', size: '1 szt.', price: recipe.price || recipe.cena || '' }]
+      : [
+          { label: 'Porcja', size: '450 ml', price: recipe.price || recipe.cena || '' },
+          { label: 'Duża',   size: '900 ml', price: '' },
+        ];
+    selectedForMenu = [{ recipe, portions: defaultPortions }];
 
     const m = document.getElementById('portionModal');
     m.dataset.rid = 'current';
@@ -581,7 +585,7 @@ ${cards}
   </div>
 
   <div class="mc-hero">
-    <div class="mc-h-cat">Zupa</div>
+    <div class="mc-h-cat">${isUFO ? cat : "Zupa"}</div>
     <div class="mc-h-rule"></div>
     <div class="mc-h-title-wrap"><div class="mc-h-title">${name}</div></div>
     <div class="mc-deco"><div class="mc-deco-line"></div><div class="mc-deco-dot"></div><div class="mc-deco-line"></div></div>
@@ -653,27 +657,50 @@ ${cards}
   }
 
 
-  // Rozdziela skład na główne składniki i pod-składniki w nawiasach
+  // Rozdziela skład na główne i pod-składniki
   function buildUFOSklad(sklad) {
     if (!sklad) return '—';
-    // Wyodrębnij składniki główne (bez nawiasów) i pod-składniki (w nawiasach)
-    const parts = sklad.split(',').map(s => s.trim()).filter(Boolean);
+    // Parsuj uwzględniając nawiasy - nie splituj po przecinkach wewnątrz nawiasów
     const mainParts = [];
     const subParts = [];
-    parts.forEach(p => {
-      if (p.includes('(')) {
-        const mainName = p.replace(/\s*\(.*?\)/g, '').trim();
-        if (mainName) mainParts.push(mainName);
-        subParts.push(p);
+    let depth = 0, current = '';
+    for (let i = 0; i < sklad.length; i++) {
+      const c = sklad[i];
+      if (c === '(') depth++;
+      if (c === ')') depth--;
+      if (c === ',' && depth === 0) {
+        const part = current.trim();
+        if (part) {
+          if (part.includes('(')) {
+            // ma pod-składniki
+            const mainName = part.replace(/\s*\([^)]*\)/g, '').trim();
+            if (mainName) mainParts.push(mainName);
+            subParts.push(part);
+          } else {
+            mainParts.push(part);
+          }
+        }
+        current = '';
       } else {
-        mainParts.push(p);
+        current += c;
       }
-    });
+    }
+    // ostatni element
+    if (current.trim()) {
+      const part = current.trim();
+      if (part.includes('(')) {
+        const mainName = part.replace(/\s*\([^)]*\)/g, '').trim();
+        if (mainName) mainParts.push(mainName);
+        subParts.push(part);
+      } else {
+        mainParts.push(part);
+      }
+    }
     const mainHtml = mainParts.length
-      ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;text-transform:uppercase;display:block;line-height:1.1;margin-bottom:6px;letter-spacing:0;">${mainParts.join(', ')}</span>`
+      ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;text-transform:uppercase;display:block;line-height:1.1;margin-bottom:8px;letter-spacing:0;">${mainParts.join(', ')}</span>`
       : '';
     const subHtml = subParts.length
-      ? `<span style="font-size:9.5px;color:#555;display:block;line-height:1.5;">${subParts.join(' · ')}</span>`
+      ? `<span style="font-size:9.5px;color:#555;display:block;line-height:1.55;">${subParts.join(' · ')}</span>`
       : '';
     return mainHtml + subHtml;
   }
