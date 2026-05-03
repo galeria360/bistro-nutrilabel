@@ -480,34 +480,37 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 <script>
 function autoFitTitle() {
   document.querySelectorAll('.mc-h-title').forEach(title => {
-    // Ustaw duży font bazowy
+    // Reset
     title.style.fontSize = '90px';
-    title.style.letterSpacing = '4px';
-    title.style.transform = '';
-    title.style.transformOrigin = 'center top';
-    title.style.display = 'block';
+    title.style.letterSpacing = '2px';
+    title.style.transform = 'none';
     title.style.whiteSpace = 'nowrap';
+    title.style.display = 'block';
+    title.style.textAlign = 'center';
+    title.style.width = '100%';
+    title.style.transformOrigin = '50% 50%';
 
-    // Kontener = hero sekcja
-    const container = title.closest('.mc-hero') || title.parentElement;
-    const maxW = (container ? container.offsetWidth : 680) * 0.84;
-    const titleW = title.scrollWidth;
+    const maxW = 651; // 82% z 794px (A4 przy 96dpi)
 
-    if (titleW > maxW) {
-      // Skaluj w poziomie
-      const scale = maxW / titleW;
-      title.style.transform = 'scaleX(' + scale + ')';
-    } else if (titleW < maxW * 0.6) {
-      // Rozciągnij letter-spacing
+    // Zmniejszaj font aż się zmieści
+    let size = 90;
+    while (title.scrollWidth > maxW && size > 20) {
+      size -= 1;
+      title.style.fontSize = size + 'px';
+    }
+
+    // Rozciągnij letter-spacing dla krótkich nazw
+    const slack = maxW - title.scrollWidth;
+    if (slack > 60 && size >= 50) {
       const chars = Math.max(title.textContent.trim().length - 1, 1);
-      const extra = (maxW - titleW) / chars;
-      title.style.letterSpacing = Math.min(extra, 18).toFixed(1) + 'px';
+      const extra = Math.min(slack / chars, 16);
+      title.style.letterSpacing = extra.toFixed(1) + 'px';
     }
   });
 }
 
 window.addEventListener('load', function() {
-  setTimeout(autoFitTitle, 100);
+  setTimeout(autoFitTitle, 200);
 });
 </script>
 </head>
