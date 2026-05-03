@@ -32,7 +32,6 @@
       .mg-recipe-item.selected{border-color:#1a1a1a;background:#f5f5f5;}
       .mg-recipe-item input[type=checkbox]{accent-color:#1a1a1a;width:16px;height:16px;}
       .mg-ri-name{flex:1;font-size:14px;font-weight:600;}
-      .mg-ri-cat{font-size:12px;color:#777;}
       .mg-ri-btn{font-size:12px;padding:4px 10px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;}
       .mg-ri-btn:hover{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
       .mg-sel-label{font-size:13px;font-weight:700;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
@@ -85,14 +84,12 @@
     m.dataset.rid = '';
     m.innerHTML = `<div class="pm-box">
       <div class="mg-head"><h2 id="pmTitle">Porcje i ceny</h2><button class="mg-close" onclick="MenuGen.closePortionModal()">&#10005;</button></div>
-      <div style="padding:12px 20px;font-size:12px;color:#666;border-bottom:1px solid #eee;">
-        Wpisz wielkość porcji (np. 450 ml) i cenę sprzedaży dla każdej opcji.
-      </div>
+      <div style="padding:10px 20px 0;font-size:12px;color:#666;">Wpisz wielkość i cenę każdej opcji. Pierwsza = miska (na miejscu+wynos), druga = słoik (tylko wynos).</div>
       <div class="pm-list" id="pmList"></div>
       <button class="pm-add" onclick="MenuGen.addPortionRow()">+ Dodaj porcję</button>
       <div class="pm-footer">
         <button class="mg-btn-secondary" onclick="MenuGen.closePortionModal()">Anuluj</button>
-        <button class="mg-btn-primary" onclick="MenuGen.savePortions()">Zapisz</button>
+        <button class="mg-btn-primary" id="pmSaveBtn" onclick="MenuGen.savePortions()">Zapisz</button>
       </div>
     </div>`;
     document.body.appendChild(m);
@@ -174,22 +171,19 @@
     renderSelList();
   }
 
-  // ── MODAL PORCJI ──────────────────────────────────────────
+  // ── MODAL PORCJI (dla przepisów z bazy) ──────────────────
   async function openPortionModalFor(id) {
     let sel = selectedForMenu.find(s => s.recipe.id == id);
     let recipe = allRecipes.find(r => r.id == id);
-
     if (!recipe) {
-      // pobierz z API jeśli nie ma w liście
       try {
         const res = await fetch(`api.php?action=get&id=${id}`);
         recipe = await res.json();
         if (!allRecipes.find(r=>r.id==id)) allRecipes.push(recipe);
       } catch(e) { return; }
     }
-
     if (!sel) {
-      selectedForMenu.push({ recipe, portions: [{ label: 'Porcja', size: '', price: '' }] });
+      selectedForMenu.push({ recipe, portions: [{ label: 'Porcja', size: '', price: '' },{ label: 'Duża', size: '', price: '' }] });
       const cb = document.querySelector(`#mgri-${id} input[type=checkbox]`);
       if(cb){cb.checked=true;document.getElementById(`mgri-${id}`)?.classList.add('selected');}
       renderSelList();
@@ -197,164 +191,187 @@
     }
     const m = document.getElementById('portionModal');
     m.dataset.rid = id;
+    m.dataset.mode = 'baza';
     document.getElementById('pmTitle').textContent = `Porcje: ${recipe.name||'—'}`;
+    document.getElementById('pmSaveBtn').onclick = function() { savePortions(); };
     renderPortionRows(id);
     m.classList.add('open');
   }
 
   function renderPortionRows(id) {
     const sel = selectedForMenu.find(s => s.recipe.id == id);
+    renderPmRows(sel?.portions || []);
+  }
+
+  function renderPmRows(portions) {
     document.getElementById('pmList').innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;padding:0 0 6px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">
         <span>Nazwa</span><span>Wielkość</span><span>Cena (zł)</span><span></span>
       </div>
-      ${(sel?.portions||[]).map((p,i)=>`
+      ${portions.map((p,i)=>`
         <div class="pm-row">
-          <input type="text" value="${p.label}" placeholder="np. Porcja" data-field="label" data-idx="${i}">
-          <input type="text" value="${p.size}" placeholder="np. 450 ml" data-field="size" data-idx="${i}">
-          <input type="text" value="${p.price}" placeholder="np. 15.00" data-field="price" data-idx="${i}">
+          <input type="text" value="${p.label||''}" placeholder="np. Porcja" data-field="label" data-idx="${i}">
+          <input type="text" value="${p.size||''}" placeholder="np. 450 ml" data-field="size" data-idx="${i}">
+          <input type="text" value="${p.price||''}" placeholder="np. 15.00" data-field="price" data-idx="${i}">
           <button class="pm-del" onclick="MenuGen.deletePortionRow(${i})">&#10005;</button>
         </div>`).join('')}`;
   }
 
   function addPortionRow() {
-    const id = document.getElementById('portionModal').dataset.rid;
-    const sel = selectedForMenu.find(s => s.recipe.id == id);
-    if(sel){sel.portions.push({label:'',size:'',price:''});renderPortionRows(id);}
+    const m = document.getElementById('portionModal');
+    const id = m.dataset.rid;
+    const mode = m.dataset.mode;
+    if (mode === 'current') {
+      selectedForMenu[0].portions.push({label:'',size:'',price:''});
+      renderPmRows(selectedForMenu[0].portions);
+    } else {
+      const sel = selectedForMenu.find(s => s.recipe.id == id);
+      if(sel){sel.portions.push({label:'',size:'',price:''});renderPmRows(sel.portions);}
+    }
   }
 
   function deletePortionRow(idx) {
-    const id = document.getElementById('portionModal').dataset.rid;
-    const sel = selectedForMenu.find(s => s.recipe.id == id);
-    if(sel&&sel.portions.length>1){sel.portions.splice(idx,1);renderPortionRows(id);}
+    const m = document.getElementById('portionModal');
+    const id = m.dataset.rid;
+    const mode = m.dataset.mode;
+    const portions = mode === 'current' ? selectedForMenu[0]?.portions : selectedForMenu.find(s=>s.recipe.id==id)?.portions;
+    if(portions && portions.length > 1){ portions.splice(idx,1); renderPmRows(portions); }
   }
 
   function savePortions() {
-    const id = document.getElementById('portionModal').dataset.rid;
-    const sel = selectedForMenu.find(s => s.recipe.id == id);
-    if(sel){
-      sel.portions = Array.from(document.querySelectorAll('#pmList .pm-row')).map(row=>({
-        label: row.querySelector('[data-field="label"]').value.trim(),
-        size:  row.querySelector('[data-field="size"]').value.trim(),
-        price: row.querySelector('[data-field="price"]').value.trim(),
-      }));
+    const m = document.getElementById('portionModal');
+    const id = m.dataset.rid;
+    const mode = m.dataset.mode;
+    const rows = Array.from(document.querySelectorAll('#pmList .pm-row')).map(row=>({
+      label: row.querySelector('[data-field="label"]').value.trim(),
+      size:  row.querySelector('[data-field="size"]').value.trim(),
+      price: row.querySelector('[data-field="price"]').value.trim(),
+    })).filter(p => p.label || p.size || p.price);
+    if (mode === 'current') {
+      selectedForMenu[0].portions = rows;
+      closePortionModal();
+      generateAndPrint();
+      setTimeout(() => { selectedForMenu = []; }, 1000);
+    } else {
+      const sel = selectedForMenu.find(s => s.recipe.id == id);
+      if(sel) sel.portions = rows;
+      closePortionModal();
+      renderSelList();
     }
-    closePortionModal();
-    renderSelList();
   }
 
   function closePortionModal() { document.getElementById('portionModal').classList.remove('open'); }
 
-  // ── DRUKUJ AKTUALNY PRZEPIS (czyta z DOM) ────────────────
+  // ── DRUKUJ AKTUALNY PRZEPIS ───────────────────────────────
   function printCurrentRecipe() {
-    // Czytaj dane z aktualnie wyświetlonego przepisu w aplikacji
-    const name     = document.getElementById('dishName')?.value?.trim() || '—';
-    const category = document.getElementById('dishCategory')?.value || 'Danie';
-    const subtitle = document.getElementById('dishSubtitle')?.value?.trim() || '';
+    const name = document.getElementById('dishName')?.value?.trim() || '';
+    if (!name) { alert('Otwórz przepis — wpisz nazwę dania.'); return; }
 
-    if (!name || name === '—') {
-      alert('Otwórz lub zapisz przepis przed generowaniem karty menu.');
-      return;
-    }
+    const category = document.getElementById('dishCategory')?.value || 'Danie gorące';
 
-    // Wartości odżywcze z podsumowania (elementy z klas/id aplikacji)
-    const kcal = readStat('ENERGIA','kcal') || readEl('totalKcal') || readEl('kcalTotal') || '';
-    const bial = readStat('BIAŁKO','g')    || readEl('totalProtein') || '';
-    const tl   = readStat('TŁUSZCZ','g')  || readEl('totalFat') || '';
-    const ww   = readStat('WĘGLOW','g')   || readEl('totalCarbs') || '';
-    const sol  = readStat('SÓL','g')      || readEl('totalSalt') || '';
+    // Wartości odżywcze z elementów DOM (na 100g ugotowanego)
+    const kcal = cleanNum(document.getElementById('totalKcal')?.textContent);
+    const fat  = cleanNum(document.getElementById('totalFat')?.textContent);
+    const carb = cleanNum(document.getElementById('totalCarb')?.textContent);
+    const salt = cleanNum(document.getElementById('totalSalt')?.textContent);
 
-    // Skład — z listy składników
-    let sklad = '';
+    // Białko i nasycone — licz z window.ingredients
+    let protein = '', saturated = '', sugars = '';
+    let skladParts = [];
+    let allergenSet = new Set();
+
     try {
       if (window.ingredients && window.ingredients.length) {
-        sklad = window.ingredients.map(i => i.name || i.nazwa || '').filter(Boolean).join(', ');
-      }
-    } catch(e) {}
+        // masa ugotowana
+        const cookedG = parseFloat(document.getElementById('cookedWeight')?.value) || 0;
+        const ratio = cookedG > 0 ? 100 / cookedG : 0;
 
-    // Alergeny — z zaznaczonych tagów alergenów
-    let alergeny = '';
+        let totProtein = 0, totSat = 0, totSugars = 0;
+        window.ingredients.forEach(ing => {
+          const w = parseFloat(ing.weight) || 0;
+          if (ing.per100) {
+            totProtein += (ing.per100.protein || 0) * w / 100;
+            totSat     += (ing.per100.saturated || 0) * w / 100;
+            totSugars  += (ing.per100.sugars || 0) * w / 100;
+          }
+          // skład
+          if (ing.name) skladParts.push(ing.name);
+          // alergeny
+          if (ing.allergens && Array.isArray(ing.allergens)) {
+            ing.allergens.forEach(a => allergenSet.add(a));
+          }
+        });
+
+        if (ratio > 0) {
+          protein   = (totProtein * ratio).toFixed(1).replace(/\.0$/,'');
+          saturated = (totSat * ratio).toFixed(1).replace(/\.0$/,'');
+          sugars    = (totSugars * ratio).toFixed(1).replace(/\.0$/,'');
+        }
+      }
+    } catch(e) { console.warn('MenuGen: błąd czytania składników', e); }
+
+    // Alergeny — tłumacz ID na nazwy przez ALLERGENS
+    let allergenNames = [];
     try {
-      const allergenEls = document.querySelectorAll('.allergen-tag.active, .allergen.active, [data-allergen].active, .alergen-pill');
-      if (allergenEls.length) {
-        alergeny = Array.from(allergenEls).map(el => el.textContent.trim()).join(', ');
-      }
-      // próbuj też z podsumowania etykiety
-      if (!alergeny) {
-        const allergenSection = document.querySelector('#allergenList, .allergen-list, [id*="allergen"]');
-        if (allergenSection) alergeny = allergenSection.textContent.replace(/alergeny:?/gi,'').trim();
+      if (window.ALLERGENS && allergenSet.size) {
+        allergenNames = Array.from(allergenSet).map(id => {
+          const a = window.ALLERGENS.find(x => x.id === id);
+          return a ? a.name : id;
+        });
       }
     } catch(e) {}
 
-    const recipe = { name, category, subtitle, kcal, protein: bial, fat: tl, carbs: ww, salt: sol, ingredients: sklad, allergens: alergeny };
+    // Jeśli brak alergenów z ingredients, spróbuj z etykiety EU
+    if (!allergenNames.length) {
+      try {
+        const allergenLegend = document.querySelector('.allergen-legend, #allergenList');
+        if (allergenLegend) {
+          allergenNames = Array.from(allergenLegend.querySelectorAll('.legend-item, .allergen-item'))
+            .map(el => el.textContent.trim().replace(/^[\u{1F300}-\u{1F9FF}]\s*/u, ''));
+        }
+      } catch(e) {}
+    }
 
-    // Otwórz modal porcji żeby użytkownik wpisał ceny
-    selectedForMenu = [{ recipe, portions: [{ label: 'Porcja', size: '', price: '' }, { label: 'Duża', size: '', price: '' }] }];
+    const recipe = {
+      name,
+      category,
+      kcal,
+      fat,
+      carbs: carb,
+      salt,
+      protein,
+      saturated_fat: saturated,
+      sugars,
+      ingredients: skladParts.join(', '),
+      allergens: allergenNames,
+    };
+
+    // Otwórz modal porcji
+    selectedForMenu = [{ recipe, portions: [
+      { label: 'Porcja', size: '450 ml', price: '' },
+      { label: 'Duża',   size: '900 ml', price: '' },
+    ]}];
 
     const m = document.getElementById('portionModal');
     m.dataset.rid = 'current';
+    m.dataset.mode = 'current';
     document.getElementById('pmTitle').textContent = `Porcje i ceny: ${name}`;
-    renderPortionRowsCurrent();
+    renderPmRows(selectedForMenu[0].portions);
     m.classList.add('open');
   }
 
-  function renderPortionRowsCurrent() {
-    const sel = selectedForMenu[0];
-    document.getElementById('pmList').innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;padding:0 0 6px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">
-        <span>Nazwa</span><span>Wielkość</span><span>Cena (zł)</span><span></span>
-      </div>
-      ${(sel?.portions||[]).map((p,i)=>`
-        <div class="pm-row">
-          <input type="text" value="${p.label}" placeholder="np. Porcja" data-field="label" data-idx="${i}">
-          <input type="text" value="${p.size}" placeholder="np. 450 ml" data-field="size" data-idx="${i}">
-          <input type="text" value="${p.price}" placeholder="np. 15.00" data-field="price" data-idx="${i}">
-          <button class="pm-del" onclick="MenuGen.deletePortionRowCurrent(${i})">&#10005;</button>
-        </div>`).join('')}`;
-
-    // Nadpisz przycisk Zapisz żeby generował kartę
-    document.querySelector('.pm-footer .mg-btn-primary').onclick = function() {
-      const rows = document.querySelectorAll('#pmList .pm-row');
-      selectedForMenu[0].portions = Array.from(rows).map(row=>({
-        label: row.querySelector('[data-field="label"]').value.trim(),
-        size:  row.querySelector('[data-field="size"]').value.trim(),
-        price: row.querySelector('[data-field="price"]').value.trim(),
-      })).filter(p => p.label || p.size || p.price);
-      closePortionModal();
-      generateAndPrint();
-      selectedForMenu = [];
-    };
+  // helper — wyciąga liczbę z tekstu "34 kcal" → "34"
+  function cleanNum(txt) {
+    if (!txt) return '';
+    const m = txt.match(/[\d.,]+/);
+    return m ? m[0].replace(',','.') : '';
   }
 
-  function deletePortionRowCurrent(idx) {
-    if(selectedForMenu[0]&&selectedForMenu[0].portions.length>1){
-      selectedForMenu[0].portions.splice(idx,1);
-      renderPortionRowsCurrent();
-    }
-  }
-
-  // helpers do czytania wartości odżywczych z DOM
-  function readEl(id) {
-    const el = document.getElementById(id);
-    return el ? el.textContent.replace(/[^\d.,]/g,'').replace(',','.') : '';
-  }
-  function readStat(label, unit) {
-    // szuka w summary stats
-    const els = document.querySelectorAll('.stat-label, .stat-name, .nutrition-label, [class*="stat"]');
-    for (const el of els) {
-      if (el.textContent.toUpperCase().includes(label.toUpperCase())) {
-        const val = el.closest('.stat, .nutrition-item, [class*="stat-"]')?.querySelector('.stat-value, .stat-number, [class*="value"]');
-        if (val) return val.textContent.replace(/[^\d.,]/g,'').replace(',','.');
-      }
-    }
-    return '';
-  }
-
-  // ── GENEROWANIE HTML KARTY ────────────────────────────────
+  // ── GENEROWANIE HTML ──────────────────────────────────────
   function generateAndPrint() {
     if (!selectedForMenu.length) { alert('Wybierz przepis.'); return; }
     const win = window.open('','_blank','width=950,height=800');
-    if (!win) { alert('Przeglądarka zablokowała popup. Zezwól na wyskakujące okna dla tej strony.'); return; }
+    if (!win) { alert('Zezwól na wyskakujące okna dla tej strony i spróbuj ponownie.'); return; }
     win.document.write(buildPrintHTML());
     win.document.close();
   }
@@ -378,7 +395,7 @@ body{background:#fff;font-family:'Space Grotesk',sans-serif;}
 .mc-hero{padding:36px 36px 30px;text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;}
 .mc-hero-cat{font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:#000;text-transform:uppercase;letter-spacing:14px;margin-bottom:16px;}
 .mc-hero-rule{width:100%;height:1px;background:#e4e4e4;margin-bottom:22px;}
-.mc-hero-title{font-family:'Syne',sans-serif;font-weight:800;font-size:78px;line-height:.9;color:#000;text-transform:uppercase;letter-spacing:-2px;margin:0 0 14px;word-break:break-word;}
+.mc-hero-title{font-family:'Syne',sans-serif;font-weight:800;color:#000;text-transform:uppercase;letter-spacing:-2px;margin:0 0 14px;word-break:break-word;line-height:.9;font-size:clamp(36px,10vw,78px);}
 .mc-hero-desc{font-size:13px;color:#000;font-weight:500;letter-spacing:2px;}
 .mc-deco{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px;}
 .mc-deco-line{width:40px;height:1px;background:#000;}
@@ -438,23 +455,30 @@ ${selectedForMenu.map(({recipe,portions}) => buildCard(recipe,portions)).join(''
   }
 
   const BOWL_SVG = `<svg width="58" height="52" viewBox="0 0 64 56" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 18 C20 14 23 12 23 8" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round"/><path d="M32 18 C32 14 35 12 35 8" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round"/><path d="M44 18 C44 14 47 12 47 8" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round"/><path d="M4 28 Q4 52 32 52 Q60 52 60 28 Z" fill="#1a1a1a"/><path d="M6 28 Q6 48 32 48 Q58 48 58 28 Z" fill="#fff"/><rect x="2" y="24" width="60" height="6" rx="3" fill="#1a1a1a"/><path d="M18 47 Q32 52 46 47" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/></svg>`;
-
-  const JAR_SVG = `<svg width="46" height="58" viewBox="0 0 52 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="1" width="40" height="10" rx="3" fill="#1a1a1a"/><rect x="9" y="3.5" width="34" height="5" rx="1.5" fill="#fff"/><rect x="10" y="11" width="32" height="6" fill="none" stroke="#1a1a1a" stroke-width="3.5"/><path d="M10 17 L5 22 L4 50 Q4 62 26 62 Q48 62 48 50 L47 22 L42 17 Z" fill="#1a1a1a"/><path d="M13 17 L9 21 L8 50 Q8 58 26 58 Q44 58 44 50 L43 21 L39 17 Z" fill="#fff"/><path d="M14 54 Q26 57 38 54" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const JAR_SVG  = `<svg width="46" height="58" viewBox="0 0 52 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="1" width="40" height="10" rx="3" fill="#1a1a1a"/><rect x="9" y="3.5" width="34" height="5" rx="1.5" fill="#fff"/><rect x="10" y="11" width="32" height="6" fill="none" stroke="#1a1a1a" stroke-width="3.5"/><path d="M10 17 L5 22 L4 50 Q4 62 26 62 Q48 62 48 50 L47 22 L42 17 Z" fill="#1a1a1a"/><path d="M13 17 L9 21 L8 50 Q8 58 26 58 Q44 58 44 50 L43 21 L39 17 Z" fill="#fff"/><path d="M14 54 Q26 57 38 54" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/></svg>`;
 
   function buildCard(recipe, portions) {
-    const name   = recipe.name || '—';
-    const cat    = recipe.category || 'Danie gorące';
-    const sklad  = recipe.ingredients || recipe.sklad || '';
-    const alerg  = Array.isArray(recipe.allergens) ? recipe.allergens.join(', ') : (recipe.allergens || recipe.alergeny || '');
-    const kcal   = fmtN(recipe.kcal || recipe.kalorie || recipe.energia);
-    const tl     = fmtN(recipe.fat || recipe.tluszcz);
-    const nas    = fmtN(recipe.saturated_fat || recipe.tluszcz_nasycony);
-    const ww     = fmtN(recipe.carbs || recipe.weglowodany);
-    const cuk    = fmtN(recipe.sugars || recipe.cukry);
-    const bial   = fmtN(recipe.protein || recipe.bialko);
-    const sol    = fmtN(recipe.salt || recipe.sol);
-    const p1     = portions[0] || { label:'Porcja', size:'', price:'' };
-    const p2     = portions[1] || null;
+    const name  = recipe.name || '—';
+    const cat   = recipe.category || 'Danie gorące';
+    const sklad = recipe.ingredients || '';
+    const alerg = Array.isArray(recipe.allergens)
+      ? recipe.allergens
+      : (recipe.allergens||'').split(/[,;]+/).map(s=>s.trim()).filter(Boolean);
+
+    const kcal = fmtN(recipe.kcal || recipe.kalorie);
+    const tl   = fmtN(recipe.fat || recipe.tluszcz);
+    const nas  = fmtN(recipe.saturated_fat || recipe.tluszcz_nasycony);
+    const ww   = fmtN(recipe.carbs || recipe.weglowodany);
+    const cuk  = fmtN(recipe.sugars || recipe.cukry);
+    const bial = fmtN(recipe.protein || recipe.bialko);
+    const sol  = fmtN(recipe.salt || recipe.sol);
+
+    const p1  = portions[0] || { label:'Porcja', size:'', price:'' };
+    const p2  = portions[1] || null;
+
+    const alergHtml = alerg.length
+      ? alerg.map(a=>`<span class="mc-atag">${a}</span>`).join('')
+      : '—';
 
     const jarTile = p2 ? `
     <div class="mc-tile">
@@ -468,10 +492,8 @@ ${selectedForMenu.map(({recipe,portions}) => buildCard(recipe,portions)).join(''
         <div><div class="mc-price-lbl">${p2.label||'Duża'}</div>
         <div><span class="mc-price">${fmtPrice(p2.price)}</span><span class="mc-zl"> zł</span></div></div>
       </div>
-    </div>` : `<div class="mc-tile" style="justify-content:center;align-items:center;color:#ccc;font-size:12px;font-style:italic;">brak drugiej opcji</div>`;
-
-    // alergeny jako tabletki
-    const alergHtml = alerg ? alerg.split(/[,;]+/).map(a=>a.trim()).filter(Boolean).map(a=>`<span class="mc-atag">${a}</span>`).join('') : '—';
+    </div>`
+    : `<div class="mc-tile" style="justify-content:center;align-items:center;font-size:11px;color:#ccc;font-style:italic;">brak drugiej opcji</div>`;
 
     return `<div class="menu-card">
   <div class="mc-toprow"><span class="mc-top-cat">${cat}</span><span class="mc-top-brand">Gruba Micha</span></div>
@@ -479,7 +501,6 @@ ${selectedForMenu.map(({recipe,portions}) => buildCard(recipe,portions)).join(''
     <div class="mc-hero-cat">Zupa</div>
     <div class="mc-hero-rule"></div>
     <div class="mc-hero-title">${name}</div>
-    ${recipe.subtitle ? `<div class="mc-hero-desc">${recipe.subtitle}</div>` : ''}
     <div class="mc-deco"><div class="mc-deco-line"></div><div class="mc-deco-dot"></div><div class="mc-deco-line"></div></div>
   </div>
   <div class="mc-info">
@@ -521,13 +542,20 @@ ${selectedForMenu.map(({recipe,portions}) => buildCard(recipe,portions)).join(''
 </div>`;
   }
 
-  function fmtN(v) { if(v===undefined||v===null||v==='') return ''; const n=parseFloat(v); return isNaN(n)?'':n.toFixed(1).replace(/\.0$/,''); }
-  function fmtPrice(v) { const n=parseFloat(String(v||'').replace(',','.')); return isNaN(n)?'—':n.toFixed(2).replace('.',','); }
+  function fmtN(v) {
+    if(v===undefined||v===null||v==='') return '';
+    const n = parseFloat(String(v).replace(',','.'));
+    return isNaN(n)?'':n.toFixed(1).replace(/\.0$/,'');
+  }
+  function fmtPrice(v) {
+    const n = parseFloat(String(v||'').replace(',','.'));
+    return isNaN(n)?'—':n.toFixed(2).replace('.',',');
+  }
 
   window.MenuGen = {
     openMenuModal, closeMenuModal, filterRecipes,
     toggleRecipe, removeSelected,
-    openPortionModalFor, addPortionRow, deletePortionRow, deletePortionRowCurrent, savePortions, closePortionModal,
+    openPortionModalFor, addPortionRow, deletePortionRow, savePortions, closePortionModal,
     generateAndPrint, printCurrentRecipe,
   };
 
