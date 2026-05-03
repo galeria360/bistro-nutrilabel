@@ -408,7 +408,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-hero{padding:32px 32px 28px;text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;}
 .mc-h-cat{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:#000;text-transform:uppercase;letter-spacing:14px;margin-bottom:14px;}
 .mc-h-rule{width:100%;height:1px;background:#e4e4e4;margin-bottom:20px;}
-.mc-h-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#000;text-transform:uppercase;margin:0 0 12px;line-height:.88;word-break:break-word;transition:none;}
+
 .mc-h-desc{font-size:12px;color:#000;font-weight:500;letter-spacing:2px;}
 .mc-deco{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;}
 .mc-deco-line{width:36px;height:1px;background:#000;}
@@ -478,21 +478,6 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 }
 </style>
 <script>
-function autoFitTitle() {
-  document.querySelectorAll('.mc-h-title').forEach(title => {
-    const wrap = title.parentElement;
-    if (!wrap || !wrap.offsetWidth || !title.offsetWidth) return;
-    const scale = wrap.offsetWidth / title.offsetWidth;
-    title.style.transformOrigin = 'left top';
-    title.style.transform = 'scaleX(' + Math.min(scale, 1) + ')';
-  });
-}
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(function() { setTimeout(autoFitTitle, 300); });
-} else {
-  window.addEventListener('load', function() { setTimeout(autoFitTitle, 500); });
-}
-
 
 </script>
 </head>
@@ -550,13 +535,6 @@ ${cards}
 
     const p1 = portions[0] || {label:'Porcja',size:'',price:''};
     const p2 = portions[1] || null;
-
-    // Rozmiar fontu nazwy — skaluj wg długości
-    const nameLen = name.length;
-    const titleSize = nameLen <= 8  ? '78px'
-                    : nameLen <= 12 ? '62px'
-                    : nameLen <= 18 ? '50px'
-                    : '38px';
 
     const alergHtml = alerg.length
       ? alerg.map(a=>`<span class="mc-atag">${a}</span>`).join('')
