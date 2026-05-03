@@ -478,39 +478,54 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 }
 </style>
 <script>
+function measureText(text, fontSize, letterSpacing) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = '800 ' + fontSize + 'px \'Barlow Condensed\', sans-serif';
+  const metrics = ctx.measureText(text);
+  // letterSpacing nie jest obsługiwany przez canvas API, dodaj ręcznie
+  const ls = parseFloat(letterSpacing) || 0;
+  return metrics.width + ls * (text.length - 1);
+}
+
 function autoFitTitle() {
+  const TARGET = 651; // 82% z A4 (794px przy 96dpi)
+
   document.querySelectorAll('.mc-h-title').forEach(title => {
-    // Reset
-    title.style.fontSize = '90px';
-    title.style.letterSpacing = '2px';
-    title.style.transform = 'none';
-    title.style.whiteSpace = 'nowrap';
-    title.style.display = 'block';
+    const text = title.textContent.trim().toUpperCase();
     title.style.textAlign = 'center';
+    title.style.display = 'block';
     title.style.width = '100%';
-    title.style.transformOrigin = '50% 50%';
 
-    const maxW = 651; // 82% z 794px (A4 przy 96dpi)
-
-    // Zmniejszaj font aż się zmieści
-    let size = 90;
-    while (title.scrollWidth > maxW && size > 20) {
-      size -= 1;
-      title.style.fontSize = size + 'px';
+    // Znajdź optymalny font-size binarnie
+    let lo = 22, hi = 110, best = 22;
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      const w = measureText(text, mid, 2);
+      if (w <= TARGET) { best = mid; lo = mid + 1; }
+      else { hi = mid - 1; }
     }
 
-    // Rozciągnij letter-spacing dla krótkich nazw
-    const slack = maxW - title.scrollWidth;
-    if (slack > 60 && size >= 50) {
-      const chars = Math.max(title.textContent.trim().length - 1, 1);
-      const extra = Math.min(slack / chars, 16);
-      title.style.letterSpacing = extra.toFixed(1) + 'px';
+    title.style.fontSize = best + 'px';
+    title.style.letterSpacing = '2px';
+
+    // Rozciągnij letter-spacing jeśli za dużo miejsca
+    const w = measureText(text, best, 2);
+    if (w < TARGET * 0.65 && best >= 40) {
+      const slack = TARGET - w;
+      const chars = Math.max(text.length - 1, 1);
+      const extra = Math.min(slack / chars, 18);
+      title.style.letterSpacing = (2 + extra).toFixed(1) + 'px';
     }
   });
 }
 
 window.addEventListener('load', function() {
-  setTimeout(autoFitTitle, 200);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function() { setTimeout(autoFitTitle, 50); });
+  } else {
+    setTimeout(autoFitTitle, 300);
+  }
 });
 </script>
 </head>
