@@ -465,7 +465,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-atag{display:inline-block;border:1.5px solid #000;border-radius:100px;padding:2px 8px;font-size:9.5px;font-weight:600;color:#000;margin:2px 2px 0 0;}
 
 /* ceny */
-.mc-price-ufo{padding:20px 48px 18px;display:flex;align-items:center;gap:28px;border-bottom:1px solid #e4e4e4;flex-shrink:0;}
+.mc-price-ufo{padding:20px 32px;display:flex;align-items:center;border-top:1px solid #e4e4e4;border-bottom:1px solid #e4e4e4;flex-shrink:0;}.mc-price-ufo .mc-tl{flex-shrink:0;margin-right:28px;display:flex;flex-direction:column;align-items:center;gap:4px;}.mc-price-ufo .mc-tr2{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;}.mc-price-ufo .mc-avail-r{flex-shrink:0;margin-left:28px;display:flex;flex-direction:column;gap:5px;}
 .mc-prices{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #e4e4e4;flex-shrink:0;}
 .mc-tile{padding:16px 18px 14px;display:flex;flex-direction:row;align-items:center;gap:16px;}
 .mc-tile:first-child{border-right:1px solid #e4e4e4;}
@@ -643,13 +643,12 @@ ${cards}
   <div class="mc-price-ufo">
     <div class="mc-tl">${UFO}<div class="mc-vol">${p1.size||'1 szt.'}</div></div>
     <div class="mc-tr2">
-      <div class="mc-avail">
-        <div class="mc-ar"><div class="mc-dot"></div>Na miejscu</div>
-        <div class="mc-ar"><div class="mc-dot"></div>Na wynos</div>
-      </div>
-      <div class="mc-div"></div>
-      <div><div class="mc-plbl">${p1.label||'Kanapka'}</div>
-      <div><span class="mc-price" style="font-size:${priceSize}px;">${fmtPrice(p1.price)}</span><span class="mc-zl" style="font-size:${Math.round(priceSize*0.42)}px;"> zł</span></div></div>
+      <div class="mc-plbl" style="text-align:center;">${p1.label||'Kanapka'}</div>
+      <div><span class="mc-price" style="font-size:${priceSize}px;">${fmtPrice(p1.price)}</span><span class="mc-zl" style="font-size:${Math.round(priceSize*0.42)}px;"> zł</span></div>
+    </div>
+    <div class="mc-avail-r">
+      <div class="mc-ar"><div class="mc-dot"></div>Na miejscu</div>
+      <div class="mc-ar"><div class="mc-dot"></div>Na wynos</div>
     </div>
   </div>` : `
   <div class="mc-prices">
