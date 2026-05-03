@@ -475,44 +475,48 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 </style>
 <script>
 function autoFitTitle() {
-  const cards = document.querySelectorAll('.menu-card');
-  cards.forEach(card => {
-    const title = card.querySelector('.mc-h-title');
-    if (!title) return;
-    // 210mm karta, 82% = ~172mm, przy 96dpi: 172mm * 3.7795 = ~650px
-    // ale używamy rzeczywistej szerokości karty
-    const cardW = card.getBoundingClientRect().width || card.offsetWidth || 794;
-    const maxW = cardW * 0.82;
+  // A4 = 210mm. Przy typowym zoom przeglądarki karta ma ~794px (96dpi)
+  // 82% z 794px = ~651px — to nasz cel
+  const TARGET_W = 651;
 
-    // Reset
-    title.style.fontSize = '10px';
-    title.style.letterSpacing = '2px';
+  document.querySelectorAll('.mc-h-title').forEach(title => {
+    title.style.letterSpacing = '0px';
 
-    // Binarne szukanie optymalnego rozmiaru
-    let lo = 20, hi = 120, best = 20;
-    while (lo <= hi) {
-      const mid = Math.floor((lo + hi) / 2);
-      title.style.fontSize = mid + 'px';
-      const w = title.getBoundingClientRect().width;
-      if (w <= maxW) { best = mid; lo = mid + 1; }
-      else { hi = mid - 1; }
+    // Szukaj od dużego do małego
+    let size = 110;
+    title.style.fontSize = size + 'px';
+
+    // Zmniejszaj aż scrollWidth <= TARGET_W
+    while (title.scrollWidth > TARGET_W && size > 24) {
+      size -= 2;
+      title.style.fontSize = size + 'px';
     }
-    title.style.fontSize = best + 'px';
+    // Jeden krok do tyłu dla pewności
+    if (title.scrollWidth > TARGET_W && size > 24) {
+      size -= 2;
+      title.style.fontSize = size + 'px';
+    }
 
-    // Letter spacing — rozciągnij do 82% szerokości
-    const currentW = title.getBoundingClientRect().width;
-    if (currentW < maxW * 0.65) {
-      const slack = maxW - currentW;
+    // Letter-spacing — rozciągnij krótkie nazwy
+    const slack = TARGET_W - title.scrollWidth;
+    if (slack > 40 && size >= 50) {
       const chars = Math.max(title.textContent.trim().length - 1, 1);
-      const extra = Math.min(slack / chars, 12);
+      const extra = Math.min(slack / chars, 14);
       title.style.letterSpacing = extra.toFixed(1) + 'px';
     }
   });
 }
+
+// Uruchom po foncie I po renderze
+function runFit() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(autoFitTitle);
+  });
+}
 if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(autoFitTitle);
+  document.fonts.ready.then(runFit);
 } else {
-  window.onload = autoFitTitle;
+  window.addEventListener('load', runFit);
 }
 </script>
 </head>
