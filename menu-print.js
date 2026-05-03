@@ -404,7 +404,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-hero{padding:32px 32px 28px;text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;}
 .mc-h-cat{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:#000;text-transform:uppercase;letter-spacing:14px;margin-bottom:14px;}
 .mc-h-rule{width:100%;height:1px;background:#e4e4e4;margin-bottom:20px;}
-.mc-h-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#000;text-transform:uppercase;letter-spacing:-2px;margin:0 0 12px;line-height:.88;word-break:break-word;}
+.mc-h-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;color:#000;text-transform:uppercase;margin:0 0 12px;line-height:.88;word-break:break-word;transition:none;}
 .mc-h-desc{font-size:12px;color:#000;font-weight:500;letter-spacing:2px;}
 .mc-deco{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;}
 .mc-deco-line{width:36px;height:1px;background:#000;}
@@ -473,6 +473,37 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
   .menu-card{margin:0;}
 }
 </style>
+<script>
+function autoFitTitle() {
+  const cards = document.querySelectorAll('.menu-card');
+  cards.forEach(card => {
+    const title = card.querySelector('.mc-h-title');
+    if (!title) return;
+    const maxW = card.offsetWidth * 0.82;
+    let size = 90;
+    title.style.fontSize = size + 'px';
+    title.style.letterSpacing = '0px';
+    // Zmniejszaj aż zmieści się w 82% szerokości
+    while (title.scrollWidth > maxW && size > 28) {
+      size -= 1;
+      title.style.fontSize = size + 'px';
+    }
+    // Rozciągnij letter-spacing jeśli jest za małe
+    if (title.scrollWidth < maxW * 0.7 && size > 40) {
+      const slack = maxW - title.scrollWidth;
+      const chars = title.textContent.length;
+      const extra = Math.min(slack / chars, 8);
+      title.style.letterSpacing = extra.toFixed(1) + 'px';
+    }
+  });
+}
+// Uruchom po załadowaniu fontów
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(autoFitTitle);
+} else {
+  window.addEventListener('load', autoFitTitle);
+}
+</script>
 </head>
 <body>
 <div class="toolbar">
