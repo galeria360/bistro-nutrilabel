@@ -430,7 +430,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-dot-dim{width:6px;height:6px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;}
 .mc-div{width:100%;height:1px;background:#e4e4e4;}
 .mc-plbl{font-size:8.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;}
-.mc-price{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:34px;line-height:1;color:#000;letter-spacing:-1px;}
+.mc-price{font-family:'DM Sans',sans-serif;font-weight:700;font-size:34px;line-height:1;color:#000;letter-spacing:-0.5px;}
 .mc-zl{font-size:15px;font-weight:500;margin-left:2px;color:#000;}
 
 /* kaucja */
@@ -451,7 +451,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-nc.sf{border-left:2px solid #ccc;}
 .mc-nclbl{font-size:6.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#000;margin-bottom:3px;}
 .mc-nclbl-s{font-size:6px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#000;margin-bottom:3px;opacity:.7;}
-.mc-ncval{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#000;line-height:1;letter-spacing:-.5px;}
+.mc-ncval{font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;color:#000;line-height:1;}
 .mc-ncunit{font-size:8.5px;color:#000;margin-top:1px;font-weight:500;}
 
 /* footer */
@@ -479,29 +479,40 @@ function autoFitTitle() {
   cards.forEach(card => {
     const title = card.querySelector('.mc-h-title');
     if (!title) return;
-    const maxW = card.offsetWidth * 0.82;
-    let size = 90;
-    title.style.fontSize = size + 'px';
-    title.style.letterSpacing = '0px';
-    // Zmniejszaj aż zmieści się w 82% szerokości
-    while (title.scrollWidth > maxW && size > 28) {
-      size -= 1;
-      title.style.fontSize = size + 'px';
+    // 210mm karta, 82% = ~172mm, przy 96dpi: 172mm * 3.7795 = ~650px
+    // ale używamy rzeczywistej szerokości karty
+    const cardW = card.getBoundingClientRect().width || card.offsetWidth || 794;
+    const maxW = cardW * 0.82;
+
+    // Reset
+    title.style.fontSize = '10px';
+    title.style.letterSpacing = '2px';
+
+    // Binarne szukanie optymalnego rozmiaru
+    let lo = 20, hi = 120, best = 20;
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      title.style.fontSize = mid + 'px';
+      const w = title.getBoundingClientRect().width;
+      if (w <= maxW) { best = mid; lo = mid + 1; }
+      else { hi = mid - 1; }
     }
-    // Rozciągnij letter-spacing jeśli jest za małe
-    if (title.scrollWidth < maxW * 0.7 && size > 40) {
-      const slack = maxW - title.scrollWidth;
-      const chars = title.textContent.length;
-      const extra = Math.min(slack / chars, 8);
+    title.style.fontSize = best + 'px';
+
+    // Letter spacing — rozciągnij do 82% szerokości
+    const currentW = title.getBoundingClientRect().width;
+    if (currentW < maxW * 0.65) {
+      const slack = maxW - currentW;
+      const chars = Math.max(title.textContent.trim().length - 1, 1);
+      const extra = Math.min(slack / chars, 12);
       title.style.letterSpacing = extra.toFixed(1) + 'px';
     }
   });
 }
-// Uruchom po załadowaniu fontów
 if (document.fonts && document.fonts.ready) {
   document.fonts.ready.then(autoFitTitle);
 } else {
-  window.addEventListener('load', autoFitTitle);
+  window.onload = autoFitTitle;
 }
 </script>
 </head>
