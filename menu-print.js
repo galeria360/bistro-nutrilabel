@@ -434,8 +434,8 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-dot-dim{width:6px;height:6px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;}
 .mc-div{width:100%;height:1px;background:#e4e4e4;}
 .mc-plbl{font-size:8.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;}
-.mc-price{font-family:'DM Sans',sans-serif;font-weight:700;font-size:34px;line-height:1;color:#000;letter-spacing:-0.5px;}
-.mc-zl{font-size:15px;font-weight:500;margin-left:2px;color:#000;}
+.mc-price{font-family:'DM Sans',sans-serif;font-weight:700;font-size:48px;line-height:1;color:#000;letter-spacing:-0.5px;}
+.mc-zl{font-size:20px;font-weight:400;margin-left:3px;color:#000;}
 
 /* kaucja */
 .mc-kaucja{padding:8px 32px;border-bottom:1px solid #e4e4e4;display:flex;align-items:center;gap:8px;flex-shrink:0;}
@@ -479,32 +479,34 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 </style>
 <script>
 function autoFitTitle() {
+  // Karta A4 w oknie przeglądarki ma ~900px szerokości z marginesem
+  // Mierzymy rzeczywistą szerokość pierwszej karty
+  const card = document.querySelector('.menu-card');
+  const cardW = card ? card.offsetWidth : 900;
+  const maxW = cardW * 0.84;
+
   document.querySelectorAll('.mc-h-title').forEach(title => {
-    // Ustaw inline-block żeby scrollWidth = szerokość tekstu (nie kontenera)
     title.style.display = 'inline-block';
     title.style.whiteSpace = 'nowrap';
     title.style.letterSpacing = '3px';
+    title.style.fontSize = '120px';
 
-    const maxW = title.closest('.mc-hero').offsetWidth * 0.84;
-
-    // Zacznij od dużego i zmniejszaj
-    let size = 110;
-    title.style.fontSize = size + 'px';
-
-    while (title.scrollWidth > maxW && size > 22) {
+    // Zmniejszaj aż się zmieści
+    let size = 120;
+    while (title.offsetWidth > maxW && size > 22) {
       size -= 1;
       title.style.fontSize = size + 'px';
     }
 
-    // Teraz przywróć block i center
     title.style.display = 'block';
     title.style.textAlign = 'center';
 
-    // Rozciągnij letter-spacing dla krótkich
-    if (title.scrollWidth < maxW * 0.62 && size >= 44) {
-      const slack = maxW - title.scrollWidth;
+    // Rozciągnij dla krótkich
+    const tw = title.scrollWidth;
+    if (tw < maxW * 0.65 && size >= 44) {
+      const slack = maxW - tw;
       const chars = Math.max(title.textContent.trim().length - 1, 1);
-      title.style.letterSpacing = (3 + Math.min(slack / chars, 20)).toFixed(1) + 'px';
+      title.style.letterSpacing = (3 + Math.min(slack / chars, 22)).toFixed(1) + 'px';
     }
   });
 }
