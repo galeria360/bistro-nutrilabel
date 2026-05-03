@@ -478,7 +478,20 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 }
 </style>
 <script>
-// autoFit zastąpiony przez CSS clamp
+function autoFitTitle() {
+  document.querySelectorAll('.mc-h-title').forEach(title => {
+    const wrap = title.parentElement;
+    if (!wrap || !wrap.offsetWidth || !title.offsetWidth) return;
+    const scale = wrap.offsetWidth / title.offsetWidth;
+    title.style.transformOrigin = 'left top';
+    title.style.transform = 'scaleX(' + Math.min(scale, 1) + ')';
+  });
+}
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(function() { setTimeout(autoFitTitle, 300); });
+} else {
+  window.addEventListener('load', function() { setTimeout(autoFitTitle, 500); });
+}
 
 
 </script>
