@@ -272,7 +272,7 @@
     const carb = cleanNum(document.getElementById('totalCarb')?.textContent);
     const salt = cleanNum(document.getElementById('totalSalt')?.textContent);
 
-    // Białko, nasycone, cukry + skład + alergeny z window.ingredients
+    // Białko, nasycone, cukry + skład + alergeny z ingredients
     let protein = '', saturated = '', sugars = '';
     let skladParts = [];
     let allergenIds = new Set();
@@ -283,7 +283,7 @@
       const ratio = cookedG > 0 ? 100 / cookedG : 0;
       let totProt = 0, totSat = 0, totSug = 0;
 
-      (window.ingredients || []).forEach(ing => {
+      (ingredients || []).forEach(ing => {
         const w = parseFloat(ing.weight) || 0;
         if(ing.per100) {
           totProt += (ing.per100.protein   || 0) * w / 100;
@@ -368,10 +368,10 @@
 <meta charset="UTF-8">
 <title>Karta Menu — Gruba Micha</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 @page{size:A4 portrait;margin:0;}
-body{background:#f0f0f0;font-family:'Space Grotesk','Segoe UI',Arial,sans-serif;}
+body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 
 .menu-card{
   width:210mm; height:297mm;
