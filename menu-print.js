@@ -480,40 +480,21 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 <script>
 function autoFitTitle() {
   document.querySelectorAll('.mc-h-title').forEach(title => {
-    // Tymczasowo inline-block żeby offsetWidth = szerokość tekstu
-    title.style.display = 'inline-block';
-    title.style.whiteSpace = 'nowrap';
-    title.style.fontSize = '150px';
-    title.style.letterSpacing = '4px';
-
-    // Rzeczywista szerokość kontenera
-    const hero = title.closest('.mc-hero');
-    const maxW = (hero ? hero.offsetWidth : window.innerWidth) * 0.86;
-
-    // Zmniejszaj od 150px w dół
-    let size = 150;
-    while (title.offsetWidth > maxW && size > 20) {
-      size -= 1;
-      title.style.fontSize = size + 'px';
+    const wrap = title.parentElement;
+    if (!wrap) return;
+    const wrapW = wrap.offsetWidth;
+    const titleW = title.offsetWidth;
+    if (wrapW <= 0 || titleW <= 0) return;
+    if (titleW > wrapW) {
+      const scale = wrapW / titleW;
+      title.style.transform = 'scaleX(' + scale + ')';
+    } else {
+      // rozciągnij
+      const scale = Math.min(wrapW / titleW, 1.0);
+      title.style.transform = 'scaleX(' + scale + ')';
     }
-
-    // Przywróć block + center
-    title.style.display = 'block';
-    title.style.textAlign = 'center';
-    title.style.whiteSpace = 'normal';
-
-    // Letter-spacing dla krótkich nazw
-    title.style.display = 'inline-block';
-    title.style.whiteSpace = 'nowrap';
-    const tw = title.offsetWidth;
-    title.style.display = 'block';
-    title.style.whiteSpace = 'normal';
-
-    if (tw < maxW * 0.62 && size >= 44) {
-      const slack = maxW - tw;
-      const chars = Math.max(title.textContent.trim().length - 1, 1);
-      title.style.letterSpacing = (4 + Math.min(slack / chars, 24)).toFixed(1) + 'px';
-    }
+    // zawsze wypełnij 100% wrappera
+    title.style.transform = 'scaleX(' + (wrapW / titleW) + ')';
   });
 }
 
@@ -614,7 +595,7 @@ ${cards}
   <div class="mc-hero">
     <div class="mc-h-cat">Zupa</div>
     <div class="mc-h-rule"></div>
-    <div class="mc-h-title" style="font-size:${titleSize};">${name}</div>
+    <div class="mc-h-title-wrap"><div class="mc-h-title">${name}</div></div>
     <div class="mc-deco"><div class="mc-deco-line"></div><div class="mc-deco-dot"></div><div class="mc-deco-line"></div></div>
   </div>
 
