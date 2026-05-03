@@ -298,13 +298,17 @@
     const ratio = cookedG > 0 ? 100 / cookedG : 0;
     let totProt = 0, totSat = 0, totSug = 0;
 
-    ings.forEach(ing => {
+    // Sortuj jak EU etykieta — od największej wagi
+    const sorted = [...ings].sort((a, b) => (parseFloat(b.weight)||0) - (parseFloat(a.weight)||0));
+
+    sorted.forEach(ing => {
       const w = parseFloat(ing.weight) || 0;
       if (ing.per100) {
         totProt += (ing.per100.protein   || 0) * w / 100;
         totSat  += (ing.per100.saturated || 0) * w / 100;
         totSug  += (ing.per100.sugars    || 0) * w / 100;
       }
+      // Skład identyczny jak podgląd EU
       if (ing.skladSzczegolowy) {
         skladParts.push(ing.name + ' (' + ing.skladSzczegolowy + ')');
       } else if (ing.name) {
