@@ -260,7 +260,7 @@
   function closePortionModal() { document.getElementById('portionModal').classList.remove('open'); }
 
   // ── DRUKUJ AKTUALNY PRZEPIS ───────────────────────────────
-  function printCurrentRecipe() {
+  async function printCurrentRecipe() {
     const name = document.getElementById('dishName')?.value?.trim() || '';
     if (!name) { alert('Otwórz przepis przed generowaniem karty.'); return; }
 
@@ -272,46 +272,59 @@
     const carb = cleanNum(document.getElementById('totalCarb')?.textContent);
     const salt = cleanNum(document.getElementById('totalSalt')?.textContent);
 
-    // Białko, nasycone, cukry + skład + alergeny z ingredients
+    // Czytaj ingredients z globalnego scope przez eval lub pobierz z API
+    let ings = [];
+    try {
+      // próba bezpośredniego dostępu do globalnej zmiennej ingredients
+      ings = (0, eval)('typeof ingredients !== "undefined" ? ingredients : []');
+    } catch(e) {}
+
+    // Jeśli brak — pobierz z API
+    if (!ings.length && window._currentRecipeId) {
+      try {
+        const res = await fetch('api.php?action=get&id=' + window._currentRecipeId);
+        const data = await res.json();
+        const r = JSON.parse(data.data || '{}');
+        ings = r.ingredients || [];
+      } catch(e) {}
+    }
+
     let protein = '', saturated = '', sugars = '';
     let skladParts = [];
     let allergenIds = new Set();
 
-    try {
-      const cookedG = parseFloat(document.getElementById('cookedWeight')?.value) ||
-                      parseFloat(document.getElementById('cookedLiters')?.value) * 1000 || 0;
-      const ratio = cookedG > 0 ? 100 / cookedG : 0;
-      let totProt = 0, totSat = 0, totSug = 0;
+    const cookedG = parseFloat(document.getElementById('cookedWeight')?.value) ||
+                    (parseFloat(document.getElementById('cookedLiters')?.value) || 0) * 1000;
+    const ratio = cookedG > 0 ? 100 / cookedG : 0;
+    let totProt = 0, totSat = 0, totSug = 0;
 
-      (ingredients || []).forEach(ing => {
-        const w = parseFloat(ing.weight) || 0;
-        if(ing.per100) {
-          totProt += (ing.per100.protein   || 0) * w / 100;
-          totSat  += (ing.per100.saturated || 0) * w / 100;
-          totSug  += (ing.per100.sugars    || 0) * w / 100;
-        }
-        // skład — jeśli ma składSzczegolowy użyj go, inaczej nazwę
-        if(ing.skladSzczegolowy) {
-          skladParts.push(ing.name + ' (' + ing.skladSzczegolowy + ')');
-        } else if(ing.name) {
-          skladParts.push(ing.name);
-        }
-        // alergeny
-        (ing.allergens || []).forEach(a => allergenIds.add(a));
-      });
-
-      if(ratio > 0) {
-        protein   = (totProt * ratio).toFixed(1).replace(/\.0$/,'');
-        saturated = (totSat  * ratio).toFixed(1).replace(/\.0$/,'');
-        sugars    = (totSug  * ratio).toFixed(1).replace(/\.0$/,'');
+    ings.forEach(ing => {
+      const w = parseFloat(ing.weight) || 0;
+      if (ing.per100) {
+        totProt += (ing.per100.protein   || 0) * w / 100;
+        totSat  += (ing.per100.saturated || 0) * w / 100;
+        totSug  += (ing.per100.sugars    || 0) * w / 100;
       }
-    } catch(e) { console.warn('MenuGen błąd składników:', e); }
+      if (ing.skladSzczegolowy) {
+        skladParts.push(ing.name + ' (' + ing.skladSzczegolowy + ')');
+      } else if (ing.name) {
+        skladParts.push(ing.name);
+      }
+      (ing.allergens || []).forEach(a => allergenIds.add(a));
+    });
 
-    // Tłumacz ID alergenów na nazwy
+    if (ratio > 0) {
+      protein   = (totProt * ratio).toFixed(1).replace(/\.0$/, '');
+      saturated = (totSat  * ratio).toFixed(1).replace(/\.0$/, '');
+      sugars    = (totSug  * ratio).toFixed(1).replace(/\.0$/, '');
+    }
+
+    // Tłumacz alergeny
     let allergenNames = [];
     try {
+      const ALLERGENS = (0, eval)('typeof ALLERGENS !== "undefined" ? ALLERGENS : []');
       allergenNames = Array.from(allergenIds).map(id => {
-        const a = (window.ALLERGENS || []).find(x => x.id === id);
+        const a = ALLERGENS.find(x => x.id === id);
         return a ? a.name : id;
       }).filter(Boolean);
     } catch(e) {}
@@ -367,8 +380,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Karta Menu — Gruba Micha</title>
+<link href='https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap' rel='stylesheet'>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 @page{size:A4 portrait;margin:0;}
 body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
