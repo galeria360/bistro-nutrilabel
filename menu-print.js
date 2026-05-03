@@ -440,8 +440,8 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-dot-dim{width:6px;height:6px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;}
 .mc-div{width:100%;height:1px;background:#e4e4e4;}
 .mc-plbl{font-size:8.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;}
-.mc-price{font-family:'DM Sans',sans-serif;font-weight:700;font-size:62px;line-height:1;color:#000;letter-spacing:-0.5px;}
-.mc-zl{font-size:26px;font-weight:400;margin-left:3px;color:#000;}
+.mc-price{font-family:'DM Sans',sans-serif;font-weight:700;font-size:81px;line-height:1;color:#000;letter-spacing:-0.5px;}
+.mc-zl{font-size:34px;font-weight:400;margin-left:3px;color:#000;}
 
 /* kaucja */
 .mc-kaucja{padding:8px 32px;border-bottom:1px solid #e4e4e4;display:flex;align-items:center;gap:8px;flex-shrink:0;}
