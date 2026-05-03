@@ -479,50 +479,42 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 </style>
 <script>
 function autoFitTitle() {
-  // Karta A4 w oknie przeglądarki ma ~900px szerokości z marginesem
-  // Mierzymy rzeczywistą szerokość pierwszej karty
-  const card = document.querySelector('.menu-card');
-  const cardW = card ? card.offsetWidth : 900;
-  const maxW = cardW * 0.84;
-
   document.querySelectorAll('.mc-h-title').forEach(title => {
+    // Tymczasowo inline-block żeby offsetWidth = szerokość tekstu
     title.style.display = 'inline-block';
     title.style.whiteSpace = 'nowrap';
-    title.style.letterSpacing = '3px';
-    title.style.fontSize = '120px';
+    title.style.fontSize = '150px';
+    title.style.letterSpacing = '4px';
 
-    // Zmniejszaj aż się zmieści
-    let size = 120;
-    while (title.offsetWidth > maxW && size > 22) {
+    // Rzeczywista szerokość kontenera
+    const hero = title.closest('.mc-hero');
+    const maxW = (hero ? hero.offsetWidth : window.innerWidth) * 0.86;
+
+    // Zmniejszaj od 150px w dół
+    let size = 150;
+    while (title.offsetWidth > maxW && size > 20) {
       size -= 1;
       title.style.fontSize = size + 'px';
     }
 
+    // Przywróć block + center
     title.style.display = 'block';
     title.style.textAlign = 'center';
+    title.style.whiteSpace = 'normal';
 
-    // Rozciągnij dla krótkich
-    const tw = title.scrollWidth;
-    if (tw < maxW * 0.65 && size >= 44) {
+    // Letter-spacing dla krótkich nazw
+    title.style.display = 'inline-block';
+    title.style.whiteSpace = 'nowrap';
+    const tw = title.offsetWidth;
+    title.style.display = 'block';
+    title.style.whiteSpace = 'normal';
+
+    if (tw < maxW * 0.62 && size >= 44) {
       const slack = maxW - tw;
       const chars = Math.max(title.textContent.trim().length - 1, 1);
-      title.style.letterSpacing = (3 + Math.min(slack / chars, 22)).toFixed(1) + 'px';
+      title.style.letterSpacing = (4 + Math.min(slack / chars, 24)).toFixed(1) + 'px';
     }
   });
-}
-
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(function() {
-    requestAnimationFrame(function() {
-      requestAnimationFrame(autoFitTitle);
-    });
-  });
-} else {
-  window.addEventListener('load', function() { setTimeout(autoFitTitle, 400); });
-}
-  } else {
-    setTimeout(autoFitTitle, 300);
-  }
 });
 </script>
 </head>
