@@ -380,7 +380,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Karta Menu — Gruba Micha</title>
-<link href='https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap' rel='stylesheet'>
+<link href='https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap' rel='stylesheet'>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 @page{size:A4 portrait;margin:0;}
@@ -398,13 +398,13 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 /* toprow */
 .mc-tr{padding:14px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e4e4e4;flex-shrink:0;}
 .mc-tr-l{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#000;}
-.mc-tr-r{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#000;font-family:'Syne',sans-serif;}
+.mc-tr-r{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#000;font-family:'Bebas Neue',sans-serif;}
 
 /* hero */
 .mc-hero{padding:32px 32px 28px;text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;}
-.mc-h-cat{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:#000;text-transform:uppercase;letter-spacing:14px;margin-bottom:14px;}
+.mc-h-cat{font-family:'Bebas Neue',sans-serif;font-weight:800;font-size:28px;color:#000;text-transform:uppercase;letter-spacing:14px;margin-bottom:14px;}
 .mc-h-rule{width:100%;height:1px;background:#e4e4e4;margin-bottom:20px;}
-.mc-h-title{font-family:'Syne',sans-serif;font-weight:800;color:#000;text-transform:uppercase;letter-spacing:-2px;margin:0 0 12px;line-height:.88;word-break:break-word;}
+.mc-h-title{font-family:'Bebas Neue',sans-serif;font-weight:800;color:#000;text-transform:uppercase;letter-spacing:-2px;margin:0 0 12px;line-height:.88;word-break:break-word;}
 .mc-h-desc{font-size:12px;color:#000;font-weight:500;letter-spacing:2px;}
 .mc-deco{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;}
 .mc-deco-line{width:36px;height:1px;background:#000;}
@@ -430,7 +430,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-dot-dim{width:6px;height:6px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;}
 .mc-div{width:100%;height:1px;background:#e4e4e4;}
 .mc-plbl{font-size:8.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;}
-.mc-price{font-family:'Syne',sans-serif;font-weight:800;font-size:34px;line-height:1;color:#000;letter-spacing:-1px;}
+.mc-price{font-family:'Bebas Neue',sans-serif;font-weight:800;font-size:34px;line-height:1;color:#000;letter-spacing:-1px;}
 .mc-zl{font-size:15px;font-weight:500;margin-left:2px;color:#000;}
 
 /* kaucja */
@@ -451,7 +451,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 .mc-nc.sf{border-left:2px solid #ccc;}
 .mc-nclbl{font-size:6.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#000;margin-bottom:3px;}
 .mc-nclbl-s{font-size:6px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#000;margin-bottom:3px;opacity:.7;}
-.mc-ncval{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#000;line-height:1;letter-spacing:-.5px;}
+.mc-ncval{font-family:'Bebas Neue',sans-serif;font-size:20px;font-weight:800;color:#000;line-height:1;letter-spacing:-.5px;}
 .mc-ncunit{font-size:8.5px;color:#000;margin-top:1px;font-weight:500;}
 
 /* footer */
