@@ -406,7 +406,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 
 /* hero */
 .mc-hero{padding:32px 32px 28px;text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;}
-.mc-h-cat{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:#000;text-transform:uppercase;letter-spacing:14px;margin-bottom:14px;}.mc-h-title-wrap{width:100%;text-align:center;margin:0 0 12px;overflow:visible;}.mc-h-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:90px;color:#000;text-transform:uppercase;line-height:.88;letter-spacing:2px;display:inline-block;white-space:nowrap;transform-origin:center top;}
+.mc-h-cat{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:#000;text-transform:uppercase;letter-spacing:14px;margin-bottom:14px;}.mc-h-title-wrap{width:100%;margin:0 0 12px;overflow:visible;text-align:center;position:relative;}.mc-h-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:90px;color:#000;text-transform:uppercase;line-height:.88;letter-spacing:2px;display:inline-block;white-space:nowrap;}
 .mc-h-rule{width:100%;height:1px;background:#e4e4e4;margin-bottom:20px;}
 
 .mc-h-desc{font-size:12px;color:#000;font-weight:500;letter-spacing:2px;}
@@ -482,16 +482,20 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 function fitTitles() {
   document.querySelectorAll('.mc-h-title').forEach(function(el) {
     el.style.transform = 'none';
+    el.style.marginLeft = '0';
     var card = el.closest('.menu-card');
     var cardW = card ? card.offsetWidth : 900;
     var maxW = cardW * 0.86;
     var tw = el.offsetWidth;
-    if (tw > 0 && maxW > 0) {
-      var scale = maxW / tw;
-      if (scale < 1) {
-        el.style.transform = 'scaleX(' + scale + ')';
-      }
-    }
+    if (tw <= 0 || cardW <= 0) return;
+    var scale = Math.min(maxW / tw, 1.0);
+    // Centring: po scaleX element nadal ma oryginalną szerokość w przepływie
+    // Używamy translateX żeby wycentrować
+    var scaledW = tw * scale;
+    var offset = (cardW - scaledW) / 2 - (cardW - tw) / 2;
+    el.style.transformOrigin = 'left top';
+    el.style.transform = 'scaleX(' + scale + ') translateX(0)';
+    el.style.marginLeft = offset + 'px';
   });
 }
 if (document.fonts && document.fonts.ready) {
