@@ -509,3 +509,37 @@ ${selectedForMenu.map(({recipe,portions}) => buildCard(recipe, portions)).join('
 
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
+
+// ── DRUKUJ AKTUALNY PRZEPIS ──────────────────────────────────
+window.MenuGen = window.MenuGen || {};
+MenuGen.printCurrentRecipe = async function() {
+  const id = window._currentRecipeId;
+  if (!id) { alert('Najpierw otwórz lub zapisz przepis.'); return; }
+
+  // Pobierz przepis z API
+  let recipe;
+  try {
+    const res = await fetch(`api.php?action=getRecipe&id=${id}`);
+    const data = await res.json();
+    recipe = Array.isArray(data) ? data[0] : (data.recipe || data);
+  } catch(e) {
+    alert('Błąd pobierania przepisu.'); return;
+  }
+
+  if (!recipe) { alert('Nie znaleziono przepisu.'); return; }
+
+  // Domyślne porcje — można rozbudować o modal
+  const portions = [
+    { label: 'Porcja', size: recipe.portion_size || recipe.wielkosc_porcji || '', price: recipe.price || recipe.cena || recipe.koszt_sprzedazy || '' },
+    null
+  ].filter(Boolean);
+
+  // Jeśli jest cena i wielkość drugiej porcji (duża)
+  if (recipe.price2 || recipe.cena2) {
+    portions.push({ label: 'Duża', size: recipe.portion_size2 || '', price: recipe.price2 || recipe.cena2 || '' });
+  }
+
+  selectedForMenu = [{ recipe, portions }];
+  generateAndPrint();
+  selectedForMenu = [];
+};
