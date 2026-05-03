@@ -411,7 +411,7 @@ body{background:#f0f0f0;font-family:'DM Sans','Segoe UI',Arial,sans-serif;}
 
 /* hero */
 .mc-hero{padding:32px 32px 28px;text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;}
-.mc-h-cat{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:#000;text-transform:uppercase;letter-spacing:14px;margin-bottom:14px;}.mc-h-title-wrap{width:100%;margin:0 0 12px;text-align:center;}.mc-h-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:72px;color:#000;text-transform:uppercase;line-height:.9;letter-spacing:1px;display:block;text-align:center;word-break:break-word;white-space:normal;}
+.mc-h-cat{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;color:#000;text-transform:uppercase;letter-spacing:14px;margin-bottom:14px;}.mc-h-title-wrap{width:100%;margin:0 0 12px;text-align:center;}.mc-h-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:122px;color:#000;text-transform:uppercase;line-height:.9;letter-spacing:1px;display:block;text-align:center;word-break:break-word;white-space:normal;}
 .mc-h-rule{width:100%;height:1px;background:#e4e4e4;margin-bottom:20px;}
 
 .mc-h-desc{font-size:12px;color:#000;font-weight:500;letter-spacing:2px;}
