@@ -339,6 +339,7 @@
       protein, saturated_fat: saturated, sugars,
       ingredients: skladParts.join(', '),
       allergens: allergenNames,
+      _ings: ings,
     };
 
     const isUFOcat = category === 'UFO kanapka';
@@ -561,7 +562,7 @@ ${cards}
       : '—';
 
     // Dla UFO - rozdziel skład na główne i pod-składniki
-    const skladHtml = isUFO ? buildUFOSklad(sklad) : (sklad||'—');
+    const skladHtml = isUFO ? buildUFOSklad(sklad, recipe._ings) : (sklad||'—');
 
     const jarTile = (!isUFO && p2)
       ? `<div class="mc-tile">
@@ -657,52 +658,27 @@ ${cards}
   }
 
 
-  // Rozdziela skład na główne i pod-składniki
-  function buildUFOSklad(sklad) {
+  // Buduje skład UFO z tablicy składników (ing.name + ing.skladSzczegolowy)
+  // ings = window.ingredients posortowane wg wagi
+  function buildUFOSklad(sklad, ings) {
+    // Jeśli mamy bezpośredni dostęp do tablicy składników - użyj jej
+    if (ings && ings.length) {
+      const sorted = [...ings].sort((a,b) => (parseFloat(b.weight)||0)-(parseFloat(a.weight)||0));
+      const mainParts = sorted.map(ing => ing.name || '').filter(Boolean);
+      const subParts  = sorted.filter(ing => ing.skladSzczegolowy)
+                              .map(ing => ing.name + ' (' + ing.skladSzczegolowy + ')');
+      const mainHtml = mainParts.length
+        ? '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:32px;font-weight:800;text-transform:uppercase;display:block;line-height:1.1;margin-bottom:8px;letter-spacing:0;">' + mainParts.join(', ') + '</span>'
+        : '';
+      const subHtml = subParts.length
+        ? '<span style="font-size:9.5px;color:#555;display:block;line-height:1.55;">' + subParts.join(' · ') + '</span>'
+        : '';
+      return mainHtml + subHtml;
+    }
+    // Fallback: tylko główne nazwy z istniejącego stringa (bez nawiasów)
     if (!sklad) return '—';
-    // Parsuj uwzględniając nawiasy - nie splituj po przecinkach wewnątrz nawiasów
-    const mainParts = [];
-    const subParts = [];
-    let depth = 0, current = '';
-    for (let i = 0; i < sklad.length; i++) {
-      const c = sklad[i];
-      if (c === '(') depth++;
-      if (c === ')') depth--;
-      if (c === ',' && depth === 0) {
-        const part = current.trim();
-        if (part) {
-          if (part.includes('(')) {
-            // ma pod-składniki
-            const mainName = part.replace(/\s*\([^)]*\)/g, '').trim();
-            if (mainName) mainParts.push(mainName);
-            subParts.push(part);
-          } else {
-            mainParts.push(part);
-          }
-        }
-        current = '';
-      } else {
-        current += c;
-      }
-    }
-    // ostatni element
-    if (current.trim()) {
-      const part = current.trim();
-      if (part.includes('(')) {
-        const mainName = part.replace(/\s*\([^)]*\)/g, '').trim();
-        if (mainName) mainParts.push(mainName);
-        subParts.push(part);
-      } else {
-        mainParts.push(part);
-      }
-    }
-    const mainHtml = mainParts.length
-      ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;text-transform:uppercase;display:block;line-height:1.1;margin-bottom:8px;letter-spacing:0;">${mainParts.join(', ')}</span>`
-      : '';
-    const subHtml = subParts.length
-      ? `<span style="font-size:9.5px;color:#555;display:block;line-height:1.55;">${subParts.join(' · ')}</span>`
-      : '';
-    return mainHtml + subHtml;
+    const mainParts = sklad.split(',').map(s => s.trim()).filter(Boolean).map(s => s.replace(/\s*\([^)]*\)/g, '').trim()).filter(Boolean);
+    return '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:32px;font-weight:800;text-transform:uppercase;display:block;line-height:1.1;margin-bottom:8px;">' + mainParts.join(', ') + '</span>';
   }
 
   function fmtN(v) {
