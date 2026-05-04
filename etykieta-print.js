@@ -405,31 +405,18 @@ function loadLogo() {
 function init() {
   loadLogo();
 
-  // Szukaj przycisku menu w aplikacji (jak menu-print.js)
-  const menuBtn = document.querySelector('#menu-btn, .menu-print-btn, [data-menu-btn]');
+  // Wstaw przycisk Etykieta obok przycisku Menu w nagłówku
+  const menuBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim().includes('Menu'));
+  const btn = document.createElement('button');
+  btn.textContent = '🏷️ Etykieta';
   if (menuBtn) {
-    const btn = document.createElement('button');
-    btn.textContent = '🏷️ Etykieta słoika';
-    btn.style.cssText = menuBtn.style.cssText || 'margin-left:8px;padding:6px 12px;cursor:pointer;';
-    btn.addEventListener('click', createPanel);
+    btn.className = menuBtn.className;
     menuBtn.parentNode.insertBefore(btn, menuBtn.nextSibling);
   } else {
-    // Fallback — dodaj pływający przycisk
-    const fab = document.createElement('button');
-    fab.textContent = '🏷️ Etykieta';
-    fab.style.cssText = `
-      position:fixed;bottom:20px;right:20px;z-index:9998;
-      padding:10px 16px;background:#222;color:#fff;
-      border:none;border-radius:8px;font-size:14px;font-weight:700;
-      cursor:pointer;font-family:'DM Sans',sans-serif;
-      box-shadow:0 4px 12px rgba(0,0,0,.2);
-    `;
-    fab.addEventListener('click', () => {
-      fab.remove();
-      createPanel();
-    });
-    document.body.appendChild(fab);
+    btn.style.cssText = 'padding:8px 14px;cursor:pointer;margin-left:8px;';
+    document.body.appendChild(btn);
   }
+  btn.addEventListener('click', createPanel);
 }
 
 // Uruchom po załadowaniu DOM
