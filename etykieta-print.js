@@ -139,7 +139,7 @@ function buildLabel(data) {
   const n = data.nutri;
 
   // S4 — Wartości odżywcze
-  const s4 = `<div style="position:absolute;top:0;left:0;width:74mm;height:105mm;overflow:hidden;background:#fff;">
+  const s4 = `<div style="width:74mm;height:105mm;overflow:hidden;background:#fff;position:relative;">
     ${hole_r()}
     <div style="position:absolute;top:${M};bottom:${M};left:${M};right:${M};display:flex;flex-direction:column;justify-content:center;font-family:'DM Sans',sans-serif;">
       <div style="display:flex;align-items:center;gap:1.5mm;border-bottom:0.5mm solid #000;padding-bottom:1mm;margin-bottom:1.5mm;">
@@ -173,7 +173,7 @@ function buildLabel(data) {
   </div>`;
 
   // S1 — Okładka
-  const s1 = `<div style="position:absolute;top:0;left:74mm;width:74mm;height:105mm;overflow:hidden;background:#fff;">
+  const s1 = `<div style="width:74mm;height:105mm;overflow:hidden;background:#fff;position:relative;">
     ${hole_l()}
     <div style="position:absolute;top:${M};bottom:${M};left:${M};right:${M};display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;">
       <div style="height:${heroH};display:flex;align-items:center;justify-content:center;gap:2mm;flex-shrink:0;">
@@ -202,7 +202,7 @@ function buildLabel(data) {
   </div>`;
 
   // S2 — Skład
-  const s2 = `<div style="position:absolute;top:0;left:0;width:74mm;height:105mm;overflow:hidden;background:#fff;">
+  const s2 = `<div style="width:74mm;height:105mm;overflow:hidden;background:#fff;position:relative;">
     ${hole_l()}
     <div style="position:absolute;top:${M};bottom:${M};left:${M};right:${M};display:flex;flex-direction:column;justify-content:space-between;font-family:'DM Sans',sans-serif;">
       <div style="border-bottom:0.5mm solid #000;padding-bottom:1mm;display:flex;justify-content:flex-start;align-items:baseline;gap:1.5mm;">
@@ -228,7 +228,7 @@ function buildLabel(data) {
   </div>`;
 
   // S3 — Alergeny
-  const s3 = `<div style="position:absolute;top:0;left:74mm;width:74mm;height:105mm;overflow:hidden;background:#fff;">
+  const s3 = `<div style="width:74mm;height:105mm;overflow:hidden;background:#fff;position:relative;">
     ${hole_r()}
     <div style="position:absolute;top:${M};bottom:${M};left:${M};right:${M};display:flex;flex-direction:column;justify-content:space-between;font-family:'DM Sans',sans-serif;">
       <div>
@@ -266,15 +266,6 @@ function buildLabel(data) {
 function printEtykieta() {
   const data = getRecipeData();
   const { s1, s2, s3, s4 } = buildLabel(data);
-
-  // Strona 1: [S4|S1] x4
-  function row1(topPx) {
-    return `
-      <div style="position:absolute;top:${topPx}px;left:0;width:280px;height:397px;">${s4.replace('position:absolute;top:0;left:0;', '')}</div>
-      <div style="position:absolute;top:${topPx}px;left:280px;width:280px;height:397px;">${s1.replace('position:absolute;top:0;left:74mm;', '')}</div>
-      <div style="position:absolute;top:${topPx}px;left:560px;width:280px;height:397px;">${s4.replace('position:absolute;top:0;left:0;', '')}</div>
-      <div style="position:absolute;top:${topPx}px;left:840px;width:280px;height:397px;">${s1.replace('position:absolute;top:0;left:74mm;', '')}</div>`;
-  }
 
   // Zbuduj pełny HTML
   const html = `<!DOCTYPE html>
