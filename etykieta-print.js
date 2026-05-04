@@ -267,6 +267,17 @@ function printEtykieta() {
   const data = getRecipeData();
   const { s1, s2, s3, s4 } = buildLabel(data);
 
+  // Pozycje 8 etykiet na stronie A4 landscape
+  const pos = [
+    ['0','0'],['0','74mm'],['0','148mm'],['0','222mm'],
+    ['105mm','0'],['105mm','74mm'],['105mm','148mm'],['105mm','222mm']
+  ];
+  function pg(content, t, l) {
+    return `<div style="position:absolute;top:${t};left:${l};width:74mm;height:105mm;overflow:hidden;">${content}</div>`;
+  }
+  const sheet1 = pos.map(([t,l],i) => i%2===0 ? pg(s4,t,l) : pg(s1,t,l)).join('');
+  const sheet2 = pos.map(([t,l],i) => i%2===0 ? pg(s2,t,l) : pg(s3,t,l)).join('');
+
   // Zbuduj pełny HTML
   const html = `<!DOCTYPE html>
 <html lang="pl">
@@ -284,7 +295,8 @@ body{margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exac
 </style>
 </head>
 <body>
-${generateSheetHTML(s4, s1, s2, s3)}
+<div class="sheet">${sheet1}</div>
+<div class="sheet rotated">${sheet2}</div>
 </body>
 </html>`;
 
@@ -297,25 +309,7 @@ ${generateSheetHTML(s4, s1, s2, s3)}
   });
 }
 
-function generateSheetHTML(s4, s1, s2, s3) {
-  function pg(content, offsetTop, offsetLeft) {
-    return `<div style="position:absolute;top:${offsetTop};left:${offsetLeft};width:74mm;height:105mm;overflow:hidden;">${content}</div>`;
-  }
-  const positions = [
-    ['0','0'],['0','74mm'],['0','148mm'],['0','222mm'],
-    ['105mm','0'],['105mm','74mm'],['105mm','148mm'],['105mm','222mm']
-  ];
 
-  const page1 = `<div class="sheet">
-    ${positions.map(([t,l],i) => i%2===0 ? pg(s4,t,l) : pg(s1,t,l)).join('')}
-  </div>`;
-
-  const page2 = `<div class="sheet rotated">
-    ${positions.map(([t,l],i) => i%2===0 ? pg(s2,t,l) : pg(s3,t,l)).join('')}
-  </div>`;
-
-  return page1 + page2;
-}
 
 // ── PANEL KONTROLNY Z SUWAKAMI
 function createPanel() {
