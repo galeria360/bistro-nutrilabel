@@ -7,7 +7,8 @@
 let CFG = {
   heroSize:    16,   // mm — wielkość nazwy zupy
   textSize:    2.4,  // mm — czcionka tekstu na stronach 2/3/4
-  logoScale:   100,  // % — skala logo+hero sekcji
+  logoScale:   100,
+  porcjaG:     400,   // pojemność porcji w gramach (kolumna NA PORCJĘ)  // % — skala logo+hero sekcji
 };
 
 // ── POBIERZ DANE Z APLIKACJI (selektory z Gruba Micha app)
@@ -137,37 +138,91 @@ function buildLabel(data) {
   ).join('');
 
   const n = data.nutri;
+  const porcjaG = CFG.porcjaG;
 
-  // S4 — Wartości odżywcze
-  const s4 = `<div style="width:74mm;height:105mm;overflow:hidden;background:#fff;position:relative;">
+  // Skalowanie wartości z 100g na pojemność porcji
+  function scaleN(v100) {
+    if (v100 === '—' || v100 == null) return '—';
+    const num = parseFloat(String(v100).replace(',', '.'));
+    if (isNaN(num)) return '—';
+    const scaled = num * porcjaG / 100;
+    if (scaled < 1) return scaled.toFixed(2).replace('.', ',');
+    return scaled.toFixed(1).replace('.', ',');
+  }
+  function scaleKcal(v100) {
+    if (v100 === '—' || v100 == null) return '—';
+    const num = parseFloat(String(v100).replace(',', '.'));
+    if (isNaN(num)) return '—';
+    return Math.round(num * porcjaG / 100);
+  }
+  function kJfromKcal(kcal) {
+    if (kcal === '—' || isNaN(kcal)) return '—';
+    return Math.round(kcal * 4.184);
+  }
+  const _k100 = parseFloat(String(n.kcal100).replace(',','.')) || 0;
+  const _kP   = scaleKcal(n.kcal100);
+  const _kJ100 = _k100 ? kJfromKcal(_k100) : '—';
+  const _kJP   = (_kP !== '—') ? kJfromKcal(_kP) : '—';
+
+
+  // S4 — Wartości odżywcze (styl jak w aplikacji + pojemność porcji)
+  const s4 = `<div style="width:74mm;height:105mm;overflow:hidden;background:#fdf6e8;position:relative;">
     ${hole_r()}
-    <div style="position:absolute;top:${M};bottom:${M};left:${M};right:${M};display:flex;flex-direction:column;justify-content:center;font-family:'DM Sans',sans-serif;">
-      <div style="display:flex;align-items:center;gap:1.5mm;border-bottom:0.5mm solid #000;padding-bottom:1mm;margin-bottom:1.5mm;">
-        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:${T*2.3}mm;color:#000;line-height:1;">4</span>
-        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:${T*1.2}mm;letter-spacing:.4mm;text-transform:uppercase;">Wartości odżywcze</span>
+    <div style="position:absolute;top:${M};bottom:${M};left:${M};right:8mm;display:flex;flex-direction:column;justify-content:flex-start;font-family:'DM Sans',sans-serif;">
+      <div style="margin-bottom:2mm;">
+        <div style="font-weight:700;font-size:${T*1.4}mm;color:#000;line-height:1.1;margin-bottom:.5mm;">${data.name || 'Zupa'}</div>
+        <div style="font-size:${T*0.85}mm;color:#444;">Porcja: ${porcjaG} g</div>
       </div>
-      <table style="width:100%;border-collapse:collapse;font-size:${T}mm;color:#000;">
+      <table style="width:100%;border-collapse:collapse;color:#000;">
         <thead><tr>
-          <th style="font-size:${T*0.9}mm;font-weight:700;text-transform:uppercase;border-bottom:0.3mm solid #000;padding:1mm 0;text-align:left;">Składnik</th>
-          <th style="font-size:${T*0.9}mm;font-weight:700;text-transform:uppercase;border-bottom:0.3mm solid #000;padding:1mm 0;text-align:right;">100ml</th>
-          <th style="font-size:${T*0.9}mm;font-weight:700;text-transform:uppercase;border-bottom:0.3mm solid #000;padding:1mm 0;text-align:right;">450ml</th>
-          <th style="font-size:${T*0.9}mm;font-weight:700;text-transform:uppercase;border-bottom:0.3mm solid #000;padding:1mm 0;text-align:right;">900ml</th>
+          <th style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:${T*0.75}mm;letter-spacing:.3mm;text-transform:uppercase;color:#666;text-align:left;padding:1mm 1mm 1mm 0;border-bottom:.3mm solid #c8b89e;vertical-align:bottom;">WARTOŚĆ ODŻYWCZA</th>
+          <th style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:${T*0.75}mm;letter-spacing:.3mm;text-transform:uppercase;color:#666;text-align:right;padding:1mm 1mm 1mm 0;border-bottom:.3mm solid #c8b89e;vertical-align:bottom;white-space:nowrap;">NA 100 G</th>
+          <th style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:${T*0.75}mm;letter-spacing:.3mm;text-transform:uppercase;color:#666;text-align:right;padding:1mm 0 1mm 0;border-bottom:.3mm solid #c8b89e;vertical-align:bottom;white-space:nowrap;">NA PORCJĘ (${porcjaG}G)</th>
         </tr></thead>
         <tbody>
-          <tr><td style="padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">Energia</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.kcal100}</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.kcal450}</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.kcal900}</td></tr>
-          <tr><td style="padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">Tłuszcz</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.fat100}</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.fat450}</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.fat900}</td></tr>
-          <tr><td style="padding:.8mm 0 .8mm 2mm;border-bottom:.2mm solid #eee;font-size:${T*0.85}mm;">w tym nasycone</td><td style="text-align:right;padding:.8mm 0;border-bottom:.2mm solid #eee;">${n.satfat100}</td><td style="text-align:right;padding:.8mm 0;border-bottom:.2mm solid #eee;">${n.satfat450}</td><td style="text-align:right;padding:.8mm 0;border-bottom:.2mm solid #eee;">${n.satfat900}</td></tr>
-          <tr><td style="padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">Węglowodany</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.carb100}</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.carb450}</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.carb900}</td></tr>
-          <tr><td style="padding:.8mm 0 .8mm 2mm;border-bottom:.2mm solid #eee;font-size:${T*0.85}mm;">w tym cukry</td><td style="text-align:right;padding:.8mm 0;border-bottom:.2mm solid #eee;">${n.sug100}</td><td style="text-align:right;padding:.8mm 0;border-bottom:.2mm solid #eee;">${n.sug450}</td><td style="text-align:right;padding:.8mm 0;border-bottom:.2mm solid #eee;">${n.sug900}</td></tr>
-          <tr><td style="padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">Białko</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.prot100}</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.prot450}</td><td style="text-align:right;padding:1mm 0;border-bottom:.2mm solid #eee;font-weight:700;">${n.prot900}</td></tr>
-          <tr><td style="padding:1mm 0;font-weight:700;">Sól</td><td style="text-align:right;padding:1mm 0;font-weight:700;">${n.salt100}</td><td style="text-align:right;padding:1mm 0;font-weight:700;">${n.salt450}</td><td style="text-align:right;padding:1mm 0;font-weight:700;">${n.salt900}</td></tr>
+          <tr>
+            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Wartość energetyczna</td>
+            <td style="font-size:${T*0.85}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;white-space:nowrap;">${_kJ100} kJ / ${_k100 ? Math.round(_k100) : '—'} kcal</td>
+            <td style="font-size:${T*0.85}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;white-space:nowrap;">${_kJP} kJ / ${_kP} kcal</td>
+          </tr>
+          <tr>
+            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Tłuszcz</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.fat100} g</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.fat100)} g</td>
+          </tr>
+          <tr>
+            <td style="font-size:${T*0.9}mm;font-weight:400;color:#444;padding:.8mm 1mm .8mm 3mm;border-bottom:.15mm solid #d8cab0;">w tym kwasy nasycone</td>
+            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 1mm .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${n.satfat100} g</td>
+            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 0 .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${scaleN(n.satfat100)} g</td>
+          </tr>
+          <tr>
+            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Węglowodany</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.carb100} g</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.carb100)} g</td>
+          </tr>
+          <tr>
+            <td style="font-size:${T*0.9}mm;font-weight:400;color:#444;padding:.8mm 1mm .8mm 3mm;border-bottom:.15mm solid #d8cab0;">w tym cukry</td>
+            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 1mm .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${n.sug100} g</td>
+            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 0 .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${scaleN(n.sug100)} g</td>
+          </tr>
+          <tr>
+            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Białko</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.prot100} g</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.prot100)} g</td>
+          </tr>
+          <tr>
+            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;">Sól</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;">${n.salt100} g</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;">${scaleN(n.salt100)} g</td>
+          </tr>
         </tbody>
       </table>
-      <div style="width:100%;height:.2mm;background:#e0e0e0;margin:2.5mm 0 1.5mm;"></div>
-      <div style="font-size:${T*0.9}mm;color:#000;line-height:1.7;margin-bottom:1.5mm;"><strong>Producent:</strong> GrubaMicha Bartłomiej Radziszewski<br>ul. Polna 1, 81-745 Sopot<br>centrala@grubamicha.pl</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-size:${T*0.9}mm;color:#000;font-weight:700;">grubamicha.pl</div>
-        <div style="font-size:9mm;line-height:1;">♻</div>
+      <div style="margin-top:auto;padding-top:1.5mm;border-top:.2mm solid #c8b89e;">
+        <div style="font-size:${T*0.75}mm;color:#000;line-height:1.5;"><strong>Producent:</strong> GrubaMicha Bartłomiej Radziszewski, ul. Polna 1, 81-745 Sopot</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.8mm;">
+          <div style="font-size:${T*0.8}mm;color:#000;font-weight:700;">grubamicha.pl</div>
+          <div style="font-size:5mm;line-height:1;">♻</div>
+        </div>
       </div>
     </div>
   </div>`;
@@ -346,6 +401,12 @@ function createPanel() {
     <input type="range" id="ety-logo" min="60" max="150" step="5" value="${CFG.logoScale}"
       style="width:100%;margin-bottom:14px;">
 
+    <label style="font-size:11px;color:#555;display:block;margin-bottom:2px;">
+      🥄 Pojemność porcji: <strong id="ety-porcja-val">${CFG.porcjaG}g</strong>
+    </label>
+    <input type="number" id="ety-porcja" min="50" max="2000" step="50" value="${CFG.porcjaG}"
+      style="width:100%;margin-bottom:14px;padding:6px 10px;border:1px solid #ccc;border-radius:5px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+
     <button id="ety-print" style="
       width:100%;padding:8px;background:#222;color:#fff;
       border:none;border-radius:5px;font-size:13px;font-weight:700;
@@ -368,6 +429,11 @@ function createPanel() {
   panel.querySelector('#ety-logo').addEventListener('input', e => {
     CFG.logoScale = parseInt(e.target.value);
     panel.querySelector('#ety-logo-val').textContent = CFG.logoScale + '%';
+  });
+
+    panel.querySelector('#ety-porcja').addEventListener('input', e => {
+    CFG.porcjaG = parseInt(e.target.value) || 400;
+    panel.querySelector('#ety-porcja-val').textContent = CFG.porcjaG + 'g';
   });
 
   panel.querySelector('#ety-print').addEventListener('click', printEtykieta);
