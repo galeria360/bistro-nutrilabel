@@ -192,7 +192,7 @@ function buildLabel(data) {
   const _kJP   = (_kP !== '—') ? kJfromKcal(_kP) : '—';
 
   // S4 — Wartości odżywcze (styl jak w aplikacji + dynamiczna pojemność)
-  const s4 = `<div style="width:74mm;height:105mm;overflow:hidden;background:transparent;position:relative;">
+  const s4 = `<div style="width:74mm;height:105mm;overflow:hidden;background:#fdf6e8;position:relative;">
     ${hole_r()}
     <div style="position:absolute;top:${M};bottom:${M};left:${M};right:8mm;display:flex;flex-direction:column;justify-content:flex-start;font-family:'DM Sans',sans-serif;">
       <div style="margin-bottom:2mm;">
