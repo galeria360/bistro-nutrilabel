@@ -35,7 +35,16 @@ function getRecipeData() {
   const per100Kcal = parseNum(document.getElementById('totalKcal')?.textContent);
   const per100Fat  = parseNum(document.getElementById('totalFat')?.textContent);
   const per100Carb = parseNum(document.getElementById('totalCarb')?.textContent);
-  const per100Sug  = 0;
+  const per100Sug  = (() => {
+    const trs = Array.from(document.querySelectorAll('tr'));
+    const tr = trs.find(t => t.children[0]?.textContent?.trim() === 'w tym cukry');
+    return tr ? parseNum(tr.children[1]?.textContent) : 0;
+  })();
+  const per100Sat = (() => {
+    const trs = Array.from(document.querySelectorAll('tr'));
+    const tr = trs.find(t => t.children[0]?.textContent?.trim() === 'w tym kwasy nasycone');
+    return tr ? parseNum(tr.children[1]?.textContent) : 0;
+  })();
   const per100Prot = parseNum(document.getElementById('totalProt')?.textContent);
   const per100Salt = parseNum(document.getElementById('totalSalt')?.textContent);
 
@@ -124,7 +133,7 @@ function getRecipeData() {
       fat100:  fmtG(per100Fat, 100),
       fat450:  fmtG(per100Fat, 450),
       fat900:  fmtG(per100Fat, 900),
-      satfat100: '—', satfat450: '—', satfat900: '—',
+      satfat100: fmtG(per100Sat, 100), satfat450: fmtG(per100Sat, 450), satfat900: fmtG(per100Sat, 900),
       carb100: fmtG(per100Carb, 100),
       carb450: fmtG(per100Carb, 450),
       carb900: fmtG(per100Carb, 900),
