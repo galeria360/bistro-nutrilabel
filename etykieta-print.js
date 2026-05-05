@@ -216,21 +216,21 @@ function buildLabel(data) {
             <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.fat100}</td>
             <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.fat100)} g</td>
           </tr>
-          ${n.satfat100 !== '—' ? `<tr>
+          <tr>
             <td style="font-size:${T*0.9}mm;font-weight:400;color:#444;padding:.8mm 1mm .8mm 3mm;border-bottom:.15mm solid #d8cab0;">w tym kwasy nasycone</td>
             <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 1mm .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${n.satfat100}</td>
             <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 0 .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${scaleN(n.satfat100)} g</td>
-          </tr>` : ''}
+          </tr>
           <tr>
             <td style="font-size:${T*0.95}mm;font-weight:400;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Węglowodany</td>
             <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.carb100}</td>
             <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.carb100)} g</td>
           </tr>
-          ${(n.sug100 && n.sug100 !== '—' && n.sug100 !== '0.0' && n.sug100 !== '0,0') ? `<tr>
+          <tr>
             <td style="font-size:${T*0.9}mm;font-weight:400;color:#444;padding:.8mm 1mm .8mm 3mm;border-bottom:.15mm solid #d8cab0;">w tym cukry</td>
             <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 1mm .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${n.sug100}</td>
             <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 0 .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${scaleN(n.sug100)} g</td>
-          </tr>` : ''}
+          </tr>
           <tr>
             <td style="font-size:${T*0.95}mm;font-weight:400;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Białko</td>
             <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.prot100}</td>
