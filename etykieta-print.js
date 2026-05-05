@@ -128,7 +128,7 @@ function getRecipeData() {
       carb100: fmtG(per100Carb, 100),
       carb450: fmtG(per100Carb, 450),
       carb900: fmtG(per100Carb, 900),
-      sug100:  fmtG(per100Sug, 100),
+      sug100: fmtG(per100Sug, 100),
       sug450:  fmtG(per100Sug, 450),
       sug900:  fmtG(per100Sug, 900),
       prot100: fmtG(per100Prot, 100),
@@ -194,7 +194,7 @@ function buildLabel(data) {
   // S4 — Wartości odżywcze (styl jak w aplikacji + dynamiczna pojemność)
   const s4 = `<div style="width:74mm;height:105mm;overflow:hidden;background:transparent;position:relative;">
     ${hole_r()}
-    <div style="position:absolute;top:${M};bottom:${M};left:${M};right:8mm;display:flex;flex-direction:column;justify-content:flex-start;font-family:'DM Sans',sans-serif;">
+    <div style="position:absolute;top:${M};bottom:${M};left:8mm;right:8mm;display:flex;flex-direction:column;justify-content:flex-start;font-family:'DM Sans',sans-serif;">
       <div style="margin-bottom:2mm;">
         <div style="font-weight:700;font-size:${T*1.4}mm;color:#000;line-height:1.1;margin-bottom:.5mm;">${data.name || 'Zupa'}</div>
         <div style="font-size:${T*0.85}mm;color:#444;">Porcja: ${porcjaG} g</div>
@@ -207,39 +207,39 @@ function buildLabel(data) {
         </tr></thead>
         <tbody>
           <tr>
-            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Wartość energetyczna</td>
+            <td style="font-size:${T*0.95}mm;font-weight:400;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Wartość energetyczna</td>
             <td style="font-size:${T*0.85}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;white-space:nowrap;">${_kJ100} kJ / ${_k100 ? Math.round(_k100) : '—'} kcal</td>
             <td style="font-size:${T*0.85}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;white-space:nowrap;">${_kJP} kJ / ${_kP} kcal</td>
           </tr>
           <tr>
-            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Tłuszcz</td>
-            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.fat100} g</td>
-            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.fat100)} g</td>
+            <td style="font-size:${T*0.95}mm;font-weight:400;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Tłuszcz</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.fat100}</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.fat100)}</td>
           </tr>
-          <tr>
+          ${n.satfat100 !== '—' ? `<tr>
             <td style="font-size:${T*0.9}mm;font-weight:400;color:#444;padding:.8mm 1mm .8mm 3mm;border-bottom:.15mm solid #d8cab0;">w tym kwasy nasycone</td>
-            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 1mm .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${n.satfat100} g</td>
-            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 0 .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${scaleN(n.satfat100)} g</td>
-          </tr>
+            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 1mm .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${n.satfat100}</td>
+            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 0 .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${scaleN(n.satfat100)}</td>
+          </tr>` : ''}
           <tr>
-            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Węglowodany</td>
-            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.carb100} g</td>
-            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.carb100)} g</td>
+            <td style="font-size:${T*0.95}mm;font-weight:400;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Węglowodany</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.carb100}</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.carb100)}</td>
           </tr>
-          <tr>
+          ${(n.sug100 && n.sug100 !== '—' && n.sug100 !== '0.0' && n.sug100 !== '0,0') ? `<tr>
             <td style="font-size:${T*0.9}mm;font-weight:400;color:#444;padding:.8mm 1mm .8mm 3mm;border-bottom:.15mm solid #d8cab0;">w tym cukry</td>
-            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 1mm .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${n.sug100} g</td>
-            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 0 .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${scaleN(n.sug100)} g</td>
+            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 1mm .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${n.sug100}</td>
+            <td style="font-size:${T*0.9}mm;text-align:right;padding:.8mm 0 .8mm 0;border-bottom:.15mm solid #d8cab0;color:#444;">${scaleN(n.sug100)}</td>
+          </tr>` : ''}
+          <tr>
+            <td style="font-size:${T*0.95}mm;font-weight:400;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Białko</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.prot100}</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.prot100)}</td>
           </tr>
           <tr>
-            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">Białko</td>
-            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${n.prot100} g</td>
-            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;border-bottom:.15mm solid #d8cab0;">${scaleN(n.prot100)} g</td>
-          </tr>
-          <tr>
-            <td style="font-size:${T*0.95}mm;font-weight:700;padding:1.2mm 1mm 1.2mm 0;">Sól</td>
-            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;">${n.salt100} g</td>
-            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;">${scaleN(n.salt100)} g</td>
+            <td style="font-size:${T*0.95}mm;font-weight:400;padding:1.2mm 1mm 1.2mm 0;">Sól</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 1mm 1.2mm 0;">${n.salt100}</td>
+            <td style="font-size:${T*0.95}mm;text-align:right;padding:1.2mm 0 1.2mm 0;">${scaleN(n.salt100)}</td>
           </tr>
         </tbody>
       </table>
