@@ -379,7 +379,7 @@ body{margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exac
 </style>
 </head>
 <body>
-<div class="sheet"><div class="crop-mark tl"></div><div class="crop-mark tr"></div><div class="crop-mark bl"></div><div class="crop-mark br"></div><div class="crop-mark top"></div><div class="crop-mark bottom"></div><div class="crop-mark left"></div><div class="crop-mark right"></div><div class="crop-mark center"></div>${sheet1}</div>
+<div class="sheet">${sheet1}</div>
 <div class="sheet rotated"><div class="crop-mark tl"></div><div class="crop-mark tr"></div><div class="crop-mark bl"></div><div class="crop-mark br"></div><div class="crop-mark top"></div><div class="crop-mark bottom"></div><div class="crop-mark left"></div><div class="crop-mark right"></div><div class="crop-mark center"></div>${sheet2}</div>
 </body>
 </html>`;
