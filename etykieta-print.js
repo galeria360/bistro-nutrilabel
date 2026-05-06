@@ -163,10 +163,10 @@ function buildLabel(data) {
   const T = CFG.textSize;
 
   function hole_l() {
-    return `<div style="position:absolute;top:0;left:0;width:6mm;height:6mm;display:flex;align-items:center;justify-content:center;z-index:10;"><div style="width:4mm;height:4mm;border-radius:50%;border:0.3mm dashed #aaa;display:flex;align-items:center;justify-content:center;"><div style="width:1.2mm;height:1.2mm;border-radius:50%;background:#ccc;"></div></div></div>`;
+    return '';
   }
   function hole_r() {
-    return `<div style="position:absolute;top:0;right:0;width:6mm;height:6mm;display:flex;align-items:center;justify-content:center;z-index:10;"><div style="width:4mm;height:4mm;border-radius:50%;border:0.3mm dashed #aaa;display:flex;align-items:center;justify-content:center;"><div style="width:1.2mm;height:1.2mm;border-radius:50%;background:#ccc;"></div></div></div>`;
+    return '';
   }
 
   const allergenTags = data.allergens.map(a =>
@@ -372,15 +372,15 @@ function printEtykieta() {
 *{box-sizing:border-box;margin:0;padding:0;}
 @page{size:A4 landscape;margin:0;}
 body{margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:'DM Sans',sans-serif;}
-.sheet{width:297mm;height:210mm;display:flex;flex-wrap:wrap;overflow:hidden;background:#fff;page-break-after:always;break-after:page;}
+.sheet{width:297mm;height:210mm;display:flex;flex-wrap:wrap;overflow:visible;background:#fff;page-break-after:always;break-after:page;position:relative;}
 .sheet > div{width:74mm;height:105mm;flex-shrink:0;}
-.sheet:last-child{page-break-after:avoid;break-after:avoid;}
+.sheet:last-child{page-break-after:avoid;break-after:avoid;}.crop-mark{position:absolute;background:transparent;}.crop-mark::before,.crop-mark::after{content:"";position:absolute;background:#999;}.crop-mark.tl{top:3mm;left:3mm;width:5mm;height:5mm;}.crop-mark.tr{top:3mm;right:3mm;width:5mm;height:5mm;}.crop-mark.bl{bottom:3mm;left:3mm;width:5mm;height:5mm;}.crop-mark.br{bottom:3mm;right:3mm;width:5mm;height:5mm;}.crop-mark.tl::before,.crop-mark.bl::before{left:0;width:5mm;height:.3mm;}.crop-mark.tr::before,.crop-mark.br::before{right:0;width:5mm;height:.3mm;}.crop-mark.tl::before,.crop-mark.tr::before{top:0;}.crop-mark.bl::before,.crop-mark.br::before{bottom:0;}.crop-mark.tl::after,.crop-mark.tr::after{top:0;width:.3mm;height:5mm;}.crop-mark.bl::after,.crop-mark.br::after{bottom:0;width:.3mm;height:5mm;}.crop-mark.tl::after,.crop-mark.bl::after{left:0;}.crop-mark.tr::after,.crop-mark.br::after{right:0;}
 .rotated{transform:rotate(180deg);transform-origin:center center;}
 </style>
 </head>
 <body>
-<div class="sheet">${sheet1}</div>
-<div class="sheet rotated">${sheet2}</div>
+<div class="sheet"><div class="crop-mark tl"></div><div class="crop-mark tr"></div><div class="crop-mark bl"></div><div class="crop-mark br"></div>${sheet1}</div>
+<div class="sheet rotated"><div class="crop-mark tl"></div><div class="crop-mark tr"></div><div class="crop-mark bl"></div><div class="crop-mark br"></div>${sheet2}</div>
 </body>
 </html>`;
 
