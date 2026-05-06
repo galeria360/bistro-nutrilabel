@@ -253,7 +253,7 @@ function buildLabel(data) {
         </tbody>
       </table>
       <div style="margin-top:auto;padding-top:1.5mm;border-top:.2mm solid #c8b89e;">
-        <div style="font-size:${T*0.75}mm;color:#000;line-height:1.5;"><strong>Producent:</strong> GrubaMicha Bartłomiej Radziszewski, ul. Polna 1, 81-745 Sopot</div>
+        <div style="font-size:${T*0.75}mm;color:#000;line-height:1.5;margin-bottom:.8mm;"><strong>Najlepiej spożyć przed końcem:</strong> data na spodzie słoika</div><div style="font-size:${T*0.75}mm;color:#000;line-height:1.5;"><strong>Producent:</strong> GrubaMicha Bartłomiej Radziszewski, ul. Polna 1, 81-745 Sopot</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.8mm;">
           <div style="font-size:${T*0.8}mm;color:#000;font-weight:700;">grubamicha.pl</div>
           <div style="font-size:5mm;line-height:1;">♻</div>
