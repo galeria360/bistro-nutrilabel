@@ -92,7 +92,7 @@
       </div>
       <div style="padding:6px 20px 0;display:flex;align-items:center;gap:12px;">
         <label style="font-size:11px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">Wielkość składników</label>
-        <input type="range" id="pmIngSize" min="8" max="60" value="32" step="1" style="flex:1;">
+        <input type="range" id="pmIngSize" min="8" max="120" value="32" step="1" style="flex:1;">
         <span id="pmIngSizeVal" style="font-size:12px;font-weight:700;color:#1a1a1a;min-width:40px;">32px</span>
       </div>
       <div style="padding:6px 20px 10px;display:flex;align-items:center;gap:12px;">
