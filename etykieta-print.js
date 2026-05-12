@@ -106,6 +106,32 @@ function getRecipeData() {
   // Sortuj malejąco po wadze
   skladniki.sort((a, b) => b.weight - a.weight);
 
+  // Składniki zawierające ukryte alergeny (do dopisania w nawiasie)
+  const hiddenAllergens = [
+    { match: /śmietan|smietan/i, allergen: 'mleko' },
+    { match: /\bmasło\b|\bmaslo\b/i, allergen: 'mleko' },
+    { match: /\bser\b|serek|serowy|serowa|serowe|mascarpone|feta|mozzarella|parmezan|ricotta|twaróg|twarog/i, allergen: 'mleko' },
+    { match: /jogurt|jogurtowy|jogurtowa/i, allergen: 'mleko' },
+    { match: /maślank|maslank|kefir/i, allergen: 'mleko' },
+    { match: /\bmleko\b|mleczn/i, allergen: 'mleko' },
+    { match: /majonez/i, allergen: 'jaja' },
+    { match: /sos sojowy|sos teriyaki/i, allergen: 'soja' },
+    { match: /musztard/i, allergen: 'gorczyca' },
+    { match: /chleb|bułk|bulk|grzank|panierk/i, allergen: 'gluten' },
+  ];
+  
+  // Funkcja dodająca (alergen) do nazwy składnika
+  function addHiddenAllergen(name) {
+    for (const { match, allergen } of hiddenAllergens) {
+      if (match.test(name) && !name.toLowerCase().includes('(' + allergen)) {
+        // Nie dodawaj jeśli już jest w nawiasie
+        return name + ' (<strong>' + allergen + '</strong>)';
+      }
+    }
+    return name;
+  }
+
+
   // Mapowanie alergenów → słowa kluczowe szukane w składzie
   const allergenKeywords = {
     'Gluten': ['pszen', 'żyt', 'jęczmie', 'owies', 'orkisz', 'kamut', 'gluten', 'mąka', 'makaron', 'kasza manna', 'kasza jęczm', 'bułka tarta'],
@@ -151,7 +177,7 @@ function getRecipeData() {
       const pctStr = pct >= 0.5 && !s.name.includes('(') 
         ? ' ' + (pct >= 10 ? Math.round(pct) : pct.toFixed(1)) + '%'
         : '';
-      return boldAllergens(s.name, Array.from(allergensSet)) + pctStr;
+      return boldAllergens(addHiddenAllergen(s.name), Array.from(allergensSet)) + pctStr;
     }).join(', ');
   } else {
     sklad = instrukcja || 'Skład produktu...';

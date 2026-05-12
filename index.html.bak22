@@ -1919,6 +1919,6 @@ function showToast(msg, isError=false) {
   </div>
 </div>
 <script src="menu-print.js?v=1777846337"></script>
-<script src="etykieta-print.js?v=1778616368" charset="utf-8"></script>
+<script src="etykieta-print.js?v=1778615513" charset="utf-8"></script>
 </body>
 </html>
