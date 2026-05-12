@@ -98,8 +98,49 @@ function getRecipeData() {
     skladniki.push({ name: ingName, weight });
   });
   
+  // Wyklucz makaron (nie idzie do słoika)
+  const skladnikiFiltered = skladniki.filter(s => !/makaron/i.test(s.name));
+  skladniki.length = 0;
+  skladniki.push(...skladnikiFiltered);
+  
   // Sortuj malejąco po wadze
   skladniki.sort((a, b) => b.weight - a.weight);
+
+  // Mapowanie alergenów → słowa kluczowe szukane w składzie
+  const allergenKeywords = {
+    'Gluten': ['pszen', 'żyt', 'jęczmie', 'owies', 'orkisz', 'kamut', 'gluten', 'mąka', 'makaron', 'kasza manna', 'kasza jęczm', 'bułka tarta'],
+    'Mleko': ['mleko', 'mleczn', 'śmietan', 'masło', 'maślank', 'jogurt', 'kefir', 'twaróg', 'twarog', 'ser ', 'serek', 'serowy', 'serowa', 'serowe', 'mascarpone', 'feta', 'mozzarella', 'parmezan', 'ricotta', 'laktoz'],
+    'Jaja': ['jajk', 'jajec', 'jajo', 'jaja', 'białko jaj', 'żółtko'],
+    'Soja': ['soja', 'sojow', 'tofu', 'tempeh', 'edamame'],
+    'Orzechy': ['orzech', 'migdał', 'pistacj', 'nerkow', 'pekan', 'makadami', 'orzechow'],
+    'Orzeszki ziemne': ['orzeszki ziemne', 'arachid', 'fistasz'],
+    'Sezam': ['sezam', 'tahini'],
+    'Seler': ['seler'],
+    'Gorczyca': ['gorczyc', 'musztard'],
+    'Ryby': ['ryba', 'ryby', 'łoso', 'dorsz', 'tuń', 'sardynk', 'śledź', 'makrela', 'pstrąg', 'sandacz'],
+    'Skorupiaki': ['krewetk', 'krab', 'homar', 'langust', 'raki', 'rak '],
+    'Mięczaki': ['małż', 'ostryg', 'kałamarni', 'ośmior', 'ślimak'],
+    'Łubin': ['łubin'],
+    'Siarczyny': ['siarczyn', 'siarka', 'so2'],
+  };
+  
+  // Funkcja boldująca alergeny w nazwie składnika
+  function boldAllergens(name, activeAllergens) {
+    if (!activeAllergens || activeAllergens.length === 0) return name;
+    let result = name;
+    activeAllergens.forEach(allergen => {
+      const keywords = allergenKeywords[allergen] || [allergen.toLowerCase()];
+      keywords.forEach(kw => {
+        // Regex case-insensitive, ale zachowuje oryginalną pisownię
+        const regex = new RegExp('(\\b' + kw.replace(/[.*+?^${}()|[\\\]\\\\]/g, '\\\\$&') + '[a-ząćęłńóśźż]*\\b)', 'gi');
+        result = result.replace(regex, '<strong>$1</strong>');
+      });
+    });
+    // Usuń duplikujące zagnieżdżenia <strong><strong>...</strong></strong>
+    result = result.replace(/<strong><strong>/g, '<strong>').replace(/<\/strong><\/strong>/g, '</strong>');
+    return result;
+  }
+
   
   // Buduj tekst składu z procentami
   const skladTotal = skladniki.reduce((sum, s) => sum + s.weight, 0);
@@ -110,7 +151,7 @@ function getRecipeData() {
       const pctStr = pct >= 0.5 && !s.name.includes('(') 
         ? ' ' + (pct >= 10 ? Math.round(pct) : pct.toFixed(1)) + '%'
         : '';
-      return s.name + pctStr;
+      return boldAllergens(s.name, Array.from(allergensSet)) + pctStr;
     }).join(', ');
   } else {
     sklad = instrukcja || 'Skład produktu...';
@@ -253,7 +294,7 @@ function buildLabel(data) {
         </tbody>
       </table>
       <div style="margin-top:auto;padding-top:1.5mm;border-top:.2mm solid #c8b89e;">
-        <div style="font-size:${T*0.75}mm;color:#000;line-height:1.5;margin-bottom:.8mm;"><strong>Najlepiej spożyć przed końcem:</strong> data na spodzie słoika</div><div style="font-size:${T*0.75}mm;color:#000;line-height:1.5;"><strong>Producent:</strong> GrubaMicha Bartłomiej Radziszewski, ul. Polna 1, 81-745 Sopot</div>
+        <div style="font-size:${T*0.75}mm;color:#000;line-height:1.5;margin-bottom:.8mm;"><strong>Najlepiej spożyć przed końcem:</strong> data na spodzie słoika. Data jest jednocześnie nr serii.</div><div style="font-size:${T*0.75}mm;color:#000;line-height:1.5;"><strong>Producent:</strong> GrubaMicha Bartłomiej Radziszewski, ul. Polna 1, 81-745 Sopot</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.8mm;">
           <div style="font-size:${T*0.8}mm;color:#000;font-weight:700;">grubamicha.pl</div>
           <div style="font-size:5mm;line-height:1;">♻</div>
@@ -301,7 +342,7 @@ function buildLabel(data) {
       <div>
         <div style="width:100%;height:.2mm;background:#e0e0e0;margin-bottom:1mm;"></div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:${T*1.1}mm;letter-spacing:.5mm;text-transform:uppercase;color:#000;margin-bottom:.8mm;">Przed otwarciem</div>
-        <div style="font-size:${T*0.9}mm;color:#000;line-height:1.6;">Przechowywać w temperaturze pokojowej (20–25°C), z dala od źródeł ciepła i światła słonecznego.</div>
+        <div style="font-size:${T*0.9}mm;color:#000;line-height:1.6;">Przechowywać w temperaturze pokojowej (od +20 do +25°C), z dala od źródeł ciepła i światła słonecznego.</div>
       </div>
       <div>
         <div style="width:100%;height:.2mm;background:#e0e0e0;margin-bottom:1mm;"></div>
