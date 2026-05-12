@@ -106,19 +106,67 @@ function getRecipeData() {
   // Sortuj malejąco po wadze
   skladniki.sort((a, b) => b.weight - a.weight);
 
-  // Składniki zawierające ukryte alergeny (do dopisania w nawiasie)
+  // Składniki zawierające ukryte alergeny (dopisywane w nawiasie)
   const hiddenAllergens = [
-    { match: /śmietan|smietan/i, allergen: 'mleko' },
-    { match: /\bmasło\b|\bmaslo\b/i, allergen: 'mleko' },
-    { match: /\bser\b|serek|serowy|serowa|serowe|mascarpone|feta|mozzarella|parmezan|ricotta|twaróg|twarog/i, allergen: 'mleko' },
-    { match: /jogurt|jogurtowy|jogurtowa/i, allergen: 'mleko' },
-    { match: /maślank|maslank|kefir/i, allergen: 'mleko' },
-    { match: /\bmleko\b|mleczn/i, allergen: 'mleko' },
-    { match: /majonez/i, allergen: 'jaja' },
-    { match: /sos sojowy|sos teriyaki/i, allergen: 'soja' },
-    { match: /musztard/i, allergen: 'gorczyca' },
-    { match: /chleb|bułk|bulk|grzank|panierk/i, allergen: 'gluten' },
+    // GLUTEN - zboża zawierające gluten
+    { match: /żyto|żytni|żytnia|żytnie|zakwas\s+żytn/i, allergen: 'żyto', group: 'Gluten' },
+    { match: /pszen|pszenicz/i, allergen: 'pszenica', group: 'Gluten' },
+    { match: /jęczmie|jęczmień|kasza\s+jęczm/i, allergen: 'jęczmień', group: 'Gluten' },
+    { match: /\bowies|owsian|płatk[ai]\s+owsian/i, allergen: 'owies', group: 'Gluten' },
+    { match: /orkisz|kamut|samopsza/i, allergen: 'orkisz', group: 'Gluten' },
+    { match: /\bmąka\b|maka\s|makaron|kluski|pierogi|knedl|łazank|kasza\s+manna|bułka\s+tart|grzank|panierk|chleb|bułk|bulk|chałka|chalka/i, allergen: 'pszenica', group: 'Gluten' },
+    // MLEKO - przetwory mleczne
+    { match: /śmietan|smietan/i, allergen: 'mleko', group: 'Mleko' },
+    { match: /\bmasło\b|\bmaslo\b|maślan|maslan/i, allergen: 'mleko', group: 'Mleko' },
+    { match: /\bser\b|serek|serowy|serowa|serowe|mascarpone|\bfeta\b|mozzarella|parmezan|ricotta|twaróg|twarog|brie|camembert|gouda|cheddar/i, allergen: 'mleko', group: 'Mleko' },
+    { match: /jogurt|jogurtow/i, allergen: 'mleko', group: 'Mleko' },
+    { match: /maślank|maslank|kefir|jogurt/i, allergen: 'mleko', group: 'Mleko' },
+    { match: /\bmleko\b|mleczn/i, allergen: 'mleko', group: 'Mleko' },
+    // JAJA
+    { match: /majonez|jaj/i, allergen: 'jaja', group: 'Jaja' },
+    // SOJA
+    { match: /sojow|sos\s+sojow|tofu|tempeh|edamame/i, allergen: 'soja', group: 'Soja' },
+    // GORCZYCA
+    { match: /musztard|gorczyc/i, allergen: 'gorczyca', group: 'Gorczyca' },
+    // SELER
+    { match: /seler/i, allergen: 'seler', group: 'Seler' },
+    // SEZAM
+    { match: /sezam|tahini/i, allergen: 'sezam', group: 'Sezam' },
+    // ORZECHY
+    { match: /orzech\s|orzechow|migdał|migdal|pistacj|nerkow|pekan|makadami/i, allergen: 'orzechy', group: 'Orzechy' },
+    { match: /orzeszki\s+ziemne|arachid|fistasz/i, allergen: 'orzeszki ziemne', group: 'Orzeszki ziemne' },
+    // RYBY
+    { match: /\bryba\b|\bryby\b|łoso|loso|dorsz|tuń|tun|sardynk|śledź|sledz|makrela|pstrąg|sandacz|filet\s+z\s+ryby/i, allergen: 'ryby', group: 'Ryby' },
+    // SKORUPIAKI
+    { match: /krewetk|\bkrab\b|homar|langust|raki\b|\brak\b/i, allergen: 'skorupiaki', group: 'Skorupiaki' },
+    // MIĘCZAKI
+    { match: /małż|malz|ostryg|kałamarni|kalamarni|ośmior|osmior|ślimak|slimak/i, allergen: 'mięczaki', group: 'Mięczaki' },
+    // ŁUBIN
+    { match: /łubin|lubin/i, allergen: 'łubin', group: 'Łubin' },
+    // SIARCZYNY
+    { match: /siarczyn|so2/i, allergen: 'siarczyny', group: 'Siarczyny' },
   ];
+  
+  // Funkcja dodająca (alergen) do nazwy składnika
+  // TYLKO jeśli ten typ alergenu jest na liście aktywnych alergenów receptury
+  function addHiddenAllergen(name, activeAllergensList) {
+    for (const { match, allergen, group } of hiddenAllergens) {
+      if (match.test(name)) {
+        // Czy ten typ alergenu jest aktywny w przepisie?
+        const isActive = activeAllergensList.some(a => 
+          a.toLowerCase().includes(group.toLowerCase()) || 
+          group.toLowerCase().includes(a.toLowerCase())
+        );
+        if (!isActive) continue;
+        // Nie dodawaj jeśli sama nazwa to już ten alergen (np. "Mleko")
+        if (name.toLowerCase().trim() === allergen.toLowerCase()) continue;
+        // Nie dodawaj jeśli już jest w nawiasie
+        if (name.toLowerCase().includes('(' + allergen.toLowerCase())) continue;
+        return name + ' (<strong>' + allergen + '</strong>)';
+      }
+    }
+    return name;
+  }
   
   // Funkcja dodająca (alergen) do nazwy składnika
   function addHiddenAllergen(name) {
@@ -177,7 +225,7 @@ function getRecipeData() {
       const pctStr = pct >= 0.5 && !s.name.includes('(') 
         ? ' ' + (pct >= 10 ? Math.round(pct) : pct.toFixed(1)) + '%'
         : '';
-      return boldAllergens(addHiddenAllergen(s.name), Array.from(allergensSet)) + pctStr;
+      return boldAllergens(addHiddenAllergen(s.name, Array.from(allergensSet)), Array.from(allergensSet)) + pctStr;
     }).join(', ');
   } else {
     sklad = instrukcja || 'Skład produktu...';
@@ -373,7 +421,7 @@ function buildLabel(data) {
       <div>
         <div style="width:100%;height:.2mm;background:#e0e0e0;margin-bottom:1mm;"></div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:${T*1.1}mm;letter-spacing:.5mm;text-transform:uppercase;color:#000;margin-bottom:.8mm;">Po otwarciu</div>
-        <div style="font-size:${T*0.9}mm;color:#000;line-height:1.6;">Przechowywać w lodówce (4–7°C) i spożyć w ciągu 48 godzin.</div>
+        <div style="font-size:${T*0.9}mm;color:#000;line-height:1.6;">Przechowywać w lodówce (od +4 do +7°C) i spożyć w ciągu 48 godzin.</div>
       </div>
       <div>
         <div style="width:100%;height:.2mm;background:#e0e0e0;margin-bottom:1mm;"></div>
