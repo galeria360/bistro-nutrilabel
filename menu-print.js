@@ -597,8 +597,10 @@ ${cards}
     const p1 = portions[0] || {label:'Kanapka',size:'1 szt.',price:''};
     const p2 = portions[1] || null;
 
+    const aSize = ingSize || 10.5;
+    const aScale = aSize / 10.5;
     const alergHtml = alerg.length
-      ? alerg.map(a=>`<span class="mc-atag">${a}</span>`).join('')
+      ? alerg.map(a=>`<span class="mc-atag" style="font-size:${aSize}px;padding:${(2*aScale).toFixed(1)}px ${(8*aScale).toFixed(1)}px;">${a}</span>`).join('')
       : '—';
 
     // Dla UFO - rozdziel skład na główne i pod-składniki
