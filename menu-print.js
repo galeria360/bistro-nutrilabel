@@ -634,7 +634,7 @@ ${cards}
 
   <div class="mc-info">
     <div class="mc-ik">Skład</div>
-    <div class="mc-iv">${skladHtml}</div>
+    <div class="mc-iv" style="font-size:${ingSize||10.5}px;">${skladHtml}</div>
     <div class="mc-ik">Alergeny</div>
     <div class="mc-iv">${alergHtml}</div>
   </div>
